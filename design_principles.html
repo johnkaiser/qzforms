@@ -1,0 +1,67 @@
+<html>
+<head>
+<title> QZ Forms Design Principles </title>
+</head>
+<body>
+
+<h1> QZ Forms Design Principles </h1>
+
+<dl>
+
+<dt>Goal</dt>
+<dd>
+Code free creation of web forms from a PostgreSQL database.
+</dd>
+
+<dt>Database Choice</dt>
+<dd>
+Database neutrality is for wimps. Postgres Rulez!
+All features of PostgreSQL may be used.
+</dd>
+
+<dt>Web user === PostgreSQL user</dt>
+<dd>
+The application does not have a password hidden someplace.
+When a user logs in, it is Postgres that validates the user.
+When the application connects to Postgres, it is as the logged in user.
+</dd>
+ 
+<dt>Text Strings</dt>
+<dd>
+Form data is moved as text strings.
+Binary data is forbidden.
+</dd>
+
+<dt>UTF8</dt>
+<dd>
+UTF8 is the one true character encoding.
+All others are heresy.
+Data that is not UTF8 is bad, should feel bad,
+and should aspire to be converted to UTF8.
+</dd>
+
+<dt> Avoid Duplicitous Redundancy </dt>
+<dd>
+Metadata in Postgres, such as data type, 
+should be carried through the process and not
+repeated.  
+Javascript on the client should know the PG type. 
+</dd>
+
+<dt> No printf(&quot;&lt;input type=text...</dt>
+<dd>
+The application builds a web page as an xml tree of nodes with libxml2.
+At no time should the application print text for display.
+</dd>
+
+<dt> Little Bobby Tables is welcome </dt>
+<dd>
+<a href='http://xkcd.com/327/'>http://xkcd.com/327/</a>
+Database transactions are to be done with prepared statements.
+</dd>
+
+</dl>
+
+</body>
+</html>
+

@@ -1,0 +1,52 @@
+#!/bin/sh
+set -e
+
+### BEGIN INIT INFO
+# Provides:             qzforms.fcgi
+# Required-Start:       $local_fs $remote_fs $network $time urandom $syslog
+# Required-Stop:        $local_fs $remote_fs $network $time urandom $syslog
+# Should-Start:         $syslog
+# Should-Stop:          $syslog
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    QZForms FastCGI form generator for PostgreSQL.
+# Description:		The recommended way to start QZForms is with
+#                       spawn-fcgi
+### END INIT INFO
+
+#
+## Options
+#
+# Set either SOCKET_PATH or SOCKET_ADDR and SOCKET_PORT.
+SOCKET_ADDR="127.0.0.1"
+SOCKET_PORT="9074"
+#SOCKET_PATH="run/qz.sock"
+#
+QZFORMS_PID="/var/qzforms/run/qzforms.pid"
+STARTUP_DIR="/var/qzforms"
+QZFORMS_FCGI="./libexec/qzforms.fcgi" 
+SPAWN_FCGI=/usr/local/bin/spawn-fcgi
+QZUSER=qzforms
+QZGROUP=qzforms
+# 
+## end options
+#
+case "$1" in
+
+start)
+
+    if [ -n "$SOCKET_PATH" ]; then
+        $SPAWN_FCGI -s $SOCKET_PATH -P $QZFORMS_PID \
+        -d $STARTUP_DIR -u $QZUSER -g $QZGROUP -- $QZFORMS_FCGI
+    else
+        $SPAWN_FCGI -a $SOCKET_ADDR -p $SOCKET_PORT -P $QZFORMS_PID \
+        -d $STARTUP_DIR -u $QZUSER -g $QZGROUP -- $QZFORMS_FCGI
+    fi
+    ;;
+stop)
+    /bin/kill $(cat $QZFORMS_PID)
+    ;;
+esac
+
+exit 0
+

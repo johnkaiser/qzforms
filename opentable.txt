@@ -1,0 +1,107 @@
+What does it mean to open a table in QZ Forms?
+
+Answering that requires some context.  
+
+*
+** URL meaning
+*
+
+In QZ Forms, each segment in a request URL is a parameter for the request.
+For example, the URL
+    http://example.com/qz/handler/lookup_name/someaction/optional_parameters
+
+The 1st segment, qz, tells the webserver to send the request to the QZ fastcgi
+process.
+
+The 2nd segment specifies one set of actions a request can take.
+Different handlers will define different actions.
+For example the onetable handler defines methods such as getall, getone, create,
+insert, editone, update, delete. In OOP speak, the handler is a base object. 
+
+The 3nd segment goes by the somewhat awkward nomenclature lookup_name.  
+It is created by the form developer and identifies a 
+collection of actions.  In the simpliest case, it maps to a table in 
+Postgresql, but a Postgresql table could be modified by any number of unique
+sets of actions each identified by its lookup_name.  In OOP speak, the
+lookup_name is an instance of a handler object.
+
+The 4th segment, someaction, will be one of those supported by the handler.
+In OOP speak, it implements a defined interface. 
+
+Some handlers may use additional segments.  
+
+*
+** about these actions that update the tables, the table_actions.
+*
+
+A form developer will write an SQL statement for each action in the format
+of a prepared statement with $n notation for variables.  Each $n is then
+mapped to a name of a variable.  The http post data is parsed to find
+the variables named.
+
+For example, lookup_name stuff, which is a namesake to the table it maintains,
+has an action getone to retrieve one record.
+
+SELECT  n, words, current_mood, trouble, ar, pos, addr, mask, nbr, fixed, name
+FROM stuff
+WHERE n = $1
+
+then defines an ordered list of names {n} and a list of the attributes in the
+primary key, it this case {n} again.  
+
+When a getone handler is invoked from a getall list, the fields in the primary
+key are presented as a readonly form field; you are not allowed to change the
+fields in the primary key.  
+
+When a form user hits the submit button, the update table_action is executed
+by QZ Forms. For example lookup_name stuff table_action update, 
+
+UPDATE stuff SET words = $2, trouble = $3,ar = $4,
+pos = $5,addr = $6,mask = $7,nbr = $8,fixed = $9,
+current_mood = $10, name = $11
+WHERE n = $1
+
+the ordered list of names is 
+
+{n,words,trouble,ar,pos,addr,mask,nbr,fixed,current_mood,name}
+
+QZ Forms will then match the names in the http post data to the list and
+execute the SQL prepared statement as a parametized prepared query.
+
+*
+**  The flow.
+*
+
+When a form user comes across a lookup_name for the first time in a session,
+the prepared statements defined for each table_action are read from Postgresql
+and well, prepared.  This means that Postgresql has parsed the statement and
+knows how to execute it.  This preparing the statement is "opening a table".  
+Opened tables are stored in a hash by QZ Forms for fast reference.
+The call to Postgresql to prepare a statement is done only once per session,
+any subsequent request for that particular table_action for that particular
+lookup_name will execute the already prepared statement.
+
+*
+** Using in C.
+** Error checking left out for clarity.
+*
+    struct table_action* update_ta = open_table(h, lookup_name, "update");
+    PGresult* update_rs = perform_post_action(h, update_ta);
+
+The table_action structure is indexed in a hash table on the 
+(lookup_name,action) tuple.
+The struct pointer returned should not be freed directly, rather the 
+function close_table should be called.
+
+There are two functions that will perform a table_action, 
+
+    perform_post_action
+    perform_action  
+    
+The difference is that perform_post_action pulls the named values from
+the http post data while perform_action is passed a null terminiated char
+array of the parameters.
+
+
+
+

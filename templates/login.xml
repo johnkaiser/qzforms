@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+  <title> QZ Forms Login</title>
+
+  <style>
+  ul.login {
+      list-style-type: none;
+  }
+  </style>
+
+</head>
+<body>
+<h1> QZ Forms &#x2713; </h1>
+<div id='qz'></div>
+</body>
+</html>
+
