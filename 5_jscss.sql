@@ -143,6 +143,14 @@ input.menu_button {
     padding-bottom: 1ex;
     border-bottom: 2pt dotted grey;
 }    
+
+.err_msg {
+    background: yellow;
+    border: 2pt solid red;
+    padding: 3pt;
+    display: table;
+    font-weight: bold;
+}
 ');
 INSERT INTO qz.css (filename, mimetype, modtime, etag, data) VALUES ('blue.css', 'text/css', '2015-05-30 17:23:51.594153', 2247, 'body {
     background: lightblue;

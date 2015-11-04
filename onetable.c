@@ -95,31 +95,16 @@ void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
  *  Result must be created and freed by calling function.
  */
 void edit_form(struct handler_args* h, char* next_action, 
-    struct table_action* edit_ta, PGresult* edit_rs, char* form_name){
+    struct table_action* edit_ta, PGresult* edit_rs, char* form_name, 
+    xmlNodePtr divqz){
 
-    xmlNodePtr divqz;
-    xmlNodePtr cur;
     xmlNodePtr form; 
     xmlNodePtr input;
 
-    if ((cur = xmlDocGetRootElement(h->doc)) == NULL){
-        fprintf(h->log, "%f %d %s:%d Root element not found\n", 
-            gettime(), h->request_id, __func__, __LINE__); 
-        error_page(h, 500,  "Root element not found");
-        return;
-    }
-
-    if ((divqz = qzGetElementByID(h, cur, edit_ta->target_div)) == NULL){
-        fprintf(h->log, "%f %d %s:%d Element with id %s not found\n", 
-            gettime(), h->request_id, __func__, __LINE__,
-            edit_ta->target_div); 
-
-        error_page(h, 500,  "Element id not found");
-        return;
-    }
     xmlNewTextChild(divqz, NULL, "h2", form_name);
 
-    add_helpful_text(h, edit_ta, cur);
+    xmlNodePtr root_el = xmlDocGetRootElement(h->doc);
+    add_helpful_text(h, edit_ta, root_el);
 
     add_delete(h, divqz, edit_rs);
 
@@ -155,7 +140,7 @@ void edit_form(struct handler_args* h, char* next_action,
         
         struct pgtype_datum * pgtype;
 
-        // table  = schema + table XXXXXXXXXXXXXXXX
+        // table  = schema + table 
         char* table_name;
         if ( edit_ta->schema_name != NULL ){
             asprintf(&table_name, "%s.%s", edit_ta->schema_name, 
@@ -208,13 +193,8 @@ void add_insert_button(struct handler_args* h, xmlNodePtr here){
     if (create_ta == NULL) return;
  
     char* action_target;
-    char* uri_parts[MAX_NBR_SEGMENTS+1];
-    uri_parts[0] = get_uri_part(h, QZ_URI_BASE_SEGMENT);
-    uri_parts[1] = get_uri_part(h, QZ_URI_FORM_NAME);
-    uri_parts[2] = "create";
-    uri_parts[3] = NULL;
-    
-    action_target = build_path(uri_parts);
+    asprintf(&action_target, "/%s/%s/%s", 
+         get_uri_part(h, QZ_URI_BASE_SEGMENT), form_name, "create");
 
     xmlNodePtr form = xmlNewChild(here, NULL, "form", NULL);
 
@@ -269,14 +249,11 @@ void add_insert_button(struct handler_args* h, xmlNodePtr here){
  *  and turn that into an edit with an edit button
  *  for each line.
  */
-void onetable_getall(struct handler_args* h, char* form_name){
+void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     int col;
     int row;
     int k;
-
-    xmlNodePtr divqz;
-    xmlNodePtr cur;
 
     content_type(h, "text/html");
 
@@ -286,23 +263,6 @@ void onetable_getall(struct handler_args* h, char* form_name){
             gettime(), h->request_id, __func__, __LINE__, form_name); 
 
         error_page(h, SC_BAD_REQUEST, "Not Found");
-        return;
-    }
-
-    if ((cur = xmlDocGetRootElement(h->doc)) == NULL){
-        fprintf(h->log, "%f %d %s:%d xml root element not found\n", 
-            gettime(), h->request_id, __func__, __LINE__); 
-
-        error_page(h, SC_EXPECTATION_FAILED,  "xml document open failure");
-        return;
-    }
-
-    if ((divqz = qzGetElementByID(h, cur, getall_ta->target_div)) == NULL){
-        fprintf(h->log, "%f %d %s:%d Element with id %s not found\n", 
-            gettime(), h->request_id, __func__, __LINE__, 
-            getall_ta->target_div); 
-
-        error_page(h, SC_EXPECTATION_FAILED,  "Element with id qz not found");
         return;
     }
 
@@ -327,7 +287,8 @@ void onetable_getall(struct handler_args* h, char* form_name){
     xmlNewTextChild(divqz, NULL, "h2", form_name);
 
     // Add helpful_text 
-    add_helpful_text(h, getall_ta, cur);
+    xmlNodePtr root_el = xmlDocGetRootElement(h->doc);
+    add_helpful_text(h, getall_ta, root_el);
 
     add_insert_button(h, divqz);
 
@@ -416,7 +377,9 @@ void onetable_getall(struct handler_args* h, char* form_name){
             // and clone it for all the other edit rows.
             if (form_tag == NULL){
                 //  XXXXXX get timeout and submit_only_once flag from pg
-                form_tag = register_form(h, form, SUBMIT_MULTIPLE, action_target);
+                form_tag = register_form(h, form, SUBMIT_MULTIPLE, 
+                    action_target);
+
             }else{
                 duplicate_registration(h, form_tag, form);
             }
@@ -428,11 +391,15 @@ void onetable_getall(struct handler_args* h, char* form_name){
                 int f_nbr = PQfnumber(getall_rs, getall_ta->pkeys[k]);
                 if (PQfname(getall_rs, f_nbr) != NULL){
                     xmlNewProp(input, "name", getall_ta->pkeys[k]);
-                    xmlNewProp(input, "value", PQgetvalue(getall_rs,row, f_nbr));
+                    xmlNewProp(input, "value", 
+                        PQgetvalue(getall_rs,row, f_nbr));
+
                 }else{
                     // The primary key was not in the returned data, but
                     // it was requested.  Perhaps it's in the passed in data.
-                    char* passed_in = xmlHashLookup(h->postdata, getall_ta->pkeys[k]);
+                    char* passed_in = xmlHashLookup(h->postdata, 
+                        getall_ta->pkeys[k]);
+
                     if (passed_in != NULL){
                         xmlNewProp(input, "name", getall_ta->pkeys[k]);
                         xmlNewProp(input, "value", passed_in);
@@ -479,7 +446,7 @@ void onetable_getall(struct handler_args* h, char* form_name){
  *  URI is like /qz/form_name/edit
  *  Record key is in post data. 
  */
-void onetable_edit(struct handler_args* h, char* form_name){
+void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     
     struct table_action* edit_ta = open_table(h, form_name, "edit");
     if (edit_ta == NULL){
@@ -505,21 +472,28 @@ void onetable_edit(struct handler_args* h, char* form_name){
 
     // not found.
     if (PQntuples(edit_rs) == 0){
-        // XXXXXXXX log this
+        
+        fprintf(h->log, "%f %d %s %d Record not found.\n",
+            gettime(), h->request_id, __func__, __LINE__ );
+
         error_page(h, SC_EXPECTATION_FAILED, "Record not found.");
         PQclear(edit_rs);
         return;
     }
     // Exactly 1. PQgetvalue can be called for row 0.
     if (PQntuples(edit_rs) != 1){
-        // XXXXXXXX log this
+        
+        fprintf(h->log, "%f %d %s %d Wrong data count %d should be 1.\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            PQntuples(edit_rs));
+
         error_page(h, SC_EXPECTATION_FAILED, "Wrong data count");
         PQclear(edit_rs);
         return;
     }
 
     // Now turn that into a form.
-    edit_form(h, "update", edit_ta, edit_rs, form_name);
+    edit_form(h, "update", edit_ta, edit_rs, form_name, divqz);
 
     PQclear(edit_rs);
    
@@ -530,11 +504,12 @@ void onetable_edit(struct handler_args* h, char* form_name){
  * 
  *  Create a new record to serve as an insert dialog.
  */  
-void onetable_create(struct handler_args* h, char* form_name){
+void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     struct table_action* create_ta = open_table(h, form_name, "create");
    
     if (create_ta == NULL){
+
         fprintf(h->log, "%f %d %s:%d create_ta is null from %s, %s\n", 
             gettime(), h->request_id,  __func__, __LINE__, 
             form_name, "create");
@@ -546,8 +521,9 @@ void onetable_create(struct handler_args* h, char* form_name){
     PGresult* create_rs = perform_post_action(h, create_ta);
 
     if (create_rs == NULL){
+
         fprintf(h->log, "%f %d %s %d fail action returned null\n", 
-        gettime(), h->request_id, __func__, __LINE__);
+            gettime(), h->request_id, __func__, __LINE__);
 
         error_page(h, SC_EXPECTATION_FAILED, "action returned null");
         return;
@@ -555,13 +531,17 @@ void onetable_create(struct handler_args* h, char* form_name){
 
     // Exactly 1. PQgetvalue can be called for row 0.
     if (PQntuples(create_rs) != 1){
-        // XXXXXXXX log this
+        
+        fprintf(h->log, "%f %d %s %d Wrong data count %d should be 1.\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            PQntuples(create_rs));
+
         error_page(h, SC_EXPECTATION_FAILED, "Wrong data count");
         PQclear(create_rs);
         return;
     }
 
-    edit_form(h, "insert", create_ta, create_rs, form_name);
+    edit_form(h, "insert", create_ta, create_rs, form_name, divqz);
 
     PQclear(create_rs);
 }
@@ -572,7 +552,8 @@ void onetable_create(struct handler_args* h, char* form_name){
  *  Call the insert table action to add a new row to a table.
  *  Called after onetable_create and user submit.
  */
-void onetable_insert(struct handler_args* h, char* form_name){
+void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
+
     struct table_action* insert_ta = open_table(h, form_name, "insert");
    
     if (insert_ta == NULL){
@@ -595,32 +576,23 @@ void onetable_insert(struct handler_args* h, char* form_name){
         return;
     }
 
-    // XXXX add error checking and return indication of success/failure
     if ( (PQresultStatus(insert_rs) == PGRES_TUPLES_OK) 
          ||
          (PQresultStatus(insert_rs) == PGRES_COMMAND_OK) ){
         // Yeah, it worked.
 
         // Redisplay the first screen.
-        onetable_getall(h, form_name);
-/*
-        char* path_parts[4];
-        path_parts[0] = get_uri_part(h, QZ_URI_BASE_SEGMENT);
-        path_parts[1] = form_name;
-        path_parts[2] = "getall";
-        path_parts[3] = NULL;
-        
-        char* action_target = build_path(path_parts);
-        location(h, action_target); 
-        */
+        onetable_getall(h, form_name, divqz);
+
     }else{
-        content_type(h, "Text/Plain");
-        h->data = new_strbuf("Error report\n",0);
-        strbuf_append(h->data, 
-            new_strbuf(PQresStatus(PQresultStatus(insert_rs)),0));
-        strbuf_append(h->data, new_strbuf("\n\n",0));
-        strbuf_append(h->data, new_strbuf(PQresultErrorMessage(insert_rs), 0));
-        strbuf_append(h->data, new_strbuf("\n---",0));
+
+        char* err_msg = PQresultErrorMessage(insert_rs);
+        xmlNodePtr insert_error = xmlNewTextChild(divqz, NULL, "pre", err_msg);
+        append_class(insert_error, "err_msg");
+
+        // Re-do the insert 
+        // XXXXXX How to return the form with the given data?
+        onetable_create(h, form_name, divqz);
     }
 
     PQclear(insert_rs);
@@ -631,7 +603,7 @@ void onetable_insert(struct handler_args* h, char* form_name){
  *
  *  Update one row from the post data.
  */
-void onetable_update(struct handler_args* h, char* form_name){
+void onetable_update(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     struct table_action* update_ta = open_table(h, form_name, "update");
    
@@ -647,23 +619,30 @@ void onetable_update(struct handler_args* h, char* form_name){
     // This is it right here.
     PGresult* update_rs = perform_post_action(h, update_ta);
 
+    fprintf(h->log, "%f %d %s:%d table action returned %s %s\n", 
+            gettime(), h->request_id,  __func__, __LINE__, 
+            PQresStatus(PQresultStatus(update_rs)),
+            PQcmdStatus(update_rs));
+
     if ( (PQresultStatus(update_rs) == PGRES_TUPLES_OK) 
          ||
          (PQresultStatus(update_rs) == PGRES_COMMAND_OK) ){
         // Yeah, it worked.
 
         // Redisplay the first screen.
-        onetable_getall(h, form_name);
+        onetable_getall(h, form_name, divqz);
 
     }else{
-        content_type(h, "Text/Plain");
-        h->data = new_strbuf("Error report\n",0);
-        strbuf_append(h->data, 
-            new_strbuf(PQresStatus(PQresultStatus(update_rs)),0));
-        strbuf_append(h->data, new_strbuf("\n\n",0));
-        strbuf_append(h->data, new_strbuf(PQresultErrorMessage(update_rs), 0));
-        strbuf_append(h->data, new_strbuf("\n---",0));
+
+        char* err_msg = PQresultErrorMessage(update_rs);
+        xmlNodePtr update_error = xmlNewTextChild(divqz, NULL, "pre", err_msg);
+        append_class(update_error, "err_msg");
+
+        // Re-do the edit
+        // XXXXXXXXX include the provided data somehow.
+        onetable_edit(h, form_name, divqz);
     }
+    
     PQclear(update_rs);
 }
 
@@ -672,7 +651,8 @@ void onetable_update(struct handler_args* h, char* form_name){
  *
  *  Call the delete table action.
  */
-void onetable_delete(struct handler_args* h, char* form_name){
+void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
+
    struct table_action* delete_ta = open_table(h, form_name, "delete");
    
    if (delete_ta == NULL){
@@ -698,17 +678,14 @@ void onetable_delete(struct handler_args* h, char* form_name){
          (PQresultStatus(delete_rs) == PGRES_COMMAND_OK) ){
         // Yeah, it worked.
 
-        // Redisplay the first screen.
-        onetable_getall(h, form_name);
     }else{
-        content_type(h, "Text/Plain");
-        h->data = new_strbuf("Error report\n",0);
-        strbuf_append(h->data, 
-            new_strbuf(PQresStatus(PQresultStatus(delete_rs)),0));
-        strbuf_append(h->data, new_strbuf("\n\n",0));
-        strbuf_append(h->data, new_strbuf(PQresultErrorMessage(delete_rs), 0));
-        strbuf_append(h->data, new_strbuf("\n---",0));
+        char* err_msg = PQresultErrorMessage(delete_rs);
+        xmlNodePtr delete_error = xmlNewTextChild(divqz, NULL, "pre", err_msg);
+        append_class(delete_error, "err_msg");
     }
+    // Redisplay the first screen.
+    onetable_getall(h, form_name, divqz);
+
     PQclear(delete_rs);
 }
 
@@ -755,19 +732,35 @@ void onetable(struct handler_args* h){
 
     add_all_menus(h, root_el);
 
+    xmlNodePtr divqz;
+    if ((divqz = qzGetElementByID(h, root_el, this_ta->target_div)) == NULL){
+        fprintf(h->log, "%f %d %s:%d Element with id %s not found\n", 
+            gettime(), h->request_id, __func__, __LINE__, 
+            this_ta->target_div); 
+
+        error_page(h, SC_EXPECTATION_FAILED,  "id element not found");
+        return;
+    }
+
     // branch to the named action
     if (strcmp("getall", action)==0){
-        onetable_getall(h, form_name);
+        onetable_getall(h, form_name, divqz);
+
     }else if (strcmp("edit", action)==0){
-        onetable_edit(h, form_name);
+        onetable_edit(h, form_name, divqz);
+
     }else if (strcmp("create", action)==0){
-        onetable_create(h, form_name);
+        onetable_create(h, form_name, divqz);
+
     }else if (strcmp("insert", action)==0){
-        onetable_insert(h, form_name);
+        onetable_insert(h, form_name, divqz);
+
     }else if (strcmp("update", action)==0){
-        onetable_update(h, form_name);
+        onetable_update(h, form_name, divqz);
+
     }else if (strcmp("delete", action)==0){
-        onetable_delete(h, form_name);
+        onetable_delete(h, form_name, divqz);
+
     }else{
         fprintf(h->log, "%f %d %s:%d unknown action (%s) \n", 
             gettime(), h->request_id, __func__, __LINE__, action);

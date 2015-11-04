@@ -526,7 +526,6 @@ void grid_save(struct handler_args* h, char* form_name){
 
     // Need the table action not for the action but for the
     // template name.
-    // XXXXXXXX h->page_ta
     struct table_action* grid_save_ta = h->page_ta;
 
     h->doc = doc_from_file(h, grid_save_ta->xml_template);
@@ -637,7 +636,7 @@ void grid_save(struct handler_args* h, char* form_name){
                     error_exists = true;
                     break;
                 }
-            }else if ((value[0] != 'E') && (value[0] != 'X')){  // E X not errors.
+            }else if ((value[0] != 'E') && (value[0] != 'X')){// E X not errors.
                 error_exists = true;
                 fprintf(h->log, "%f %d %s:%d grid_row_rs unexpectedly null\n",
                     gettime(), h->request_id, __func__, __LINE__);

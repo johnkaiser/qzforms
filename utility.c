@@ -335,8 +335,9 @@ void add_helpful_text(struct handler_args* h, struct table_action* ta,
 
     xmlNodePtr add_here = qzGetElementByID(h, root_node, "helpful_text");
     xmlNodePtr helpful_text;
-    helpful_text = xmlNewTextChild(add_here, NULL, "p", ta->helpful_text);
-    xmlNewProp(helpful_text, "class", "helpful_text");
-
+    if (add_here != NULL){
+        helpful_text = xmlNewTextChild(add_here, NULL, "p", ta->helpful_text);
+        xmlNewProp(helpful_text, "class", "helpful_text");
+    }
     return;
 }

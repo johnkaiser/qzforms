@@ -133,11 +133,6 @@ struct session{
 };
  
 struct table_action{
-    // XXXXXX change form_name to url_name in 85 places
-    // XXXXXX or maybe action_name?
-    // or maybe it is /qz/pattern/pattern_name/action?
-    // or just the conventional object_name?
-    // or form_name !!!ZZZZZ!!!!
     char* form_name;
     char* action;
     char* schema_name;
