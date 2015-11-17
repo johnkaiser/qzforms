@@ -106,6 +106,15 @@ void percent_unescape_vals(void* val, void* ignore, xmlChar* key){
     percent_unescape(val);
 }
 
+void check_utf8(void* val, void* data, xmlChar* key){
+    bool* is_valid_utf8 = data;
+    
+    if ( !xmlCheckUTF8(key) || !xmlCheckUTF8(val) ){
+        *is_valid_utf8 = false;
+    }
+
+}
+
 /*
  * A legal char according to rfc3986 are the reserved chars
  * alpha digit - . _ ~
@@ -283,8 +292,25 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
         pt = NULL;
         return NULL;
     }
+
     if (unescape){
         xmlHashScan(pt, percent_unescape_vals, NULL);
+    }
+
+    // Validate the utf-8 encoding
+    bool is_valid_utf8 = true;
+    xmlHashScan(pt, check_utf8, &is_valid_utf8);
+
+    if (!is_valid_utf8){
+
+        fprintf(hargs->log, "%f %d %s:%d fail invalid utf-8\n", 
+            gettime(), hargs->request_id, __func__, __LINE__);
+
+        error_page(hargs, SC_EXPECTATION_FAILED, 
+            "Post data contains invalid UTF-8 data");
+        
+        xmlHashFree(pt, NULL);
+        pt = NULL;
     }
     
     return pt;

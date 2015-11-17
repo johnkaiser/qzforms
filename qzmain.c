@@ -172,7 +172,6 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         fprintf(hargs->log, "%f %d %s:%d parse_post complete %s\n", 
             gettime(), hargs->request_id, __func__, __LINE__,
             (hargs->postdata == NULL) ? hargs->postbuf : "success" ); 
-            //(hargs->postdata == NULL) ? "failure" : "success" ); 
 
     }else{
         hargs->postdata = NULL;
@@ -185,11 +184,6 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     return hargs;
 }
 
-/*
-static void free_it_scanner(void* payload, xmlChar* name){
-    free(payload);
-}
-*/
 void free_handler(struct handler_args* handler){
     if (handler != NULL){
         double start = handler->starttime;

@@ -171,6 +171,8 @@ void etag_header(struct handler_args* h, uint64_t payload){
 
 void error_page( struct handler_args* h, int status_code, const char* msg ){
 
+    h->error_exists = true;
+    
     FCGX_SetExitStatus(status_code, h->out);
     FCGX_FPrintF(h->out, "Status: %d\r\n", status_code);
 
@@ -225,6 +227,11 @@ void catch_notifies(struct handler_args* h){
  */
 void do_page( struct handler_args* hargs ){
     
+    // This can happen if non-utf8 data is posted.
+    if (hargs->error_exists){
+        return;
+    }    
+
     // Check the post data for being legal
     // It must contain a name 'form_tag' with value
     // that passes the test for being a valid etag.
@@ -233,6 +240,7 @@ void do_page( struct handler_args* hargs ){
 
     if (hargs->postdata != NULL){
         if (!post_contains_valid_form_tag(hargs)){
+
             fprintf(hargs->log, "%f %d %s:%d fail post contains invalid form_tag\n", 
                 gettime(), hargs->request_id, __func__, __LINE__);
 
