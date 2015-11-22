@@ -102,6 +102,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
         rule->size = strtol( get_value(rs, 0, "size"), NULL, 10);
         rule->maxlength = strtol(get_value(rs, 0, "maxlength"), NULL, 10);
         rule->tabindex = strtol(get_value(rs, 0, "tabindex"), NULL, 10);
+        rule->regex_pattern = get_value(rs, 0, "regex_pattern");
 
         rule->expand_percent_n = get_bool(rs, 0, "expand_percent_n");
 
@@ -388,6 +389,10 @@ void set_common_attributes(struct prompt_add_args* args, xmlNodePtr input){
             free(pgtype_json);
         }    
     }
+
+    if (has_data(args->rule->regex_pattern)){
+        xmlNewProp(input, "pattern", args->rule->regex_pattern);
+    }    
 
     if (has_data(args->rule->onfocus)) add_event(args, input, 
         "onfocus", args->rule->onfocus);

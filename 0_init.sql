@@ -65,7 +65,7 @@ CREATE TABLE qz.constants (
     key boolean PRIMARY KEY CONSTRAINT one_row CHECK(key),
     schema_version int
 );
-INSERT INTO qz.constants VALUES ('t', '2');
+INSERT INTO qz.constants (key, schema_version) VALUES ('t', '3');
 
 
 CREATE TABLE qz.change_history (

@@ -6,6 +6,7 @@ CREATE TABLE qz.prompt_rule (
     rows integer,
     cols integer,
     size integer,
+    text regex_pattern,
     etag bigint DEFAULT nextval('qz.etag_seq'::regclass),
     options text[],
     maxlength integer,

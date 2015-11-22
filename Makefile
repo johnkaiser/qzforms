@@ -22,7 +22,7 @@ CFLAGS=-Wall \
        -I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=2
+SCHEMA_VERSION=3
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
     str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
@@ -47,7 +47,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jquery.sql 7_jscss_data.sql 8_menu.sql \
-	9_functions.sql  pgtype_datum.sql comment.sql 
+	9_functions.sql  pgtype_datum.sql comment.sql qz_db_update_SV3.sql
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
 	internal_cmds.sql qz_examples.sql
@@ -126,7 +126,7 @@ status.o: status.c qz.h
 	$(CC) $(CFLAGS) -DQZVER="$(VERSION)" -c status.c
 
 opentable.o: opentable.c qz.h
-	$(CC) $(CFLAGS) -c opentable.c
+	$(CC) $(CFLAGS) -DSCHEMA_VER=\"$(SCHEMA_VERSION)\" -c opentable.c
 
 opentable_test: opentable.c parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools.o
 	$(CC) $(CFLAGS) $(LFLAGS) \

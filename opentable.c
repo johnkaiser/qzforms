@@ -40,6 +40,48 @@
 
 void init_open_table(struct handler_args* h){
 
+    PGresult* rs;  // reused without apology.
+
+    // But first, check schema version for trouble.
+    char schema_version_query[] =
+        "SELECT schema_version,  $1::int expected_verion, "
+        "$1::int = schema_version does_match "
+        "FROM qz.constants";
+
+    const char* sv_ver[2];
+    sv_ver[0] = SCHEMA_VER;
+    sv_ver[1] = NULL;
+
+    PQprepare(h->session->conn, "schema_version", 
+        schema_version_query, 0, NULL);
+
+    rs = PQexecPrepared(h->session->conn, "schema_version", 1, 
+        (const char * const *) &sv_ver, NULL, NULL, 0);
+    
+    if ( PQresultStatus(rs) == PGRES_TUPLES_OK ){
+        char* does_match = PQgetvalue(rs, 0, 2);
+        if ( does_match[0] == 't'){
+
+            fprintf(h->log, "%f %d %s:%d schema_version %s matches\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                SCHEMA_VER);
+
+        }else{
+            fprintf(h->log, "%f %d %s:%d fail schema_version mismatch "
+                "program expected %s but database is %s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                SCHEMA_VER, PQgetvalue(rs, 0, 0));
+        }
+    }else{
+        char* sv_ver_err_msg = nlfree_error_msg(rs);
+        fprintf(h->log, "%f %d %s:%d fail schema_version mismatch check %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            sv_ver_err_msg);
+        free(sv_ver_err_msg);
+        sv_ver_err_msg = NULL;
+    }
+    PQclear(rs);
+
     // fetch_table_action
 
     char fetch_query[] = 
@@ -65,7 +107,6 @@ void init_open_table(struct handler_args* h){
         "WHERE ta.form_name = $1 "
         "AND ta.action = $2";
 
-    PGresult* rs;
             
     rs = PQprepare(h->session->conn, "fetch_table_action", fetch_query, 0, NULL);
 
@@ -134,7 +175,7 @@ void init_open_table(struct handler_args* h){
     char fetch_rule[] = 
         "SELECT form_name, fieldname, prompt_type, el_class, "
         "readonly, rows, cols, size, maxlength, tabindex, publish_pgtype, "
-        "expand_percent_n, options, src, onfocus, onblur, onchange, "
+        "expand_percent_n, regex_pattern, options, src, onfocus, onblur, onchange, "
         "onselect, onclick, ondblclick, onmousedown, onmouseup, "
         "onmouseover, onmouseout, onkeypress, onkeydown, "
         "onkeyup, tabindex "

@@ -41,6 +41,10 @@
 #define QZVER 0
 #endif
 
+#ifndef SCHEMA_VER
+#define SCHEMA_VER 0
+#endif
+
 #define MAX_SEGMENT_LENGTH (32)
 #define MAX_LOGIN_URI (2*(MAX_SEGMENT_LENGTH+1)+2)
 #define MAX_PRIMARY_KEYS (15)
@@ -229,6 +233,7 @@ struct prompt_rule{
     int maxlength;
     int tabindex;
     bool expand_percent_n;
+    char* regex_pattern;
     uint64_t etag; // XXXXX can this be removed?
     char* options;
     char* free_options; // Internal bookkeeping.
