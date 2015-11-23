@@ -51,6 +51,7 @@ $2::text "fieldname",
 ''''::text "el_class",
 ''''::text "options", 
 ''f''::boolean "readonly",
+''''::text "regex_pattern",
 ''''::text "rows",
 ''''::text "cols",
 ''''::text "size"
@@ -73,8 +74,8 @@ data entry prompt.  A lookup name and
 a fieldname identify a prompt rule.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) VALUES ('prompt_rule_edit', 'edit', 'SELECT "form_name", "fieldname", "prompt_type", "tabindex",
-"el_class", "readonly", "rows", "cols", "size", "maxlength",
-"options", "publish_pgtype", "expand_percent_n",
+"el_class", "readonly", "regex_pattern", "rows", "cols", "size", 
+"maxlength", "options", "publish_pgtype", "expand_percent_n",
  "onfocus", "onblur", "onchange", "onselect",
 "onclick", "ondblclick", "onmousedown", "onmouseup",
 "onmouseover", "onmousemove", "onmouseout",
@@ -87,31 +88,32 @@ SET
 "prompt_type" = $1,
 "el_class" = $2,
 "readonly" = $3,
-"rows" = $4,
-"cols" = $5,
-"size" = $6,
-"tabindex" = $7,
-"options" = $8, 
-"maxlength" = $9,
-"onfocus" = $10, 
-"onblur" = $11, 
-onchange = $12, 
-onselect = $13, 
-onclick = $14, 
-ondblclick = $15,
-onmousedown = $16, 
-onmouseup = $17, 
-onmouseover = $18, 
-onmousemove = $19, 
-onmouseout = $20,
-onkeypress = $21, 
-onkeydown = $22, 
-onkeyup = $23,
-publish_pgtype = $24,
-expand_percent_n = $25
-WHERE form_name = $26
-AND fieldname = $27
-', '{prompt_type,el_class,readonly,rows,cols,size,tabindex,options,maxlength,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,publish_pgtype,expand_percent_n,form_name,fieldname}', NULL, 2012, NULL);
+"regex_pattern" = $4,
+"rows" = $5,
+"cols" = $6,
+"size" = $7,
+"tabindex" = $8,
+"options" = $9, 
+"maxlength" = $10,
+"onfocus" = $11, 
+"onblur" = $12, 
+"onchange" = $13, 
+"onselect" = $14, 
+"onclick" = $15, 
+"ondblclick" = $16,
+"onmousedown" = $17, 
+"onmouseup" = $18, 
+"onmouseover" = $19, 
+"onmousemove" = $20, 
+"onmouseout" = $21,
+"onkeypress" = $22, 
+"onkeydown" = $23, 
+"onkeyup" = $24,
+"publish_pgtype" = $25,
+"expand_percent_n" = $26
+WHERE form_name = $27
+AND fieldname = $28
+', '{prompt_type,el_class,readonly,regex_pattern,rows,cols,size,tabindex,options,maxlength,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,publish_pgtype,expand_percent_n,form_name,fieldname}', NULL, 2012, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) VALUES ('prompt_rule_edit', 'delete', 'DELETE FROM qz.prompt_rule
 WHERE form_name = $1 AND fieldname = $2', '{form_name,fieldname}', '{form_name,fieldname}',  176, NULL);

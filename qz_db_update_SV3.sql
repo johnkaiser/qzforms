@@ -97,3 +97,88 @@ input.menu_button {
 '
 WHERE filename = 'qzforms.css';
 
+
+UPDATE qz.table_action 
+SET sql = 
+'SELECT 
+$1::text "form_name", 
+$2::text "fieldname",
+''input_text''::qz.prompt_types "prompt_type",
+''''::text "el_class",
+''''::text "options", 
+''f''::boolean "readonly",
+''''::text "regex_pattern",
+''''::text "rows",
+''''::text "cols",
+''''::text "size"
+'
+WHERE form_name =  'prompt_rule_edit'
+AND action = 'create';
+
+UPDATE qz.table_action
+SET sql = 
+'SELECT "form_name", "fieldname", "prompt_type", "tabindex",
+"el_class", "readonly","regex_pattern", "rows", "cols", "size", 
+"maxlength", "options", "publish_pgtype", "expand_percent_n",
+ "onfocus", "onblur", "onchange", "onselect",
+"onclick", "ondblclick", "onmousedown", "onmouseup",
+"onmouseover", "onmousemove", "onmouseout",
+"onkeypress", "onkeydown", "onkeyup"
+FROM qz.prompt_rule
+WHERE form_name = $1 AND fieldname = $2'
+WHERE form_name = 'prompt_rule_edit'
+AND action = 'edit';
+
+UPDATE qz.table_action
+SET sql =
+'INSERT INTO qz.prompt_rule
+("form_name", "fieldname", "prompt_type", "options",
+"el_class", "readonly", "regex_pattern", "rows", "cols", "size")
+VALUES
+($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+fieldnames = 
+'{form_name,fieldname,prompt_type,options,el_class,readonly,regex_pattern,
+ rows,cols,size}'
+WHERE form_name = 'prompt_rule_edit'
+AND action = 'insert';
+
+UPDATE qz.table_action
+SET sql = 
+'UPDATE qz.prompt_rule
+SET
+"prompt_type" = $1,
+"el_class" = $2,
+"readonly" = $3,
+"regex_pattern" = $4,
+"rows" = $5,
+"cols" = $6,
+"size" = $7,
+"tabindex" = $8,
+"options" = $9, 
+"maxlength" = $10,
+"onfocus" = $11, 
+"onblur" = $12, 
+"onchange" = $13, 
+"onselect" = $14, 
+"onclick" = $15, 
+"ondblclick" = $16,
+"onmousedown" = $17, 
+"onmouseup" = $18, 
+"onmouseover" = $19, 
+"onmousemove" = $20, 
+"onmouseout" = $21,
+"onkeypress" = $22, 
+"onkeydown" = $23, 
+"onkeyup" = $24,
+"publish_pgtype" = $25,
+"expand_percent_n" = $26
+WHERE form_name = $27
+AND fieldname = $28
+',
+fieldnames = 
+'{prompt_type,el_class,readonly,regex_pattern,rows,cols,size,tabindex,options,maxlength,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,publish_pgtype,expand_percent_n,form_name,fieldname}'
+WHERE form_name = 'prompt_rule_edit'
+AND action = 'update';
+
+
+
