@@ -238,7 +238,7 @@ session_from_hargs(struct handler_args* hargs,
 
     if (etag_payload == 0){
 
-        fprintf(hargs->log, "%f %d %s:%d fail session key validation\n", 
+        fprintf(hargs->log, "%f %d %s:%d session key not validated\n", 
             gettime(), hargs->request_id, __func__, __LINE__);
 
         return NULL;

@@ -11,6 +11,9 @@ PGLIBDIR!=pg_config --libdir
 XMLCFLAGS!=xml2-config --cflags
 XMLLIBDIR!=xml2-config --libs
 
+PCRECFLAGS!=pcre-config --cflags
+PCRELIBS!=pcre-config --libs
+
 #CC=clang -Wno-pointer-sign -O2
 CC=gcc 
 
@@ -56,7 +59,7 @@ qzforms.fcgi: $(OBJ) qzmain.o
 	$(CC)   -o qzforms.fcgi $(OBJ) qzmain.o \
 			$(CFLAGS) $(LFLAGS) \
             -I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-            -L$(XMLLIBDIR) \
+            -L$(XMLLIBDIR) $(PCRELIBS) \
             -lpq
 	make qz_db_install
 
@@ -204,7 +207,7 @@ test_qzconfig:qzconfig.c qzconfig.h qzrandom64.o gettime.o
 		-o test_qzconfig
 
 prompt_rule.o: prompt_rule.c qz.h 
-	$(CC) $(CFLAGS)  -Wall -c prompt_rule.c 
+	$(CC) $(CFLAGS) $(PCRECFLAGS)  -Wall -c prompt_rule.c 
     
 test_prompt_rule: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DPROMPT_RULE_MAIN  prompt_rule.c \

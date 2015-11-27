@@ -349,12 +349,25 @@ void do_page( struct handler_args* hargs ){
                 struct handler* handler;
                 handler = xmlHashLookup(handler_hash, handler_name);
 
+
                 if (handler != NULL){
                     catch_notifies(hargs);
                     handler->count++;
     
-                    // Execute the selected handler
-                    handler->handler( hargs );
+                    // The existance of a strbuf chain at hargs->data
+                    // is the sentinal indicating a regex_pattern validation
+                    // failure.  To work, it must be null now, which it
+                    // is because no output has yet been generated yet.
+                    // This note and check are to prevent future changes
+                    // from breaking this.
+                    if (hargs->data != NULL) exit(50);
+
+                    regex_patterns_are_valid(hargs);
+
+                    if (hargs->data == NULL){
+                        // Execute the selected handler
+                        handler->handler( hargs );
+                    }    
                 } 
             }    
         }else{

@@ -257,8 +257,8 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
     if (argv != NULL){
         argv[0] = tagger;
     }
-    // does not return
-    tagger_serve(conf, true);
+    // does not return, false=no debug
+    tagger_serve(conf, false);
 
     return -1;
  }

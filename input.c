@@ -83,4 +83,64 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
     return doc;
 }
 
+void validate_regex(void* val, void* data, xmlChar* key){
+    struct handler_args* h = data;
+
+    // fetch the prompt rule
+    char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
+    struct prompt_rule* rule = fetch_prompt_rule(h, form_name, key);
+    if (rule == NULL) return;
+
+    // does it have a pattern?
+    if (rule->comp_regex == NULL) return;
+    
+    // does the value fit the pattern?
+    int subject_length = strlen(val);
+    const int   ovectcount = 30;
+    int ovector[ovectcount];
+    int rc;
+
+    rc = pcre_exec(rule->comp_regex, NULL, val, subject_length, 0, 0,
+        ovector, ovectcount);
+
+    if (rc < 0){ // match failed
+
+        if (h->data == NULL){
+            // Then this is the first one, start with an
+            // explanatory note about the failure.
+            static const char* regex_failure_hdr = 
+                "One or more fields submitted failed validation.\n"
+                "This error should have been caught by the client\n"
+                "before the data was submitted.\n"
+                "You may be able to recover by using your back\n"
+                "button and correcting your data (or may not).\n\n";
+
+            h->data = new_strbuf(regex_failure_hdr, 0);
+            content_type(h, "text/plain");
+        }
+
+        char* error_msg;
+        asprintf(&error_msg, "attribute %s failed regex_pattern %s rc=%d\n\n",
+             rule->fieldname, rule->regex_pattern, rc);
+
+        strbuf_append(h->data, new_strbuf(error_msg,0));
+
+        fprintf(h->log, "%f %d %s:%d fail attribute %s regex_pattern %s rc=%d\n\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            rule->fieldname, rule->regex_pattern, rc);
+        
+        free(error_msg);
+    }
+}
+
+
+void regex_patterns_are_valid(struct handler_args* h){
+    
+    xmlHashScan(h->postdata, validate_regex, h);
+
+    fprintf(h->log, "%f %d %s:%d validation complete\n",
+        gettime(), h->request_id, __func__, __LINE__);
+
+}
+
 

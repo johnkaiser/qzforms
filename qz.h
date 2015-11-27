@@ -17,6 +17,7 @@
 #include <libxml/xmlstring.h>
 #include <libxml/xpath.h>
 #include <limits.h>
+#include <pcre.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -234,6 +235,7 @@ struct prompt_rule{
     int tabindex;
     bool expand_percent_n;
     char* regex_pattern;
+    pcre* comp_regex;
     uint64_t etag; // XXXXX can this be removed?
     char* options;
     char* free_options; // Internal bookkeeping.
@@ -307,6 +309,15 @@ extern void do_page( struct handler_args* hargs );
  *  Turn a file on disk into an xml document tree.
  */ 
 extern xmlDocPtr doc_from_file( struct handler_args*, char*);
+
+/*
+ *  regex_patters_are_valid
+ *  input.c
+ *
+ *  Search the postdata for prompt_rules with a compiled regex pattern,
+ *  and validate data values for any patterns found.
+ */
+void regex_patterns_are_valid(struct handler_args* h);
 
 /*
  *  req_login

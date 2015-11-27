@@ -103,6 +103,20 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
         rule->maxlength = strtol(get_value(rs, 0, "maxlength"), NULL, 10);
         rule->tabindex = strtol(get_value(rs, 0, "tabindex"), NULL, 10);
         rule->regex_pattern = get_value(rs, 0, "regex_pattern");
+        if (rule->regex_pattern != NULL){
+            const char* error = NULL;
+            int erroffset = 0;
+            rule->comp_regex = pcre_compile( rule->regex_pattern, 
+                PCRE_JAVASCRIPT_COMPAT|PCRE_UTF8,
+                &error, &erroffset, NULL);
+
+            if (rule->comp_regex == NULL){
+                fprintf(h->log, "%f %d %s:%d "
+                    "regex compile failed form %s field %s offset %d: %s\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    form_name, fieldname, erroffset, error);
+            }
+        }
 
         rule->expand_percent_n = get_bool(rs, 0, "expand_percent_n");
 
