@@ -50,10 +50,12 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jquery.sql 7_jscss_data.sql 8_menu.sql \
-	9_functions.sql  pgtype_datum.sql comment.sql qz_db_update_SV3.sql
+	9_functions.sql  pgtype_datum.sql comment.sql 
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
-	internal_cmds.sql qz_examples.sql
+	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql
+
+all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
 qzforms.fcgi: $(OBJ) qzmain.o
 	$(CC)   -o qzforms.fcgi $(OBJ) qzmain.o \
@@ -236,7 +238,7 @@ inc:
 	mv Version.new Version
 	cat Version
 
-qz_db_install: $(SQL)
+qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL)
 	cat $(SQL) > qz_db_install_SV$(SCHEMA_VERSION).sql
 
 tar:

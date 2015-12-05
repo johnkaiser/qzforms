@@ -180,5 +180,127 @@ fieldnames =
 WHERE form_name = 'prompt_rule_edit'
 AND action = 'update';
 
+--
+-- regex patterns - filename
+--
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) VALUES ('css_edit', 'filename', NULL, false,
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$',
+NULL, NULL, 63, 2174, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', false, false, NULL);
+
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) VALUES ('js_edit', 'filename', NULL, false,
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$',
+NULL, NULL, 63, 2174, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', false, false, NULL);
+
+
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'page_css' AND fieldname = 'filename';
+
+UPDATE qz.prompt_rule 
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'page_js' AND fieldname = 'filename';
+
+
+--
+-- regex patterns - variable_name
+--
+
+-- menu_edit
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('menu_edit', 'menu_name', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('menu_edit', 'target_div', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+-- menu_host_edit
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'menu_host_edit' 
+AND fieldname = 'menu_name';
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'menu_host_edit' 
+AND fieldname = 'host_form_name';
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'menu_host_edit' 
+AND fieldname = 'host_form_name';
+
+
+-- menu_item_edit: menu_name target_form_name action
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('menu_item_edit', 'menu_name', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('menu_item_edit', 'target_form_name', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('menu_item_edit', 'action', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+-- menu_set_edit: insert menu_name update host_form_name update action
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('menu_set_edit', 'menu_name', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'menu_set_edit' 
+AND fieldname = 'host_form_name';
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'menu_set_edit' 
+AND fieldname = 'action';
+
+-- prompt_rule: form_name, fieldname
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'prompt_rule_edit' 
+AND fieldname = 'form_name';
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('prompt_rule_edit', 'fieldname', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+-- table_action: form_name, action
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'table_action_edit' 
+AND fieldname = 'form_name';
+
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
+VALUES ('table_action_edit', 'action', 'input_text',
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+
+UPDATE qz.prompt_rule
+SET regex_pattern = 
+'^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\]\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$'
+WHERE form_name = 'table_action_edit'
+AND fieldname = 'fieldnames';
+
 
 
