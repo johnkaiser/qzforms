@@ -36,162 +36,183 @@
 #include <ctype.h>
 
 /*
+ *  hex_to_val
+ *
+ *  Turn a single ascii charecter into its numerical value.
+ *  Return -1 in case of a bad character.
+ */
+
+inline int hex_to_val(unsigned char xd){
+
+    if ((xd >= '0') && (xd <= '9')){
+        return xd - '0';
+    }
+    if ((xd >= 'a') && (xd <= 'f')){
+        return xd - 'a' + 10;
+    }
+    if ((xd >= 'A') && (xd <= 'F')){
+        return xd - 'A' + 10;
+    }
+
+    return -1;
+}
+
+
+/*
  *  hex_to_uchar
  *
  *  Convert a hex character string to an array of 
  *  unsigned chars.
+ *  An even number of hex chars must be given or 
+ *  null is returned.
  *
  *  The result must be freed.
- *
- *  There are two algorithms implementing this function.
- *
- *  If USE_BN is not defined, a home rolled 
  */
  
-#ifndef USE_BN
+unsigned char* hex_to_uchar(char* instr){
+    if (instr==NULL) return NULL;
 
-unsigned char*  hex_to_uchar(char* str){
-    if (str==NULL) return NULL;
+    int slen = strlen(instr);
 
-    int len = strlen(str);
-    if (len == 0) return NULL;
+    bool is_odd = (slen % 2 == 1);
+    if (is_odd) return NULL; 
 
-    bool is_odd = (len % 2 == 1);
-    //printf("len=%d is_odd=%c  ", len, 
-    //    (is_odd) ? 't':'f' );
+    // 200MB of hex or 100MB of text is the size limit
 
-    unsigned char* uch; 
+    if ((slen == 0) || (slen > 209715200)) return NULL;
 
-    // +1 so an odd length allocates correctly
-    uch = malloc((len+1)/2);
+    unsigned char* outstr; 
+    unsigned char const canary = 0xff;
 
-    int in; 
-    int out = 0;
-    unsigned char ch[3];
+    outstr = calloc(1, slen/2 + 4);
+    outstr[slen/2 + 2] = canary;
 
-    // If the input string contains a non-hex digit
-    // then return null.
-    if(!isxdigit(str[0])){
-        free(uch);
-        return NULL;
-    }
-    ch[0] = str[0];
-    if (is_odd){
-        ch[1] = '\0';
-        in = 1;
-        out = 1;
-    }else{
-        ch[1] = str[1];
-        ch[2] = '\0';
-        in = 2;
-        out = 1;
-        if(!isxdigit(str[1])){
-            free(uch);
-            return NULL;
+    char* outch = outstr;
+    char* inch = instr;
+
+    while (*inch != '\0'){
+        int hival,loval;
+
+        hival = hex_to_val(*inch++);
+        loval = hex_to_val(*inch++);
+        if ((hival == -1)||(loval == -1)){
+           free(outstr);
+           return NULL;
         }
-    }
-    sscanf(ch, "%hhx", uch);
-    // printf("%s=%x, ", ch, uch[0]);
-
-    while(in<len){
-
-         ch[0] = str[in];
-         ch[1] = str[in+1];
-         ch[2] = '\0';
-         if ( (!isxdigit(ch[0])) || (!isxdigit(ch[1])) ){
-             free(uch);
-             return NULL;
-         }
-         sscanf(ch, "%hhx", uch + out);
-
-         // printf("%s=%x, ", ch, uch[out]);
-         out++;
-         in+=2;
+        
+        *outch++ = hival*16 + loval;
     }
 
-    return uch;
+    if ((outstr[slen/2+1] != '\0')
+        || (outstr[slen/2+2] != canary)
+        ||  (outstr[slen/2+3] != '\0')){
+        
+        exit(51);
+    }    
+    return outstr;
 }
-#endif
 
 
-#ifdef USE_BN
-#include <openssl/bn.h>
+/*
+ *  uchar_to_hex
+ *
+ *  Convert a character string to hex.
+ *
+ *  The result must be freed.
+ */
 
-unsigned char*  hex_to_uchar(const char* str){
-    //BIGNUM* bn = BN_new();
-    BIGNUM bn;
-    BIGNUM *bnp = &bn;
+unsigned char* uchar_to_hex(unsigned char* instr){
+    if (instr == NULL) return NULL;
 
-    BN_init(&bn);
+    unsigned int slen = strlen(instr);
+    // If its more than 100MB then give up.
+    // It's a web app after all.
+    if (slen > 104857600) return NULL;
 
-    char* to;
-    int size;
+    unsigned char const canary = 0xff;
 
-    //printf("BN_hex2bn length = %d ", BN_hex2bn(&bnp, str));
-    size = BN_num_bytes(&bn);
-    to = calloc(1, size+1);
-    //printf("BN_bn2bin length = %d\n", BN_bn2bin(&bn, to));
+    unsigned char* outstr = calloc(2, slen + 4);
+    outstr[2*slen + 2] = canary;
+    unsigned char* outch = outstr;
+    unsigned char* inch;
 
-    //BN_clear_free(bn);
-    BN_clear(&bn);
-    return to;
+    for (inch=instr; *inch!='\0'; inch++){
+        div_t hexval = div(*inch, 16);
+
+        *outch++ = (hexval.quot < 10) ? '0'+hexval.quot : 'a'+hexval.quot-10;
+        *outch++ = (hexval.rem < 10) ? '0'+hexval.rem : 'a'+hexval.rem-10;
+    }
+    
+    if ((outstr[2*slen+1] != '\0')
+        || (outstr[2*slen+2] != canary)
+        || (outstr[2*slen+3] != '\0')){
+        
+        exit(52);
+    }    
+    return outstr;
 }
-#endif
+
 
 #ifdef HEX_TO_UCHAR_MAIN 
+
+extern double gettime(void);
 
 int main(void){
     char* test[] = { 
         "",
         "1",
         "12",
-        "123",
-        "1234",
-        "12345",
+        "486921",
         "123456",
-        "123456789abcdef",
+        "0123456789abcdef",
         "0",
         "00",
         "01",
         "001",
-        "0012",
+        "1200",
         "012X",
-        "0123X",
+        " 12",
+        "77616765207065616365",
+        "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0",
         NULL
     };
-    int n_test = 15;
     int nt;
 
     unsigned char* uch;
-    int len;
+    unsigned char* back;
 
-    struct timeval start;
-    struct timeval fin;
+    double prog_start = gettime();
+    double prog_fin;
+
+    double conv_start;
+    double conv_back;
+    double conv_fin;
     
-    for(nt=0; nt<n_test; nt++){
+    for(nt=0; test[nt]!=NULL; nt++){
     
-        printf("converting: %s  ", test[nt]);
-        len = (strlen(test[nt])+1)/2;
-        gettimeofday(&start, NULL); 
+        printf("converting: [%s]  ", test[nt]);
+        conv_start = gettime();
+
         uch = hex_to_uchar(test[nt]);
-        gettimeofday(&fin, NULL); 
+        conv_back = gettime();
 
-        long t = ((fin.tv_sec*1000000 + fin.tv_usec)
-             - (start.tv_sec*1000000 + start.tv_usec));
+        back = uchar_to_hex(uch);
+        conv_fin = gettime();
 
-        printf(" (%ld usec) ", t);
-    
-        int n;
-        if (uch != NULL){
-            printf("output: ");
-            for(n=0; n<len; n++){
-                printf("%02x", uch[n]);
-            }
-            printf("\n");
+        printf("hex_to_uchar [%s] %f ", uch, conv_back - conv_start);
+        printf("uchar_to_hex [%s] %f ", back, conv_fin - conv_back);
+
+        if ((test[nt] != NULL) && (back != NULL)){
+            printf("%s\n", (strcmp(test[nt],back) == 0) ? "OK":"??");
         }else{
-            printf("output is null\n");
-        }
+            printf("NULL\n");
+        }    
+        free(uch);
+        free(back);
     }
+
+    prog_fin = gettime();
+    printf("run time: %f\n", prog_fin - prog_start);
     return 0;
 }   
         
