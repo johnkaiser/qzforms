@@ -63,7 +63,6 @@ qzforms.fcgi: $(OBJ) qzmain.o
             -I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
             -L$(XMLLIBDIR) $(PCRELIBS) \
             -lpq
-	make qz_db_install
 
 qzmain.o: qzmain.c qz.h
 	$(CC) $(CFLAGS)  -DQZVER="$(VERSION)" -c qzmain.c
