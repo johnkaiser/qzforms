@@ -74,6 +74,7 @@ if [ "$idcheck" ]; then
     exit 1
 fi
 
+INSTALL_FROM=$(dirname $0)
 ###########################################################################
 ##
 ##  Create the installation directory
@@ -86,9 +87,9 @@ install -d -m 755 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALLDIR}
 ##  It must be read only for the account running the fast-cgi process.
 ##
 install -d -m 750 -o ${ADMINUSER} -g ${RUNGROUP}  ${INSTALLDIR}/libexec
-install -m 550 -o ${ADMINUSER} -g ${RUNGROUP} qzforms.fcgi \
+install -m 550 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.fcgi \
     ${INSTALLDIR}/libexec/ 
-install -m 544 -o ${ADMINUSER} -g ${RUNGROUP} qzforms.init \
+install -m 544 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.init \
     ${INSTALLDIR}/libexec/ 
 
 ##
@@ -96,7 +97,7 @@ install -m 544 -o ${ADMINUSER} -g ${RUNGROUP} qzforms.init \
 ##
 install -d -m 775 -o ${ADMINUSER} -g ${FORMDEVGROUP} ${INSTALLDIR}/templates
 install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
-    templates/base.xml templates/login.xml \
+    ${INSTALL_FROM}/templates/base.xml ${INSTALL_FROM}/templates/login.xml \
     ${INSTALLDIR}/templates 
 
 ##
@@ -106,7 +107,7 @@ install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
 ##
 install -d -m 750 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALLDIR}/config
 if [ ! -f ${INSTALLDIR}/config/qzforms.conf ]; then
-    install -m 640 -o ${ADMINUSER} -g ${RUNGROUP} qzforms.conf \
+    install -m 640 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.conf \
         ${INSTALLDIR}/config
 fi
 
