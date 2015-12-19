@@ -326,7 +326,7 @@ char* pgtype_datum_to_json(struct pgtype_datum* datum){
         "  \"description\": \"%s\",\n"
         "  \"is_updatable\": \"%s\",\n"
         "  \"enum_labels\": %s,\n"
-        "  \"composite_attributes\": %s\n"
+        "  \"composite_attributes\": %s,\n"
         "  \"has_fkey\": \"%s\",\n"
         "  \"fkey_schema\": \"%s\",\n"
         "  \"fkey_table\": \"%s\",\n"
