@@ -173,8 +173,9 @@ qzrandom64_test: qzrandom64.c qzrandom64.h
 hex_to_uchar.o: hex_to_uchar.c
 	$(CC) $(CFLAGS) -c hex_to_uchar.c
 
-hex_to_uchar_test: hex_to_uchar.c
-	$(CC) $(CFLAGS) -DHEX_TO_UCHAR_MAIN hex_to_uchar.c -lcrypto -o hex_to_uchar_test
+hex_to_uchar_test: hex_to_uchar.c gettime.o
+	$(CC) $(CFLAGS) -Wstack-protector -DHEX_TO_UCHAR_MAIN hex_to_uchar.c \
+	gettime.o -lcrypto -o hex_to_uchar_test
 
 crypto_etag.o: crypto_etag.c crypto_etag.h
 	$(CC) $(CFLAGS) -c crypto_etag.c
