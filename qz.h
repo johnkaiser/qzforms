@@ -17,6 +17,8 @@
 #include <libxml/xmlstring.h>
 #include <libxml/xpath.h>
 #include <limits.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 #include <pcre.h>
 #include <pthread.h>
 #include <signal.h>
@@ -227,6 +229,7 @@ struct prompt_rule{
     char* prompt_type;
     char* el_class;
     bool readonly;
+    char* regex_pattern;
     bool publish_pgtype;
     int rows;
     int cols;
@@ -234,7 +237,6 @@ struct prompt_rule{
     int maxlength;
     int tabindex;
     bool expand_percent_n;
-    char* regex_pattern;
     pcre* comp_regex;
     uint64_t etag; // XXXXX can this be removed?
     char* options;
@@ -902,3 +904,13 @@ extern bool form_name_is_menu(struct handler_args*);
  */
 extern void add_helpful_text(struct handler_args* h, struct table_action* ta,
     xmlNodePtr root_node); 
+
+/*
+ *  char* base64_encode
+ *
+ *  Return a base64 encoded copy of a string.
+ *
+ *  The result must be freed.
+ */
+extern char* base64_encode(char*);
+

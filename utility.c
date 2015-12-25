@@ -341,3 +341,29 @@ void add_helpful_text(struct handler_args* h, struct table_action* ta,
     }
     return;
 }
+
+
+/*
+ *  base64_encode
+ *
+ *  Return a string that is base64 encoded from the given string.
+ *
+ *  The result must be freed.
+ */
+char* base64_encode(char* astr){
+    if (astr == NULL) return NULL;
+
+    BIO* b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+
+    BIO* bio = BIO_new(BIO_s_mem());
+    BIO_push(b64, bio);
+
+    BIO_write(b64, astr, strlen(astr));
+    BIO_flush(b64);
+    int nbytes = BIO_pending(bio);
+    char* str_encoded = calloc(1, nbytes+2);
+    BIO_read(bio, str_encoded, nbytes);
+
+    return str_encoded;
+}
