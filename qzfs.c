@@ -163,6 +163,12 @@ void qzfs(struct handler_args* h){
 
     // It.
     h->data = new_strbuf( PQgetvalue(rs, 0, PQfnumber(rs, "data")),0); 
+
+    fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d\n",
+        gettime(), h->request_id, __func__, __LINE__, 
+        which_name, PQgetlength(rs, 0, PQfnumber(rs, "data")));
+
+
     free(a_name);
     a_name = NULL;
     PQclear(rs);
