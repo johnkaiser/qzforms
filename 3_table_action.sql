@@ -181,7 +181,7 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, hel
 FROM qz.menu_set
 WHERE menu_name = $1
 ORDER BY host_form_name, action', '{menu_name}', '{menu_name}', 2097, 'This is a table interface that ties a particular menu_name  to a particular table action.
-"host_form_name" is the page hosting the given menu name.  A blank action implies all actions
+"host_form_name" is the page hosting the given menu name.  A action of any implies all actions
 for the given host_form_name.');
 
 --
