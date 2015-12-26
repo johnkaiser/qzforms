@@ -242,7 +242,7 @@ qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL)
 	cat $(SQL) > qz_db_install_SV$(SCHEMA_VERSION).sql
 
 tar:
-	tar -cz -s '|^|qzforms_$(VERSION)/|' -f qzforms_$(VERSION).tgz $(FILES) $(SQL) $(DOCS)
+	tar -cz -s '|^|qzforms_$(VERSION)/|' -f qzforms-$(VERSION).tgz $(FILES) $(SQL) $(DOCS)
 
 # XXXXX add all the tests
 clean:
