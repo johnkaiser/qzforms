@@ -783,9 +783,10 @@ xmlNodePtr add_textarea(struct prompt_add_args* args){
 char* json_add_element_args(char* func_name, struct prompt_rule* rule, 
     char* option_ar[]){
 
-     static const char* empty = "\0\0";
-
-     if ((rule==NULL) || (rule->fieldname==NULL)) return (char*) empty;
+     if ((rule==NULL) || (rule->fieldname==NULL)){
+         char* empty = calloc(1,2);
+         return (char*) empty;
+     }
 
      char* fieldname = NULL;
      asprintf(&fieldname, "\"fieldname\":\"%s\" ", rule->fieldname);
@@ -810,6 +811,13 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
          asprintf(&readonly, "\"readonly\":\"%s\", ", 
              (rule->readonly) ? "true":"false");
      }        
+
+     char* pattern = "";
+     if (rule->regex_pattern[0] != '\0' ){
+         char* pattern64 = base64_encode(rule->regex_pattern);
+         asprintf(&pattern, "\"pattern\":\"%s\", ", pattern64);
+         free(pattern64);
+     }
 
      char* rows = "";
      if (rule->rows > 0){
@@ -847,62 +855,86 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      
      char* onblur = "";
      if (rule->onblur[0] != '\0'){
-         asprintf(&onblur, "\"onblur\":\"%s\", ", rule->onblur);
+         char* onblur64 = base64_encode(rule->onblur);
+         asprintf(&onblur, "\"onblur\":\"%s\", ", onblur64);
+         free(onblur64);
      }    
 
      char* onchange = "";
      if (rule->onchange[0] != '\0'){
-         asprintf(&onchange, "\"onchange\":\"%s\", ", rule->onchange);
+         char* onchange64 = base64_encode(rule->onchange);
+         asprintf(&onchange, "\"onchange\":\"%s\", ", onchange64);
+         free(onchange64);
      }    
 
      char* onclick = "";
      if (rule->onclick[0] != '\0'){
-         asprintf(&onclick, "\"onclick\":\"%s\", ", rule->onclick);
+         char* onclick64 = base64_encode(rule->onclick);
+         asprintf(&onclick, "\"onclick\":\"%s\", ", onclick64);
+         free(onclick64);
      }    
 
      char* ondblclick = "";
      if (rule->ondblclick[0] != '\0'){
-         asprintf(&ondblclick, "\"ondblclick\":\"%s\", ", rule->ondblclick);
+         char* ondblclick64 = base64_encode(rule->ondblclick);
+         asprintf(&ondblclick, "\"ondblclick\":\"%s\", ", ondblclick64);
+         free(ondblclick64);
      }
 
      char* onfocus = "";
      if (rule->onfocus[0] != '\0'){ 
+         char* onfocus64 = base64_encode(rule->onfocus);
          asprintf(&onfocus, "\"onfocus\":\"%s\", ", rule->onfocus);
+         free(onfocus64);
      }    
 
      char* onkeypress = "";
      if (rule->onkeypress[0] != '\0'){
+         char* onkeypress64 = base64_encode(rule->onkeypress);
          asprintf(&onkeypress, "\"onkeypress\":\"%s\", ", rule->onkeypress);
+         free(onkeypress64);
      }    
 
      char* onkeyup = "";
      if (rule->onkeyup[0] != '\0'){
+         char* onkeyup64 = base64_encode(rule->onkeyup);
          asprintf(&onkeyup, "\"onkeyup\":\"%s\", ", rule->onkeyup);
+         free(onkeyup64);
      }    
 
      char* onkeydown = "";
      if (rule->onkeydown[0] != '\0'){
+         char* onkeydown64 = base64_encode(rule->onkeydown);
          asprintf(&onkeydown, "\"onkeydown\":\"%s\", ", rule->onkeydown);
+         free(onkeydown64);
      }    
 
      char* onmousedown = "";
      if (rule->onmousedown[0] != '\0'){
+         char* onmousedown64 = base64_encode(rule->onmousedown);
          asprintf(&onmousedown, "\"onmousedown\":\"%s\", ", rule->onmousedown);
+         free(onmousedown64);
      }
 
      char* onmouseout = "";
      if (rule->onmouseout[0] != '\0'){
+         char* onmouseout64 = base64_encode(rule->onmouseout);
          asprintf(&onmouseout, "\"onmouseout\":\"%s\", ", rule->onmouseout);
+         free(onmouseout64);
      }
 
      char* onmouseover = "";
      if (rule->onmouseover[0] != '\0'){
-        asprintf(&onmouseover, "\"onmouseover\":\"%s\",  ", rule->onmouseover);
+         char* onmouseover64 = base64_encode(rule->onmouseover);
+         asprintf(&onmouseover, "\"onmouseover\":\"%s\",  ", onmouseover64);
+         free(onmouseover64);
      }
 
      char* onselect = "";
      if (rule->onselect[0] != '\0'){
-         asprintf(&onselect, "\"onselect\":\"%s\", ", rule->onselect);
+         char* onselect64 = base64_encode(rule->onselect);
+         asprintf(&onselect, "\"onselect\":\"%s\", ", onselect64);
+         free(onselect64);
      }
 
      //char* end = "\"z\":\"end\""; // no comma, lame hack
@@ -911,30 +943,31 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
 
 
      if (func_name == NULL){
-     asprintf(&json_args, "{%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}",
-         prompt_type, el_class, expand_percent_n, readonly, 
-         rows, cols, size, maxlength, tabindex, options,
-         onblur, onchange, onclick, ondblclick, onfocus,
-         onkeypress, onkeyup, onkeydown, onmousedown, onmouseout,
-         onmouseover, onselect,
-         fieldname 
-         );
+         asprintf(&json_args, "{%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}",
+             prompt_type, el_class, expand_percent_n, readonly, pattern, 
+             rows, cols, size, maxlength, tabindex, options,
+             onblur, onchange, onclick, ondblclick, onfocus,
+             onkeypress, onkeyup, onkeydown, onmousedown, onmouseout,
+             onmouseover, onselect,
+             fieldname);
+
      }else{
-         asprintf(&json_args, "%s({%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s});",
-         func_name,
-         prompt_type, el_class, expand_percent_n, readonly, 
-         rows, cols, size, maxlength, tabindex, options,
-         onblur, onchange, onclick, ondblclick, onfocus,
-         onkeypress, onkeyup, onkeydown, onmousedown, onmouseout,
-         onmouseover, onselect,
-         fieldname 
-         );
+         asprintf(&json_args, "%s({%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s});",
+             func_name,  // Having this requires name() around the object
+             prompt_type, el_class, expand_percent_n, readonly, pattern,
+             rows, cols, size, maxlength, tabindex, options,
+             onblur, onchange, onclick, ondblclick, onfocus,
+             onkeypress, onkeyup, onkeydown, onmousedown, onmouseout,
+             onmouseover, onselect,
+             fieldname);
+
      }
      free(fieldname);
      if (prompt_type[0] != '\0') free(prompt_type);
      if (el_class[0] != '\0') free(el_class);
      if (expand_percent_n[0] != '\0') free(expand_percent_n);
      if (readonly[0] != '\0') free(readonly);
+     if (pattern[0] != '\0') free(pattern);
      if (rows[0] != '\0') free(rows);
      if (size[0] != '\0') free(size);
      if (maxlength[0] != '\0') free(maxlength);

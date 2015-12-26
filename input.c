@@ -125,9 +125,9 @@ void validate_regex(void* val, void* data, xmlChar* key){
 
         strbuf_append(h->data, new_strbuf(error_msg,0));
 
-        fprintf(h->log, "%f %d %s:%d fail attribute %s key %s regex_pattern %s rc=%d\n\n",
+        fprintf(h->log, "%f %d %s:%d fail attribute \"%s\" val [%s] regex_pattern %s rc=%d\n\n",
             gettime(), h->request_id, __func__, __LINE__,
-            rule->fieldname, key, rule->regex_pattern, rc);
+            rule->fieldname, val, rule->regex_pattern, rc);
         
         free(error_msg);
     }

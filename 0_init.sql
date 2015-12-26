@@ -65,8 +65,11 @@ CREATE TABLE qz.constants (
     key boolean PRIMARY KEY CONSTRAINT one_row CHECK(key),
     schema_version int
 );
-INSERT INTO qz.constants (key, schema_version) VALUES ('t', '3');
 
+--
+-- Set the Schema Version
+--
+INSERT INTO qz.constants (key, schema_version) VALUES ('t', '3');
 
 CREATE TABLE qz.change_history (
     change_id serial primary key,
@@ -79,5 +82,6 @@ CREATE TABLE qz.change_history (
 INSERT INTO qz.change_history 
   (change_description) 
   VALUES 
-  ('First install');
+  ('First install Schema Version '||
+    (SELECT schema_version FROM qz.constants));
 

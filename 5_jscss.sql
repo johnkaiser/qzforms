@@ -40,7 +40,10 @@ CREATE TABLE qz.page_js (
 -- css
 --
 
-INSERT INTO qz.css (filename, mimetype, modtime, etag, data) VALUES ('login_process.css', 'text/css', '2014-08-10 12:34:54.600325', 109, 'table {
+INSERT INTO qz.css (filename, mimetype, modtime, data) 
+VALUES ('login_process.css', 'text/css', '2014-08-10 12:34:54',
+$LP$
+table {
     border-collapse: collapse;
     border: 2pt solid black;
 }
@@ -62,8 +65,13 @@ i {
 
 dd {
    margin-bottom: 1.0ex;
-}');
-INSERT INTO qz.css (filename, mimetype, modtime, etag, data) VALUES ('qzforms.css', 'text/css', '2015-05-26 20:43:16.217704', 2152, '.bold {font-weight:bold;}
+}
+$LP$);
+
+INSERT INTO qz.css (filename, mimetype, modtime, data) 
+VALUES ('qzforms.css', 'text/css', '2015-05-26 20:43:16',
+$QZF$
+.bold {font-weight:bold;}
   .light { color: #999; }
   legend {font-size: 50%;}
   table.qztablez { border: 2pt solid black; border-collapse: collapse; }
@@ -151,14 +159,21 @@ input.menu_button {
     display: table;
     font-weight: bold;
 }
-');
-INSERT INTO qz.css (filename, mimetype, modtime, etag, data) VALUES ('blue.css', 'text/css', '2015-05-30 17:23:51.594153', 2247, 'body {
+$QZF$);
+
+INSERT INTO qz.css (filename, mimetype, modtime, data) 
+VALUES ('blue.css', 'text/css', '2015-05-30 17:23:51',
+$B$
+body {
     background: lightblue;
     color: darkblue;
-}');
+}
+$B$);
 
-INSERT INTO qz.css (filename, mimetype, modtime, etag, data) VALUES ('form_edit.css', 'text/css', 
- '2015-06-22 08:47:51.535663', 467, '#pagemenu {
+INSERT INTO qz.css (filename, mimetype, modtime, data) 
+VALUES ('form_edit.css', 'text/css', '2015-06-22 08:47:51',
+$FE$
+#pagemenu {
     float:left;
     width: 11em;
 }
@@ -168,13 +183,17 @@ INSERT INTO qz.css (filename, mimetype, modtime, etag, data) VALUES ('form_edit.
 
 #qz {
    margin-left: 12em;
-}');
+}
+$FE$);
 
 
 --
 -- js
 --
-INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('encodeFormData.js', 'text/javascript', '2014-07-27 14:58:06.889344', 104, '/**
+INSERT INTO qz.js (filename, mimetype, modtime, data) 
+VALUES ('encodeFormData.js','text/javascript','2014-07-27 14:58:06',
+$EFD$
+/**
  * Encode the properties of a form if they were name/value pairs from
  * an HTML form, using application/x-www-form-urlencoded format
  *
@@ -193,11 +212,30 @@ function encodeFormData(data) {
         value = encodeURIComponent(value).replace("%20", "+"); // Encode value
         pairs.push(name + "=" + value);   // Remember name=value pair
     }
-    return pairs.join(''&''); // Return joined pairs separated with &
-}');
+    return pairs.join('&'); // Return joined pairs separated with &
+}
+$EFD$);
 
 
-INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('qzforms.js', 'text/javascript; charset=utf-8', '2015-03-23 21:49:31.300949', 1685, 'var httpRequest;
+INSERT INTO qz.js (filename, mimetype, modtime, data) 
+VALUES ('qzforms.js', 'text/javascript; charset=utf-8', '2015-03-23 21:49:31',
+$QZJS$
+var httpRequest;
+
+/*
+ *  base64_attribs
+ *
+ *  These are base64 encoded before being encapsulated in a JSON object.
+ *  This avoids a lot of ugliness from slashes and quotes, but the
+ *  attribute must be decoded prior to being added to an element.
+ *
+ *  Used by add_array_input and set_common_attributes via  grid_add_row.
+ */
+var base64_attribs = {'pattern':true, 'onfocus':true, 'onblur':true,
+    'onchange':true, 'onselect':true, 'onclick':true,
+    'ondblclick':true, 'onmousedown':true, 'onmouseup':true,
+    'onmouseover':true, 'onmousemove':true, 'onkeypress':true,
+    'onkeydown':true, 'onkeyup':true};
 
 /*
  *  form_refresh
@@ -212,16 +250,16 @@ function form_refresh(){
     var nel;
     var f;
     var postdata;
-    var refresh = "/" + window.location.pathname.split(''/'')[1] + "/refresh";
+    var refresh = "/" + window.location.pathname.split('/')[1] + "/refresh";
     for (nf=0; nf < document.forms.length; nf++ ){
         f = document.forms[nf];
         
         for(nel=0; nel < f.elements.length; nel++){
             if ((f.elements[nel].name == "form_tag") && 
-                (f.elements[nel].getAttribute(''refresh'') == 1) ){
+                (f.elements[nel].getAttribute('refresh') == 1) ){
 
-                console.log("f.elements["+nel+"].getAttribute(''refresh'')=" + 
-                     f.elements[nel].getAttribute(''refresh'') );
+                console.log("f.elements["+nel+"].getAttribute('refresh')=" + 
+                     f.elements[nel].getAttribute('refresh') );
 
                 form_tag = f.elements[nel].value;
                 postdata = "form_tag=" + encodeURIComponent(form_tag);
@@ -305,7 +343,11 @@ function add_array_input(rule_esc){
     for(attr in rule){
         if(attr != "fieldname"){
             attr_val = rule[attr];
-            if( needs_nbr.test(attr_val) ){
+            if (attr_val == "") continue;
+            if (attr in base64_attribs){
+                attr_val = window.atob(attr_val);
+            }    
+            if ( needs_nbr.test(attr_val) ){
                 attr_val = attr_val.replace("%n", next_val);
             }
             new_input.setAttribute(attr, attr_val);
@@ -330,28 +372,34 @@ function add_array_input(rule_esc){
 function change_status(row_index, new_status){
     
     var allowed =  new Object();
-    allowed[''>I''] = true;
-    allowed[''I>X''] = true;
-    allowed[''E>U''] = true;
-    allowed[''E>D''] = true;
+    allowed['>I'] = true;
+    allowed['I>X'] = true;
+    allowed['E>U'] = true;
+    allowed['E>D'] = true;
           
     var chg_st_name = "change_status["+row_index+"]";
     var chg_st_el = document.getElementById(chg_st_name);
      
     if (chg_st_el){
-        var transition = chg_st_el.value + ''>'' + new_status;
+        var transition = chg_st_el.value + '>' + new_status;
         if (allowed[transition]){
         
             chg_st_el.value = new_status;
 
         }            
     }else{
-        console.log(''getElementById(''+chg_st_name+'') returned null'');
+        console.log('getElementById('+chg_st_name+') returned null');
     }
-}');
+}
+$QZJS$
+);
 
 
-INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('grid.js', 'text/javascript', '2015-03-14 16:41:05.85443', 1626, '/*
+
+INSERT INTO qz.js (filename, mimetype, modtime, data) 
+VALUES ('grid.js', 'text/javascript', '2015-03-14 16:41:05',
+$GJS$
+/*
  *  get_next_row_index
  *
  *  Search the grid table for the row numbers and
@@ -359,7 +407,7 @@ INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('grid.js', '
  */
 
 function get_next_row_index(){
-    var el_list = document.getElementsByClassName(''change_status'');
+    var el_list = document.getElementsByClassName('change_status');
     var max_index = -1;
     var is_valid_change_status = /change_status\[[0-9]+\]/;
     var brackets = /\[[0-9]+\]/;
@@ -392,9 +440,9 @@ function grid_add_row(){
 
     var next_index = get_next_row_index();
 
-    var grid_table = document.getElementById(''grid_edit_tbody'');
+    var grid_table = document.getElementById('grid_edit_tbody');
     if (!grid_table){
-        console.log(''id grid_edit_tbody not found'');
+        console.log('id grid_edit_tbody not found');
         return;
     }
  
@@ -417,13 +465,13 @@ function grid_add_row(){
     delete_btn.appendChild( document.createTextNode("Delete") );
     delete_btn.setAttribute("type", "button");
     delete_btn.setAttribute("onclick", 
-        "grid_delete_row("+next_index.toString()+",''X'')" );
+        "grid_delete_row("+next_index.toString()+",'X')" );
 
     td.appendChild(delete_btn);
 
-    var add_row_form = document.getElementById(''add_row_form'');
+    var add_row_form = document.getElementById('add_row_form');
     
-    var new_inputs = add_row_form.getElementsByTagName(''input'');
+    var new_inputs = add_row_form.getElementsByTagName('input');
     var k, some_input, p_rule, attr;
     
     for (k=0; k< new_inputs.length; k++){
@@ -431,18 +479,16 @@ function grid_add_row(){
         tr.appendChild(td);
         
         some_input = new_inputs.item(k);
-        if ((some_input != null) && (some_input.hasAttribute(''prompt_rule''))){
-           attr = some_input.getAttribute(''prompt_rule'');
-           console.log( ''input ''+k.toString()+'' prompt_rule ''+attr);
+        if ((some_input != null) && (some_input.hasAttribute('prompt_rule'))){
+           attr = some_input.getAttribute('prompt_rule');
+
            attr = decodeURIComponent(attr);
-           console.log(''decoded '' + attr);
+           console.log('decoded input ' + attr);
            p_rule = JSON.parse(attr); 
            td.setAttribute("class", p_rule["fieldname"]);
            if (p_rule.prompt_type == "input_hidden"){
                td.className += " " + "input_hidden";
            }         
-           console.log("prompt_rule from JSON is "+ 
-               some_input.getAttribute(''prompt_rule''));
         }else{
             p_rule = null;
         }
@@ -452,7 +498,6 @@ function grid_add_row(){
             p_rule.prompt_type = "input_text";
             console.log("default prompt_rule created for "+ some_input.id);
         }
-        console.log("some_input "+ next_index.toString()+" "+ some_input.id);
         add_prompt(td, some_input.id, p_rule, next_index);
     }
    
@@ -468,14 +513,18 @@ function grid_delete_row(row_index, delete_flag){
      // XXXXXXXXXX 
      // var tr = document.getElementById(_)
     return false;
-}');
+}
+$GJS$);
 
 
-INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('prompt_rule.js', 'text/javascript', '2015-03-14 16:34:53.211068', 1625, '/*
+INSERT INTO qz.js (filename, mimetype, modtime, data) 
+VALUES ('prompt_rule.js', 'text/javascript', '2015-12-15 21:16:12',
+$PRJS$
+/*
  *  add_input_text
  *
  *  The simplest case, <input type=text...
- *  except you don''t have to type it.
+ *  except you don't have to type it.
  */
 
 function add_input_text(parent_el, fieldname, prompt_rule, row_index){
@@ -492,12 +541,12 @@ function add_input_text(parent_el, fieldname, prompt_rule, row_index){
     new_input.setAttribute("id", id);
     new_input.setAttribute("type", "text");
     
-    if (''size'' in prompt_rule){
-        new_input.setAttribute(''size'', prompt_rule[''size'']);
+    if ('size' in prompt_rule){
+        new_input.setAttribute('size', prompt_rule['size']);
     }
 
-    if (''maxlength'' in prompt_rule){
-        new_input.setAttribute(''maxlength'', prompt_rule[''maxlength'']);
+    if ('maxlength' in prompt_rule){
+        new_input.setAttribute('maxlength', prompt_rule['maxlength']);
     } 
 
     parent_el.appendChild(new_input);
@@ -628,12 +677,12 @@ function add_textarea(parent_el, fieldname, prompt_rule, row_index){
     textarea.setAttribute("id", id);
     textarea.setAttribute("type", "textarea");
 
-    if (''rows'' in prompt_rule){
-        textarea.setAttribute(''rows'', prompt_rule[''rows'']);
+    if ('rows' in prompt_rule){
+        textarea.setAttribute('rows', prompt_rule['rows']);
     }
 
-    if (''cols'' in prompt_rule){
-        textarea.setAttribute(''cols'', prompt_rule[''cols'']);
+    if ('cols' in prompt_rule){
+        textarea.setAttribute('cols', prompt_rule['cols']);
     }
     set_common_attributes(textarea, fieldname, prompt_rule, row_index);
 
@@ -665,15 +714,15 @@ function add_button(parent_el, fieldname, prompt_rule, row_index){
 
 function set_common_attributes(new_input_el, fieldname, prompt_rule, row_index){
 
-    var attribs = [''onfocus'', ''onblur'', ''onchange'', ''onselect'',
-        ''onclick'', ''ondblclick'', ''onmousedown'', ''onmouseup'', ''onmouseover'',
-        ''onmousemove'', ''onkeypress'', ''onkeydown'', ''onkeyup'',
-        ''readonly'', ''tabindex'', ''etag'' ];
+    var attribs = ['pattern', 'onfocus', 'onblur', 'onchange', 'onselect',
+        'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover',
+        'onmousemove', 'onkeypress', 'onkeydown', 'onkeyup',
+        'readonly', 'tabindex', 'etag' ];
 
     if (!new_input_el){
-        console.log(''set_common_attributes called on a null input element.'');
+        console.log('set_common_attributes called on a null input element.');
         if (prompt_rule){
-            console.log('' on prompt_rule.fieldname'');
+            console.log(' on prompt_rule.fieldname');
         }
         return;
     }
@@ -683,13 +732,14 @@ function set_common_attributes(new_input_el, fieldname, prompt_rule, row_index){
     for (k=0; k < attribs.length; k++){
         if (attribs[k] in prompt_rule){
             attr = prompt_rule[attribs[k]];
-
+            if (attr == "") continue;
+            if (attribs[k] in base64_attribs){
+                attr = window.atob(attr);
+            }
             if (prompt_rule.expand_percent_n){
                 attr = attr.replace("%n", row_index.toString());
             }
             new_input_el.setAttribute(attribs[k], attr);
-
-
        }
     }
     new_input_el.setAttribute("class", fieldname.split("[")[0]);
@@ -710,7 +760,7 @@ function add_prompt(parent_el, fieldname, prompt_rule, row_index){
 
     // XXXXXX Make sure there is a prompt_rule. 
     // Set row_index to 0 if it is not an integer.
-    if ( ! prompt_rule.hasOwnProperty(''fieldname'') ){
+    if ( ! prompt_rule.hasOwnProperty('fieldname') ){
         console.log( "prompt_rule has no fieldname");
         return;
     }
@@ -745,10 +795,14 @@ function add_prompt(parent_el, fieldname, prompt_rule, row_index){
             break;
     }
 
-}');
+}
+$PRJS$);
 
 
-INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('document_ready.js', 'text/javascript', '2015-06-01 20:48:14.15958', 2248, '  $(document).ready(function() 
+INSERT INTO qz.js (filename, mimetype, modtime, data) 
+VALUES ('document_ready.js', 'text/javascript', '2015-06-01 20:48:14',
+$DR$
+  $(document).ready(function() 
     { 
         $("#pg_stat_activity").tablesorter(); 
         $("#table_action").tablesorter();
@@ -758,7 +812,7 @@ INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('document_re
         $("#listmgr").tablesorter();
         $("#form_tags").tablesorter();
         $(".qztable").hide();
-        console.log(''document ready executed'');
+        console.log('document ready executed');
     } 
 
   );
@@ -773,7 +827,8 @@ INSERT INTO qz.js (filename, mimetype, modtime, etag, data) VALUES ('document_re
 	  el = document.getElementById(id);
 	  attrib = el.getAttribute("pgtype");
 	  alert("pgtype_datum="+decodeURIComponent(attrib));
-  }	');
+  }
+$DR$);
 
 
 
