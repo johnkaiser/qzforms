@@ -50,7 +50,12 @@ For nginx:
 location /qz/ {
     include fastcgi_params;
     fastcgi_pass 192.168.1.1:9991;
+    fastcgi_buffering off;
 }
+
+Use a port number that suits you, or use a unix domain socket.
+
+For nginx, turn off buffering or large files or datasets will be served chopped. 
 
 For Apache2, inside a VirtualHost add:
 FastCgiExternalServer  "/var/www/html/qz" -host 127.0.0.1:8888
