@@ -12,6 +12,7 @@ The prerequisites are:
    PostgreSQL Client library for libpq-fe 
    BSD make, default on OpenBSD, bmake on Debian
    libxml2, libxml2-dev on Debian
+   PCRE for javascript style regex validation
    GCC or Clang
    FastCGI Developement Kit, fcgi on OpenBSD, libfcgi-dev on Debian
    On Debian, libasprintf-dev for asprintf support
