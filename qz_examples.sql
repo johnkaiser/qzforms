@@ -15,6 +15,14 @@ CREATE TABLE location (
     loc_name text PRIMARY KEY
 );
 
+INSERT INTO qz.css (filename, mimetype, modtime, data) 
+VALUES ('blue.css', 'text/css', '2015-05-30 17:23:51',
+$B$
+body {
+    background: lightblue;
+    color: darkblue;
+}
+$B$);
 
 INSERT INTO location (loc_name) VALUES ('some place');
 INSERT INTO location (loc_name) VALUES ('a place');
