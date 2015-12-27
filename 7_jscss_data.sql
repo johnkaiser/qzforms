@@ -44,13 +44,9 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('fixed_parameter
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('fixed_parameters', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('fixed_parameters', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('fixed_parameters', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('fixed_parameters', 40, 'prompt_rule.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('fixed_parameters', 50, 'grid.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_host_edit', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_host_edit', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_host_edit', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_host_edit', 40, 'prompt_rule.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_host_edit', 50, 'grid.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('table_action_edit', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('table_action_edit', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('table_action_edit', 30, 'qzforms.js');
@@ -69,23 +65,15 @@ INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('css_edit', 3, 'q
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_js', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_js', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_js', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_js', 40, 'prompt_rule.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_js', 50, 'grid.js');
-
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_css', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_css', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_css', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_css', 40, 'grid.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('page_css', 50, 'prompt_rule.js');
-
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_item_edit', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_item_edit', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_item_edit', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_set_edit', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_set_edit', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_set_edit', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_set_edit', 40, 'prompt_rule.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_set_edit', 50, 'grid.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_edit', 10, 'jquery-2.1.4.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_edit', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_edit', 30, 'qzforms.js');

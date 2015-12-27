@@ -138,12 +138,6 @@ VALUES ('gridle', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) 
 VALUES ('gridle', 30, 'qzforms.js');
 
-INSERT INTO qz.page_js (form_name, sequence, filename) 
-VALUES ('gridle', 40, 'prompt_rule.js');
-
-INSERT INTO qz.page_js (form_name, sequence, filename) 
-VALUES ('gridle', 50, 'grid.js');
-
 INSERT INTO qz.prompt_rule (form_name, fieldname, readonly, regex_pattern, rows, 
 cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect,
 onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, 

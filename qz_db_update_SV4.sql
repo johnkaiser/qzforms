@@ -9,6 +9,11 @@ DELETE FROM qz.js
   WHERE filename = 'grid.js' 
   OR filename = 'prompt_rule.js';
 
+DELETE FROM qz.menu_set_edit
+  WHERE filename = 'grid.js' 
+  OR filename = 'prompt_rule.js';
+
+
 --
 -- Correct mistakes in SV3
 -- css_edit filename fields in wrong place,
