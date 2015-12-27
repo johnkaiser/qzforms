@@ -18,39 +18,46 @@ PCRELIBS!=pcre-config --libs
 CC=gcc 
 
 CFLAGS=-Wall \
-       -I/usr/local/include \
-	   -ggdb  \
-	   -fPIC \
-	   $(XMLCFLAGS) \
-       -I$(PGINCLUDEDIR)
+	-I/usr/local/include \
+	-ggdb  \
+	-fPIC \
+	$(XMLCFLAGS) \
+	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
 SCHEMA_VERSION=3
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
-    str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
-    input.o output.o strbuf.o menu.o utility.o strbufs.o \
-    parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
+	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
+	input.o output.o strbuf.o menu.o utility.o strbufs.o \
+	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
-    hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
-    grid.o
+	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
+	grid.o
 
 FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	templates/base.xml templates/login.xml qzforms.init README.txt \
 	strbuf.c strbuf.h \
 	http_codes.h qzrandom64.h crypto_etag.h \
 	qzmain.c qzhandlers.c timestamp.c  onetable.c \
-    str_to_array.c qzGetElementByID.c session.c login.c cookie.c \
-    input.c output.c menu.c utility.c strbufs.c \
-    parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
+	str_to_array.c qzGetElementByID.c session.c login.c cookie.c \
+	input.c output.c menu.c utility.c strbufs.c \
+	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom64.c crypto_etag.c tagger.h tagger.c \
-    hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
+	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
 	form_tag.c prompt_rule.c grid.c
 
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jquery.sql 7_jscss_data.sql 8_menu.sql \
 	9_functions.sql  pgtype_datum.sql comment.sql 
+
+JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
+	js/add_input_radio.js js/add_input_text.js js/add_prompt.js \
+	js/add_select_options.js js/add_text_area.js js/base64_attribs.js\
+	js/change_status.js js/form_refresh.js js/form_refresh_init.js \
+	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
+	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
 	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql
@@ -59,10 +66,10 @@ all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
 qzforms.fcgi: $(OBJ) qzmain.o
 	$(CC)   -o qzforms.fcgi $(OBJ) qzmain.o \
-			$(CFLAGS) $(LFLAGS) \
-            -I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-            -L$(XMLLIBDIR) $(PCRELIBS) \
-            -lpq
+		$(CFLAGS) $(LFLAGS) \
+		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+		-L$(XMLLIBDIR) $(PCRELIBS) \
+		-lpq
 
 qzmain.o: qzmain.c qz.h
 	$(CC) $(CFLAGS)  -DQZVER="$(VERSION)" -c qzmain.c
@@ -80,7 +87,7 @@ session.o: session.c
 	$(CC) $(CFLAGS) -c session.c
 
 session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom64.o \
-    hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o  \
+	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o  \
 	opentable.o parse_pg_array.o
 	$(CC) $(CFLAGS) -L$(XMLLIBDIR) -L$(PGLIBDIR) $(LFLAGS) -DSESSION_MAIN \
 		session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom64.o \
@@ -183,7 +190,7 @@ crypto_etag.o: crypto_etag.c crypto_etag.h
 crypto_etag_test: crypto_etag.c qzrandom64.o hex_to_uchar.o
 	$(CC) $(CFLAGS) -DCRYPTO_ETAG_MAIN  crypto_etag.c qzrandom64.o hex_to_uchar.o \
 		-lcrypto -o crypto_etag_test
-	
+
 tagger.o:tagger.c
 	$(CC) $(CFLAGS) -c tagger.c
 
@@ -204,13 +211,13 @@ qzconfig.o:qzconfig.c qzconfig.h
 
 test_qzconfig:qzconfig.c qzconfig.h qzrandom64.o gettime.o  
 	$(CC) $(CFLAGS) -lcrypto -DQZCONFIG_MAIN  qzconfig.c \
-        -L$(XMLLIBDIR) -lxml2 \
+		-L$(XMLLIBDIR) -lxml2 \
 		qzrandom64.o gettime.o \
 		-o test_qzconfig
 
 prompt_rule.o: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(PCRECFLAGS)  -Wall -c prompt_rule.c 
-    
+
 test_prompt_rule: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DPROMPT_RULE_MAIN  prompt_rule.c \
 	qzhandlers.o timestamp.o  onetable.o \
@@ -219,9 +226,9 @@ test_prompt_rule: prompt_rule.c qz.h
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o \
-        -I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-        -L$(XMLLIBDIR) \
-        -lpq \
+		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+		-L$(XMLLIBDIR) \
+		-lpq \
 		-o test_prompt_rule
 
 gettime.o:gettime.c
@@ -235,16 +242,41 @@ grid.o: grid.c
 
 inc:
 	echo $(VERSION)"+0.001"|bc > Version.new
-	mv Version.new Version
+	printf "%.3f\n" `cat Version.new` > Version
 	cat Version
 
-qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL)
+qzforms.js.sql: $(JS) 
+	echo "UPDATE qz.js SET data = \\044QZ\\044"  > qzforms.js.sql
+	cat js/httpRequest.js >> qzforms.js.sql
+	cat js/base64_attribs.js        >> qzforms.js.sql
+	cat js/refresh_result.js        >> qzforms.js.sql
+	cat js/form_refresh.js          >> qzforms.js.sql
+	cat js/form_refresh_init.js     >> qzforms.js.sql
+	cat js/set_common_attributes.js >> qzforms.js.sql
+	cat js/add_array_input.js       >> qzforms.js.sql
+	cat js/add_button.js            >> qzforms.js.sql
+	cat js/add_input_hidden.js      >> qzforms.js.sql
+	cat js/add_input_radio.js       >> qzforms.js.sql
+	cat js/add_input_text.js        >> qzforms.js.sql
+	cat js/add_select_options.js    >> qzforms.js.sql
+	cat js/add_text_area.js         >> qzforms.js.sql
+	cat js/add_prompt.js            >> qzforms.js.sql
+	cat js/change_status.js         >> qzforms.js.sql
+	cat js/get_next_row_index.js    >> qzforms.js.sql
+	cat js/grid_add_row.js          >> qzforms.js.sql
+	cat js/grid_delete_row.js       >> qzforms.js.sql
+	echo "\\044QZ\\044 WHERE filename = 'qzforms.js'" >> qzforms.js.sql
+
+qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
 	cat $(SQL) > qz_db_install_SV$(SCHEMA_VERSION).sql
+	cat qzforms.js.sql >> qz_db_install_SV$(SCHEMA_VERSION).sql
 
 tar:
-	tar -cz -s '|^|qzforms_$(VERSION)/|' -f qzforms-$(VERSION).tgz $(FILES) $(SQL) $(DOCS)
+	tar -cz -s '|^|qzforms_$(VERSION)/|' -f qzforms_$(VERSION).tgz \
+    $(FILES) $(SQL) $(DOCS) $(JS)
 
 # XXXXX add all the tests
 clean:
-	rm -f $(OBJ) qzmain.o qzforms qzforms.core test_parse_pg_array testopentable \
-		qzrandom64_test crypto_etag_test test_prompt_rule
+	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array testopentable \
+		qzrandom64_test crypto_etag_test test_prompt_rule hex_to_uchar_test \
+        qzforms.js.sql
