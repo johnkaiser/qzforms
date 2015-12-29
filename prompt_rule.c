@@ -813,7 +813,7 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      }        
 
      char* pattern = "";
-     if (rule->regex_pattern[0] != '\0' ){
+     if ((rule->regex_pattern != NULL) && (rule->regex_pattern[0] != '\0')){
          char* pattern64 = base64_encode(rule->regex_pattern);
          asprintf(&pattern, "\"pattern\":\"%s\", ", pattern64);
          free(pattern64);
