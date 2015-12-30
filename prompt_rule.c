@@ -584,8 +584,11 @@ xmlNodePtr add_select_options(struct prompt_add_args* args){
         // and look to see if it is the one selected
         bool selected = false;
 
-        if (strcasecmp(args->fvalue, args->options[n]) == 0) selected = true;
-        
+        if ((args->fvalue != NULL) &&
+            (strcasecmp(args->fvalue, args->options[n]) == 0)){
+                selected = true;
+        }
+
         if ((args->pgtype != NULL) && (args->pgtype->is_boolean)){
             if ((truthishness(args->hargs, args->fvalue) == true) 
                  && (truthishness(args->hargs, args->options[n]) == true)){

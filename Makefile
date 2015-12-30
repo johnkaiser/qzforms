@@ -25,7 +25,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=3
+SCHEMA_VERSION=4
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
 	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
@@ -272,7 +272,7 @@ qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
 	cat qzforms.js.sql >> qz_db_install_SV$(SCHEMA_VERSION).sql
 
 tar:
-	tar -cz -s '|^|qzforms_$(VERSION)/|' -f qzforms_$(VERSION).tgz \
+	tar -cz -s '|^|qzforms-$(VERSION)/|' -f qzforms-$(VERSION).tgz \
     $(FILES) $(SQL) $(DOCS) $(JS)
 
 # XXXXX add all the tests

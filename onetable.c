@@ -153,9 +153,7 @@ void edit_form(struct handler_args* h, char* next_action,
 
         pgtype = get_pgtype_datum(h, table_name, fname);
         free(table_name);
-
         char** options = fetch_options(h, pgtype, rule, fname);
-
         add_prompt(h, edit_ta, rule, pgtype, options, NO_ROW_INDEX, form, 
             fname, fvalue);
 
@@ -205,10 +203,10 @@ void add_insert_button(struct handler_args* h, xmlNodePtr here){
     for (pcnt=0; pcnt<create_ta->nbr_pkeys; pcnt++){
         char* fname = create_ta->pkeys[pcnt];
         struct prompt_rule* rule;
-        rule = fetch_prompt_rule(h, form_name, fname);
         struct pgtype_datum* pgtype;
-
         char* table_name;
+
+        rule = fetch_prompt_rule(h, form_name, fname);
         if ( create_ta->schema_name != NULL ){
             asprintf(&table_name, "%s.%s", create_ta->schema_name, 
                 create_ta->table_name);
@@ -221,11 +219,13 @@ void add_insert_button(struct handler_args* h, xmlNodePtr here){
         pgtype = get_pgtype_datum(h, table_name, fname);
         free(table_name);
 
+        char** options = fetch_options(h, pgtype, rule, fname);
+
         // If the fieldname is in postdata then fill in the value
         // and because it is a primary key it will be readonly.
         char* fvalue = xmlHashLookup(h->postdata, fname);
 
-        add_prompt(h, create_ta, rule, pgtype, NO_OPTIONS, NO_ROW_INDEX, form,
+        add_prompt(h, create_ta, rule, pgtype, options, NO_ROW_INDEX, form,
             fname, fvalue);
     }
 
