@@ -61,6 +61,7 @@ void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     xmlNewProp(del_form, "method", "post");
     xmlNewProp(del_form, "action", action_target);
     xmlNewProp(del_form, "name", "delete_it");
+    xmlNewProp(del_form, "id", "delete_it");
     xmlNewProp(del_form, "enctype", "application/x-www-form-urlencoded");
    
     // register_form adds a record about the form in a table and adds 
@@ -76,6 +77,7 @@ void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
         xmlNodePtr pk_input = xmlNewChild(del_form, NULL, "input", NULL);
         xmlNewProp(pk_input, "type", "hidden");
         xmlNewProp(pk_input, "name", fname);
+        xmlNewProp(pk_input, "id", fname);
         xmlNewProp(pk_input, "value", fvalue);
     }
 
@@ -121,6 +123,7 @@ void edit_form(struct handler_args* h, char* next_action,
     char* action_name;
     asprintf(&action_name, "%s_it", next_action);
     xmlNewProp(form, "name", action_name);
+    xmlNewProp(form, "id", action_name);
     free(action_name);
     action_name = NULL;
 
@@ -232,6 +235,7 @@ void add_insert_button(struct handler_args* h, xmlNodePtr here){
     xmlNewProp(form, "method", "post");
     xmlNewProp(form, "action", action_target);
     xmlNewProp(form, "name", "insert");
+    xmlNewProp(form, "id", "insert");
     xmlNewProp(form, "enctype", "application/x-www-form-urlencoded");
 
     register_form(h, form, SUBMIT_MULTIPLE, action_target);
@@ -323,6 +327,7 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     xmlNodePtr table = xmlNewChild(divqz, NULL, "table", NULL);
     xmlNewProp(table, "class", "tablesorter");
+    xmlNewProp(table, "named", "getall");
     xmlNewProp(table, "id", "getall");
     xmlNodePtr tr;
 
@@ -371,6 +376,7 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
             asprintf(&form_prop_name, "edit%d",  form_nbr++);
             xmlNewProp(form, "name", form_prop_name);
+            xmlNewProp(form, "id", form_prop_name);
             free(form_prop_name);
 
             // Make a new form_tag for the 1st edit row,
@@ -391,6 +397,7 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                 int f_nbr = PQfnumber(getall_rs, getall_ta->pkeys[k]);
                 if (PQfname(getall_rs, f_nbr) != NULL){
                     xmlNewProp(input, "name", getall_ta->pkeys[k]);
+                    xmlNewProp(input, "id", getall_ta->pkeys[k]);
                     xmlNewProp(input, "value", 
                         PQgetvalue(getall_rs,row, f_nbr));
 
@@ -402,6 +409,7 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
                     if (passed_in != NULL){
                         xmlNewProp(input, "name", getall_ta->pkeys[k]);
+                        xmlNewProp(input, "id", getall_ta->pkeys[k]);
                         xmlNewProp(input, "value", passed_in);
                     } 
                  }   
