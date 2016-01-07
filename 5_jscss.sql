@@ -175,6 +175,17 @@ $FE$
 #qz {
    margin-left: 12em;
 }
+
+ol#fieldnames {
+    counter-reset: item;
+    list-style-type: none;
+}
+
+ol#fieldnames li:before {
+    content: '$' counter(item) '=';
+    counter-increment: item;
+}
+
 $FE$);
 
 
