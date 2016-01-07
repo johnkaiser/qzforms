@@ -1,6 +1,6 @@
 CREATE TABLE qz.form(
      form_name qz.variable_name PRIMARY KEY,
-     handler_name qz.variable_name REFERENCES qz.handler(handler_name),
+     handler_name qz.variable_name REFERENCES qz.handler(handler_name) NOT NULL,
      schema_name qz.variable_name,
      table_name qz.variable_name,
      xml_template qz.file_name,
