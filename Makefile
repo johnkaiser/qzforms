@@ -279,4 +279,4 @@ tar:
 clean:
 	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array testopentable \
 		qzrandom64_test crypto_etag_test test_prompt_rule hex_to_uchar_test \
-        qzforms.js.sql
+        qzforms.js.sql qz_db_install_SV$(SCHEMA_VERSION).sql
