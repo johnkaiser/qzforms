@@ -108,7 +108,7 @@ void validate_regex(void* val, void* data, xmlChar* key){
         if (h->data == NULL){
             // Then this is the first one, start with an
             // explanatory note about the failure.
-            static const char* regex_failure_hdr = 
+            static char* regex_failure_hdr = 
                 "One or more fields submitted failed validation.\n"
                 "This error should have been caught by the client\n"
                 "before the data was submitted.\n"
@@ -125,9 +125,10 @@ void validate_regex(void* val, void* data, xmlChar* key){
 
         strbuf_append(h->data, new_strbuf(error_msg,0));
 
-        fprintf(h->log, "%f %d %s:%d fail attribute \"%s\" val [%s] regex_pattern %s rc=%d\n\n",
+        fprintf(h->log, "%f %d %s:%d "
+            "fail attribute \"%s\" val [%s] regex_pattern %s rc=%d\n\n",
             gettime(), h->request_id, __func__, __LINE__,
-            rule->fieldname, val, rule->regex_pattern, rc);
+            rule->fieldname, (char*)val, rule->regex_pattern, rc);
         
         free(error_msg);
     }
