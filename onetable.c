@@ -397,7 +397,12 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                 int f_nbr = PQfnumber(getall_rs, getall_ta->pkeys[k]);
                 if (PQfname(getall_rs, f_nbr) != NULL){
                     xmlNewProp(input, "name", getall_ta->pkeys[k]);
-                    xmlNewProp(input, "id", getall_ta->pkeys[k]);
+
+                    char* key_name_nbr;
+                    asprintf(&key_name_nbr, "%s[%d]",getall_ta->pkeys[k], row); 
+                    xmlNewProp(input, "id", key_name_nbr);
+                    free(key_name_nbr);
+
                     xmlNewProp(input, "value", 
                         PQgetvalue(getall_rs,row, f_nbr));
 
@@ -409,7 +414,14 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
                     if (passed_in != NULL){
                         xmlNewProp(input, "name", getall_ta->pkeys[k]);
-                        xmlNewProp(input, "id", getall_ta->pkeys[k]);
+
+                        char* key_name_nbr;
+                        asprintf(&key_name_nbr, "%s[%d]",
+                            getall_ta->pkeys[k], row); 
+
+                        xmlNewProp(input, "id", key_name_nbr);
+                        free(key_name_nbr);
+
                         xmlNewProp(input, "value", passed_in);
                     } 
                  }   
@@ -504,7 +516,6 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     edit_form(h, "update", edit_ta, edit_rs, form_name, divqz);
 
     PQclear(edit_rs);
-   
 }
 
 /*
