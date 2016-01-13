@@ -266,9 +266,9 @@ void add_menu(struct handler_args* hargs,
                    // If I had more time I might make this a popup menu,
                    // but I need it to work first. XXXXXXX
                    fprintf(hargs->log, "%f %d %s:%d fail param %s "
-                       "on menu_name %s not found in input\n",
+                       "on not found in input\n",
                        gettime(), hargs->request_id, __func__, __LINE__,
-                       params[p], item_id ); 
+                       params[p]); 
 
                }
             }
