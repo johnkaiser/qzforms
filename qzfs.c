@@ -88,9 +88,9 @@ void qzfs(struct handler_args* h){
         payload = validate_etag(h->session->tagger_socket_path, 
             http_if_none_match);
 
-        fprintf(h->log, "%f %d %s:%d etag name %s payload %s\n",
+        fprintf(h->log, "%f %d %s:%d etag name %s payload is %s\n",
             gettime(), h->request_id, __func__, __LINE__,
-            which_name, (payload > 0)  ? "OK" : "fail"  );
+            which_name, (payload > 0)  ? "OK" : "invalid"  );
 
         if (payload > 0){
             struct table_action* etag_value_ta;
