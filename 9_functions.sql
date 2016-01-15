@@ -4,7 +4,7 @@
 --
 
 CREATE OR REPLACE FUNCTION
-create_table_action(form_name varchar, action varchar)
+qz.create_table_action(form_name varchar, action varchar)
 RETURNS qz.table_action
 AS $$
 DECLARE
