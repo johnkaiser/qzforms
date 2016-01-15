@@ -110,9 +110,6 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, actio
 VALUES ('form_submenu', 20, 'prompt_rule_edit', 'getall', 'Prompt_Rules', '{form_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 30, 'menu_host_edit', 'edit', 'Menus_For_Lookup', '{form_name}');
-
-INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_submenu', 40, 'page_js', 'edit', 'page_js', '{form_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
