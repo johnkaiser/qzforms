@@ -579,7 +579,7 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_t
 VALUES ('css_edit', 'delete', 
     'DELETE FROM qz.css
     WHERE filename = $1', 
-'{filename}', NULL, NULL);
+'{filename}', '{filename}', NULL);
 
 --
 -- js_edit
