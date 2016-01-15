@@ -33,7 +33,7 @@ NULL, '{form_name}',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'edit', 
-    'SELECT form_name, handler_name, 
+    'SELECT form_name, handler_name_ro, 
      schema_name, table_name, xml_template, target_div,
      add_description, prompt_container
      FROM qz.form
@@ -163,7 +163,7 @@ VALUES ('prompt_rule_edit', 'delete',
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'edit', 
     'SELECT
-      form_name, action, 
+      form_name, action action_ro, 
       helpful_text, sql,
       fieldnames, pkey 
     FROM
@@ -188,8 +188,8 @@ VALUES ('table_action_edit', 'update',
     SET helpful_text=$3,
     sql=$4, fieldnames=$5, pkey=$6 
     WHERE form_name = $1 AND action = $2', 
-'{form_name,action,helpful_text,sql,fieldnames,pkey}', 
-'{form_name,action}', NULL);
+'{form_name,action_ro,helpful_text,sql,fieldnames,pkey}', 
+'{form_name,action_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'delete', 
@@ -199,7 +199,8 @@ WHERE form_name = $1 AND action = $2',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'create', 
-    'SELECT form_name, action, ''''::text helpful_text, sql, fieldnames, pkey FROM create_table_action($1,$2)', '{form_name,action}', 
+    'SELECT form_name, action, ''''::text helpful_text, sql, fieldnames, pkey 
+     FROM qz.create_table_action($1,$2)', '{form_name,action}', 
 '{form_name,action}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
