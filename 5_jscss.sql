@@ -159,7 +159,11 @@ input.menu_button {
     display: table;
     font-weight: bold;
 }
+$QZF$);
 
+INSERT INTO qz.css (filename, mimetype, modtime, data) 
+VALUES ('form_edit.css', 'text/css', '2015-06-22 08:47:51',
+$FE$
 #pagemenu {
     float:left;
     width: 11em;
@@ -181,7 +185,9 @@ ol#fieldnames li:before {
     content: '$' counter(item) '=';
     counter-increment: item;
 }
-$QZF$);
+
+$FE$);
+
 
 --
 -- js

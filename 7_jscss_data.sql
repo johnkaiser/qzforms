@@ -24,6 +24,19 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('page_js', 10, '
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('css_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('js_edit', 10, 'qzforms.css');
 
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('form', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('table_action_edit', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('prompt_rule_edit', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_item_edit', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_host_edit', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('page_css', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('page_js', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_edit', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_set_edit', 20, 'form_edit.css');
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('fixed_parameters', 20, 'form_edit.css');
+
+
+
 --
 -- Data for Name: page_js; Type: TABLE DATA; Schema: qz; Owner: qz
 --
