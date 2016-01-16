@@ -32,15 +32,11 @@
 
 #define BUFSIZE (1024)
 
-// XXXXXX Rewrite this without BUFSIZE.
-
 void open_table_scanner(void* val, void* data, xmlChar* name){
 
     struct table_action* ta = val;
     xmlNodePtr thead = data;
-    char buf[BUFSIZE];
-    bzero(buf,BUFSIZE);
-
+    char* buf;
     xmlNodePtr tr = xmlNewChild(thead, NULL, "tr", NULL);
 
     xmlNewTextChild(tr, NULL, "td", ta->form_name);
@@ -48,56 +44,9 @@ void open_table_scanner(void* val, void* data, xmlChar* name){
     xmlNewTextChild(tr, NULL, "td", ta->table_name);
     xmlNewTextChild(tr, NULL, "td", ta->prepare_name);
 
-    snprintf(buf, BUFSIZE-1, "%d", ta->nbr_params);
+    asprintf(&buf, "%llu", ta->etag);
     xmlNewTextChild(tr, NULL, "td", buf);
-
-    // The parameter field names in prepared sequence
-    int k;
-    int bytes_left = BUFSIZE-2;
-    int param_length;
-    bool first = true;
-    bzero(buf,BUFSIZE);
-    for (k=0; k<ta->nbr_params; k++){
-        param_length = strlen(ta->fieldnames[k])+3;
-        if (param_length >= bytes_left){
-            strcat(buf,"?");    
-            break;
-        }
-        if (!first){
-            strcat(buf, ", ");
-        }else{
-            first = false;
-        }
-        strcat(buf, ta->fieldnames[k]);
-    }
-    xmlNewTextChild(tr, NULL, "td", buf);
-    
-    // The number of attributes in the primary key
-    snprintf(buf, BUFSIZE-1, "%d", ta->nbr_pkeys);
-    xmlNewTextChild(tr, NULL, "td", buf);
-
-    // A comma separated list of primary keys
-    bytes_left = BUFSIZE-2;
-    bzero(buf, BUFSIZE);
-    int key_length; 
-    first = true;
-    for (k=0; k<ta->nbr_pkeys; k++){
-        key_length = strlen(ta->pkeys[k])+3;
-        if (key_length >= bytes_left){
-            strcat(buf,"?");    
-            break;
-        }
-        if (!first){
-            strcat(buf, ", ");
-        }else{
-            first = false;
-        }
-        strcat(buf, ta->pkeys[k]);
-    }
-    xmlNewTextChild(tr, NULL, "td", buf);
-
-    snprintf(buf, BUFSIZE-1, "%llu", ta->etag);
-    xmlNewTextChild(tr, NULL, "td", buf);
+    free(buf);
 
     return;    
 }
@@ -140,7 +89,6 @@ void qz_status(struct handler_args* h){
  
     h->doc = doc_from_file(h, "base.xml");
 
-
     if ((cur = xmlDocGetRootElement(h->doc)) == NULL){
         error_page(h, 500,  "Root element not found");
         return;
@@ -173,10 +121,6 @@ void qz_status(struct handler_args* h){
 
     menu_item = xmlNewTextChild(menu, NULL, "button", "pg_stat");
     xmlNewProp(menu_item, "onclick", "menu_click(\"pg_stat_activity\")");
-
-    menu_item = xmlNewTextChild(menu, NULL, "button", "table_actions");
-    xmlNewProp(menu_item, "onclick", "menu_click(\"table_action\")");
-
 /*
  *  see note below on handlers array
  *
@@ -194,11 +138,6 @@ void qz_status(struct handler_args* h){
     struct table_action* stat_ta = open_table(h, "pg_stat_activity", "fetch");
     PGresult* stat_rs = perform_post_action(h, stat_ta);
     rs_to_table(divqz, stat_rs, "pg_stat_activity");
-
-    // show table actions
-    struct table_action* op_t_ta = open_table(h, "table_action", "getall");
-    PGresult* op_t_rs = perform_post_action(h, op_t_ta);
-    rs_to_table(divqz, op_t_rs, "table_action");
 
 /*
  *  This needs to be changed from accessing a handlers array
@@ -240,10 +179,6 @@ void qz_status(struct handler_args* h){
     xmlNewTextChild(ot_tr, NULL, "th", "action");
     xmlNewTextChild(ot_tr, NULL, "th", "table_name");
     xmlNewTextChild(ot_tr, NULL, "th", "prepare_name");
-    xmlNewTextChild(ot_tr, NULL, "th", "nbr_params");
-    xmlNewTextChild(ot_tr, NULL, "th", "fieldnames");
-    xmlNewTextChild(ot_tr, NULL, "th", "nbr_keys");
-    xmlNewTextChild(ot_tr, NULL, "th", "pkeys");
     xmlNewTextChild(ot_tr, NULL, "th", "etag");
 
     xmlNodePtr ot_tbody = xmlNewChild(ot_table, NULL, "tbody", NULL);
@@ -267,6 +202,6 @@ void qz_status(struct handler_args* h){
     xmlHashScan(h->session->form_tags, form_tag_status_scanner, ft_tbody);
 
     PQclear(stat_rs);
-    PQclear(op_t_rs);
+
     return;
 }
