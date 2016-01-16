@@ -33,7 +33,7 @@ NULL, '{form_name}',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'edit', 
-    'SELECT form_name, handler_name_ro, 
+    'SELECT form_name, handler_name handler_name_ro, 
      schema_name, table_name, xml_template, target_div,
      add_description, prompt_container
      FROM qz.form
@@ -50,10 +50,9 @@ VALUES ('form', 'update',
     xml_template = $4,
     target_div = $5,
     add_description = $6,
-    prompt_container = $7,
-    handler_name = $8
+    prompt_container = $7
     WHERE form_name = $1', 
-'{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container,handler_name}', 
+'{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container}', 
 '{form_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
