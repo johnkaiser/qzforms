@@ -1,9 +1,24 @@
 #!/bin/sh
 
 ##
-##  The INSTALLDIR will be created with subdirectories and the necessary files.
-##
-INSTALLDIR=/var/qzforms
+##  The INSTALLDIR must be specified, /var/qzforms is suggested.
+##  The necessary subdirectories are created. 
+
+if [ -z "$1" ]; then
+    echo "You must specify the target directory."
+    echo "If /var/qzforms exists then try:"
+    echo "$0 /var/qzforms"
+    exit 1
+fi
+
+if [ -d "$1" ]; then
+    echo "installing to $1"
+    INSTALLDIR=$1
+else
+    echo "Install directory $1 does not exist"
+    exit 2
+fi
+
 
 ##
 ##  The user and group that will be running the qzforms application. 
