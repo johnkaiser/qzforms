@@ -216,7 +216,7 @@ void logout(struct handler_args* hargs){
  
     if (hargs->session != NULL){
 
-        if (hargs->session->user != NULL){
+        if (*hargs->session->user == '\0'){
             fprintf(hargs->log, 
                 "%f %d %s:%d logout user %s\n", 
                 gettime(), hargs->request_id, __func__, __LINE__,
