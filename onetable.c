@@ -308,12 +308,12 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
              char* fname = getall_ta->fieldnames[p];
              if (fname == NULL) break;  // should not happen
 
-             xmlNodePtr dt = xmlNewTextChild(dl, NULL, "dt", fname);
+             xmlNewTextChild(dl, NULL, "dt", fname);
 
              // add value in a dd
              char* value = xmlHashLookup(h->postdata, fname);
              if (value != NULL){
-                 xmlNodePtr dd = xmlNewTextChild(dl, NULL, "dd", value);
+                 xmlNewTextChild(dl, NULL, "dd", value);
              }    
         }
     }
