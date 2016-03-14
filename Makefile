@@ -14,8 +14,8 @@ XMLLIBDIR!=xml2-config --libs
 PCRECFLAGS!=pcre-config --cflags
 PCRELIBS!=pcre-config --libs
 
-#CC=clang -Wno-pointer-sign -O2
-CC=gcc 
+CC=clang -Wno-pointer-sign 
+#CC=gcc 
 
 CFLAGS=-Wall \
 	-I/usr/local/include \
