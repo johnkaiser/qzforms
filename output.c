@@ -62,6 +62,9 @@ void serve_output( struct handler_args* hargs ){
             fprintf(hargs->log, "%f %d %s:%d %s\n", 
                 gettime(), hargs->request_id, __func__, __LINE__,
                 "xbuf from xmlBufferCreate is null\n");
+
+            error_page(hargs, SC_INTERNAL_SERVER_ERROR, "xmlBufferCreate failed");
+            return;
         }
     
         xmlSaveCtxtPtr ctxt = xmlSaveToBuffer(xbuf, "UTF-8", 
@@ -124,7 +127,7 @@ void expires(struct handler_args* h, time_t expires_t){
  
     struct tm* expires_tm = malloc(sizeof(struct tm));
 
-    expires_tm = gmtime_r(&expires_t, expires_tm);
+    gmtime_r(&expires_t, expires_tm);
     strftime(expires_buf->str, 127, "Expires: %a %b %d %T %Z %Y", expires_tm);
 
     free(expires_tm);
