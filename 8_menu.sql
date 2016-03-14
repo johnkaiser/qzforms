@@ -122,128 +122,128 @@ VALUES ('form_submenu', 50, 'page_css', 'edit', 'page_css', '{form_name}');
 -- Data for Name: menu_set; Type: TABLE DATA; Schema: qz; Owner: qz
 --
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'menu', 'any', 1);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'menu', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'form', 'any', 7);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'form', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'js_edit', 'any', 11);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'js_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'status', 'any', 13);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'status', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'menu_edit', 'any', 15);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'menu_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'menu_item_edit', 'any', 17);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'menu_item_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'menu_set_edit', 'any', 18);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'menu_set_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'form_dev', 'any', 24);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'form_dev', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'table_action_edit', 'any', 29);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'table_action_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'css_edit', 'any', 62);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'css_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'fixed_parameters', 'any', 31);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'fixed_parameters', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'prompt_rule_edit', 'any', 41);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'prompt_rule_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'menu_host_edit', 'any', 45);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'menu_host_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'page_js', 'any', 53);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'page_js', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'page_css', 'any', 58);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'page_css', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'form', 'any', 32);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'form', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'fixed_parameters', 'any', 33);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'fixed_parameters', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'menu_edit', 'any', 34);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'menu_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'menu_host_edit', 'any', 35);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'menu_host_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'menu_item_edit', 'any', 36);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'menu_item_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'menu_set_edit', 'any', 37);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'menu_set_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'table_action_edit', 'any', 39);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'table_action_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'form_dev', 'any', 25);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'form_dev', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'css_edit', 'any', 63);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'css_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'prompt_rule_edit', 'any', 43);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'prompt_rule_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'js_edit', 'any', 51);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'js_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'status', 'any', 52);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'status', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'page_js', 'any', 54);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'page_js', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_dev', 'page_css', 'any', 59);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_dev', 'page_css', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('fixed_parameters', 'menu_item_edit', 'edit', 30);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('fixed_parameters', 'menu_item_edit', 'edit');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('menu_submenu', 'menu_edit', 'edit', 16);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('menu_submenu', 'menu_edit', 'edit');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('menu_submenu', 'menu_set_edit', 'any', 19);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('menu_submenu', 'menu_set_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('menu_submenu', 'menu_item_edit', 'any', 21);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('menu_submenu', 'menu_item_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('menu_submenu', 'fixed_parameters', 'any', 38);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('menu_submenu', 'fixed_parameters', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('table_action_edit', 'form', 'getall', 26);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('table_action_edit', 'form', 'getall');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_submenu', 'form', 'edit', 28);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_submenu', 'form', 'edit');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_submenu', 'prompt_rule_edit', 'any', 42);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_submenu', 'prompt_rule_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_submenu', 'menu_host_edit', 'any', 44);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_submenu', 'menu_host_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_submenu', 'table_action_edit', 'any', 27);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_submenu', 'table_action_edit', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_submenu', 'page_js', 'any', 55);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_submenu', 'page_js', 'any');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('form_submenu', 'page_css', 'any', 60);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('form_submenu', 'page_css', 'any');
 
 
 

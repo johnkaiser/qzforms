@@ -120,8 +120,8 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name,
 action, menu_text, context_parameters) 
 VALUES ('main', 10, 'gridle', 'edit', 'Gridle', NULL);
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'gridle', 'any', 12);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'gridle', 'any');
 
 INSERT INTO qz.page_css (form_name, sequence, filename) 
 VALUES ('gridle', 10, 'qzforms.css');
@@ -381,8 +381,8 @@ VALUES (nextval('stuff_n'), 'eight', '(9,1)', NULL, 18, NULL, '192.168.1.8', B'1
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
 VALUES ('stuff', 'onetable', 'public', 'stuff', 'base.xml', 'qz', false, 'fieldset');
 
-INSERT INTO qz.menu_set (menu_name, host_form_name, action, set_id) 
-VALUES ('main', 'stuff', 'any', 14);
+INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
+VALUES ('main', 'stuff', 'any');
 
 INSERT INTO qz.page_css (form_name, sequence, filename) 
 VALUES ('stuff', 10, 'qzforms.css');
