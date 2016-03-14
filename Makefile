@@ -25,7 +25,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=4
+SCHEMA_VERSION=5
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
 	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
@@ -60,7 +60,8 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
-	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql
+	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql \
+	qz_db_update_SV4.sql
 
 all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
