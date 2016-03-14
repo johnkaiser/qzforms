@@ -42,7 +42,7 @@
  *  Return -1 in case of a bad character.
  */
 
-inline int hex_to_val(unsigned char xd){
+int hex_to_val(unsigned char xd){
 
     if ((xd >= '0') && (xd <= '9')){
         return xd - '0';
