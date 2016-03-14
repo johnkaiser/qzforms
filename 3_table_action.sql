@@ -275,8 +275,8 @@ VALUES ('menu_edit', 'edit',
     WHERE menu_name = $1
     ORDER BY menu_name', 
 '{menu_name}', '{menu_name}',  
-'Press Menu_Item_Edit to add, change, or delete the items on a menu.
-Press Menu_Set_Edit to manage which page gets a particular menu.');
+'Press Menu_Item to add, change, or delete the items on a menu.
+Press Menu_Set to manage which page gets a particular menu.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('menu_edit', 'update', 

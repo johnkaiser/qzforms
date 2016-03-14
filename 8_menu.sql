@@ -95,16 +95,16 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, actio
 VALUES ('main', 999, 'logout', NULL, 'Logout', NULL);
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('menu_submenu', 1, 'menu_item_edit', 'getall', 'Menu_Item_Edit', '{menu_name}');
+VALUES ('menu_submenu', 1, 'menu_item_edit', 'getall', 'Menu_Item', '{menu_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('menu_submenu', 2, 'menu_set_edit', 'edit', 'Menu_Set_Edit', '{menu_name}');
+VALUES ('menu_submenu', 2, 'menu_set_edit', 'edit', 'Menu_Set', '{menu_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_submenu', 1, 'form', 'edit', 'form', '{form_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 10, 'table_action_edit', 'getall', 'Table_Action_Edit', '{form_name}');
+VALUES ('form_submenu', 10, 'table_action_edit', 'getall', 'Table_Action', '{form_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_submenu', 20, 'prompt_rule_edit', 'getall', 'Prompt_Rules', '{form_name}');
