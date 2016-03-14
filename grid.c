@@ -250,6 +250,15 @@ void grid_edit(struct handler_args* h, char* form_name){
         return;
     }
     int nfields = PQnfields(grid_edit_rs);
+    if (nfields < 1){
+        fprintf(h->log, "%f %d %s:%d fail grid edit called with nfields=%d\n",
+            gettime(), h->request_id, __func__, __LINE__, 
+            nfields); 
+
+        error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
+        return;
+    }
+
     int col;
 
     xmlNewTextChild(divqz, NULL, "h2", form_name);
@@ -360,12 +369,12 @@ void grid_edit(struct handler_args* h, char* form_name){
              char* fname = grid_edit_ta->fieldnames[p];
              if (fname == NULL) break;  // should not happen
 
-             xmlNodePtr dt = xmlNewTextChild(dl, NULL, "dt", fname);
+             xmlNewTextChild(dl, NULL, "dt", fname);
 
              //Z add value in a dd
              char* value = xmlHashLookup(h->postdata, fname);
              if (value != NULL){
-                 xmlNodePtr dd = xmlNewTextChild(dl, NULL, "dd", value);
+                 xmlNewTextChild(dl, NULL, "dd", value);
              }    
         }
     }
