@@ -498,6 +498,8 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
     // This will not work as a prepared statement because
     // the FROM is unknown here but required for a
     // prepared statement.
+    // It also will not work as an SQL function because
+    // the from table is not known. 
 
     // But first, make sure none of search terms contains a 
     // double quote, escaped or not.
@@ -506,6 +508,9 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
     for (ch=pg_type->fkey_schema; *ch != '\0'; ch++){
         if (*ch == '"') dbl_quote = true;
     }    
+    for (ch=pg_type->fkey_table; *ch != '\0'; ch++){
+        if (*ch == '"') dbl_quote = true;
+    }
     for (ch=pg_type->fkey_attribute; *ch != '\0'; ch++){
         if (*ch == '"') dbl_quote = true;
     }
@@ -547,7 +552,7 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
     char** options = calloc(1, fkey_size);
 
     // string data starts past the end of the options array
-    char* val = &options[PQntuples(rs)+1];
+    char* val = (void*) &options[PQntuples(rs)+1];
     for(row=0; row<PQntuples(rs); row++){
 
         options[row] = val;
