@@ -340,7 +340,7 @@ char** parse_pg_array(char* pg_ar){
     void* tmp;  // cramming two different types in one buffer
     char* st = tmp = &(outbuf[ptrcnt+1]) ;
 
-    for (noderunner = base.next; noderunner!=NULL; noderunner=noderunner->next){
+    for (noderunner = base.next; noderunner!=NULL; ){
         int strsize;
 
         if (noderunner->str == NULL){
@@ -356,6 +356,10 @@ char** parse_pg_array(char* pg_ar){
         if (debug)printf("added %d [%s]\n", n, st);
         n++;    
         st += strsize+1;
+
+        struct strnode* free_this = noderunner;
+        noderunner = noderunner->next;
+        free(free_this);
     } 
     
     free(ar);
