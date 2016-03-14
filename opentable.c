@@ -85,10 +85,10 @@ void init_open_table(struct handler_args* h){
     // fetch_table_action
 
     char fetch_query[] = 
-        "SELECT ob.schema_name, ob.table_name, ta.sql, "
+        "SELECT fm.schema_name, fm.table_name, ta.sql, "
         "ta.fieldnames, ta.pkey, ta.etag, "
-        "ob.target_div, ob.handler_name, ob.xml_template, "
-        "ob.add_description, ob.prompt_container, " 
+        "fm.target_div, fm.handler_name, fm.xml_template, "
+        "fm.add_description, fm.prompt_container, " 
         "ta.helpful_text, "
         "ARRAY( "
         "  SELECT 'js/get/'|| f.filename filename " 
@@ -103,7 +103,7 @@ void init_open_table(struct handler_args* h){
         "  ORDER BY sequence "
         ") css_filenames "
         "FROM qz.table_action ta "
-        "JOIN qz.form ob USING (form_name) "
+        "JOIN qz.form fm USING (form_name) "
         "WHERE ta.form_name = $1 "
         "AND ta.action = $2";
 
@@ -806,7 +806,7 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
     }
 
     char** paramdata = calloc((2 + ta->nbr_params), sizeof(char*)); 
-    bool*  free_array = calloc((2 + ta->nbr_params), sizeof(bool*));
+    bool free_array[2+ta->nbr_params];
 
     for(k=0; k < ta->nbr_params; k++){
          element = xmlHashLookup(h->postdata, ta->fieldnames[k]);
