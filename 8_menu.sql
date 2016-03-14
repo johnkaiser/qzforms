@@ -101,19 +101,19 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, actio
 VALUES ('menu_submenu', 2, 'menu_set_edit', 'edit', 'Menu_Set', '{menu_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 1, 'form', 'edit', 'form', '{form_name}');
+VALUES ('form_submenu', 1, 'form', 'edit', 'form', '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 10, 'table_action_edit', 'getall', 'Table_Action', '{form_name}');
+VALUES ('form_submenu', 10, 'table_action_edit', 'getall', 'Table_Action', '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 20, 'prompt_rule_edit', 'getall', 'Prompt_Rules', '{form_name}');
+VALUES ('form_submenu', 20, 'prompt_rule_edit', 'getall', 'Prompt_Rules', '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 40, 'page_js', 'edit', 'page_js', '{form_name}');
+VALUES ('form_submenu', 40, 'page_js', 'edit', 'page_js', '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_submenu', 50, 'page_css', 'edit', 'page_css', '{form_name}');
+VALUES ('form_submenu', 50, 'page_css', 'edit', 'page_css', '{form_name, handler_name_ro}');
 
 
 

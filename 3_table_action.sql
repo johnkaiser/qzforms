@@ -14,20 +14,20 @@ VALUES ('form', 'insert',
    'INSERT INTO qz.form
     (form_name, handler_name)
     VALUES ($1,$2)', 
-'{form_name,handler_name}', '{form_name}', NULL);
+'{form_name,handler_name}', '{form_name, handler_name_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'create', 
    'SELECT $1::text form_name,
     ''''::text handler_name', 
-'{form_name}', '{form_name}', NULL);
+'{form_name}', '{form_name, handler_name_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'getall', 
     'SELECT form_name, handler_name
      FROM qz.form
      ORDER BY form_name, handler_name', 
-NULL, '{form_name}', 
+NULL, '{form_name, handler_name_ro}', 
 'A form on this list will match incoming data to a particular set of table 
  actions.  The form_name is the 2nd segment of the URL.');
 
@@ -38,7 +38,7 @@ VALUES ('form', 'edit',
      add_description, prompt_container
      FROM qz.form
      WHERE form_name = $1', 
-'{form_name}', '{form_name}', 
+'{form_name}', '{form_name, handler_name_ro}', 
 'The handler_name will provide a specific set of actions, such as edit, update, 
  delete.  The xml_template will be used as the starting document.');
 
@@ -53,13 +53,13 @@ VALUES ('form', 'update',
     prompt_container = $7
     WHERE form_name = $1', 
 '{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container}', 
-'{form_name}', NULL);
+'{form_name, handler_name_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'delete', 
    'DELETE FROM qz.form
     WHERE form_name = $1', 
-'{form_name}', '{form_name}', NULL);
+'{form_name, handler_name_ro}', '{form_name, handler_name_ro}', NULL);
 
 --
 -- prompt_rule_edit
@@ -161,14 +161,17 @@ VALUES ('prompt_rule_edit', 'delete',
 --
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'edit', 
-    'SELECT
-      form_name, action action_ro, 
-      helpful_text, sql,
-      fieldnames, pkey 
+    $tae$SELECT
+      ta.form_name, ta.action action_ro, 
+      fm.handler_name handler_name_ro,
+      ta.helpful_text, ta.sql,
+      ta.fieldnames, ta.pkey 
     FROM
-      qz.table_action
+      qz.table_action ta
+    JOIN
+      qz.form fm USING (form_name)
     WHERE
-      form_name = $1 AND action = $2 ', 
+      ta.form_name = $1 AND ta.action = $2 $tae$, 
 '{form_name,action}', '{form_name,action}', 
   'A table action binds a URL and HTTP post data to an SQL statement.');
 
@@ -198,17 +201,21 @@ WHERE form_name = $1 AND action = $2',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'create', 
-    'SELECT form_name, action, ''''::text helpful_text, sql, fieldnames, pkey 
-     FROM qz.create_table_action($1,$2)', '{form_name,action}', 
-'{form_name,action}', NULL);
+    $TAC$SELECT ta.form_name, ta.action, fm.handler_name handler_name_ro,
+    ''::text helpful_text, ta.sql, ta.fieldnames, ta.pkey 
+     FROM qz.create_table_action($1,$2) ta
+    JOIN qz.form fm USING (form_name)$TAC$, '{form_name, action}', 
+'{form_name, handler_name_ro, action}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'getall', 
-    'SELECT action, helpful_text 
-    FROM qz.table_action
+    $TAG$SELECT ta.action, ta.helpful_text,
+    fm.handler_name 
+    FROM qz.table_action ta
+    JOIN qz.form fm USING (form_name)
     WHERE form_name = $1
-    ORDER BY form_name, action', 
-'{form_name}', '{form_name,action}', 
+    ORDER BY form_name, action$TAG$, 
+'{form_name}', '{form_name, handler_name_ro, action}', 
 'Edit the table actions for a given form_name.');
 
 
