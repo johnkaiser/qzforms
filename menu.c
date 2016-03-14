@@ -192,9 +192,8 @@ void init_menu(struct handler_args* hargs){
  *
  *  Add one menu to the indicated node.
  *
- *  A menu is a set of one or more options
- *  presented in an html ul list.
- *  Each li contains one html form with data from
+ *  A menu is a set of one or more button choices. 
+ *  Each menu item contains one html form with data from
  *  current postdata in html hidden fields for each 
  *  pg menu_item parameters array element.
  */
