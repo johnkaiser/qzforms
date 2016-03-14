@@ -94,8 +94,11 @@ void validate_regex(void* val, void* data, xmlChar* key){
     // does it have a pattern?
     if (rule->comp_regex == NULL) return;
     
-    // does the value fit the pattern?
+    // is there data there to check?
     int subject_length = strlen(val);
+    if (subject_length == 0) return;
+
+    // does the value fit the pattern?
     const int   ovectcount = 30;
     int ovector[ovectcount];
     int rc;
