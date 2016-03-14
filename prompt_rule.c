@@ -516,20 +516,24 @@ xmlNodePtr add_input_text(struct prompt_add_args* args){
     xmlNewProp(input,"name", args->fname);
     xmlNewProp(input,"id", args->fname);
 
-    if (args->rule->size > 0){
-        asprintf(&buf, "%d", args->rule->size);
-        xmlNewProp(input, "size", buf);
-    }
     if (args->fvalue!=NULL) xmlNewProp(input, "value", args->fvalue);
-    
-    if (args->rule->maxlength > 0){  
-        char* intbuf;
-        asprintf(&intbuf, "%d", args->rule->maxlength);     
-        xmlNewProp(input, "maxlength", intbuf);
-        free(intbuf);
-    }    
 
-    set_common_attributes(args, input);
+    //  rule can not be null as add_prompt gives it a default value.
+    //  Checking anyway to please clang scan-build
+    if (args->rule != NULL){
+        if (args->rule->size > 0){
+            asprintf(&buf, "%d", args->rule->size);
+            xmlNewProp(input, "size", buf);
+        }
+
+        if (args->rule->maxlength > 0){
+            char* intbuf;
+            asprintf(&intbuf, "%d", args->rule->maxlength);
+            xmlNewProp(input, "maxlength", intbuf);
+            free(intbuf);
+        }
+        set_common_attributes(args, input);
+    }
 
     return input;
 }
@@ -966,7 +970,7 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
 
      }
      free(fieldname);
-     if (prompt_type[0] != '\0') free(prompt_type);
+     if (*prompt_type != '\0') free(prompt_type);
      if (el_class[0] != '\0') free(el_class);
      if (expand_percent_n[0] != '\0') free(expand_percent_n);
      if (readonly[0] != '\0') free(readonly);
@@ -1017,7 +1021,7 @@ xmlNodePtr add_text_array(struct prompt_add_args* args){
             // create a name like base[0], base[1], etc.
             char* fname_buf;
             asprintf(&fname_buf, "%s[%d]", args->fname, n);
-    
+
             struct prompt_rule* rule_copy = fetch_prompt_rule(
                 args->hargs, args->rule->form_name, args->rule->fieldname);
 
@@ -1143,10 +1147,6 @@ void add_prompt(struct handler_args* hargs,
             }
         }
     }
-    fprintf(hargs->log, "%f %d %s:%d prompt %s %s pkey\n", 
-        gettime(), hargs->request_id,  __func__, __LINE__, 
-        mod_fname, (is_pkey) ? "is":"is not");
-
     free(mod_fname);
     mod_fname = NULL;
 
@@ -1343,7 +1343,8 @@ char**  fetch_options(
         
             fprintf(h->log, "%f %d %s:%d fkey %s\n", 
                 gettime(), h->request_id, __func__, __LINE__,
-                    new_options[0]);
+                    ((new_options != NULL) && (new_options[0] != '\0')) ?
+                        "OK":"foreign_key_list fail");
         }
     }
 
