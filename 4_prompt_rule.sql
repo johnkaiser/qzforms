@@ -272,11 +272,12 @@ VALUES ('table_action_edit', 'fieldnames', NULL, false,
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
 VALUES ('table_action_edit', 'helpful_text', NULL, false, 10, 40, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'textarea', false, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern, options)
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern, options, onfocus)
 VALUES ('table_action_edit', 'action', 'select_options',
 '^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$',
 '{create,delete,delete_row,edit,etag_value,get,getall,
-  insert,insert_row,save,update,update_row,view}');
+  insert,insert_row,save,update,update_row,view}',
+  'set_action_options()');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
 VALUES ('table_action_edit', 'handler_name', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', NULL, false, NULL);

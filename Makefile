@@ -57,7 +57,8 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/add_select_options.js js/add_text_area.js js/base64_attribs.js\
 	js/change_status.js js/form_refresh.js js/form_refresh_init.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
-	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js
+	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
+	js/set_action_options.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
 	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql \
@@ -266,6 +267,7 @@ qzforms.js.sql: $(JS)
 	cat js/get_next_row_index.js    >> qzforms.js.sql
 	cat js/grid_add_row.js          >> qzforms.js.sql
 	cat js/grid_delete_row.js       >> qzforms.js.sql
+	cat js/set_action_options.js    >> qzforms.js.sql
 	echo "\\044QZ\\044 WHERE filename = 'qzforms.js'" >> qzforms.js.sql
 
 qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql

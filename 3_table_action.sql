@@ -11,20 +11,28 @@ CREATE TABLE qz.table_action (
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'insert', 
-   'INSERT INTO qz.form
-    (form_name, handler_name)
-    VALUES ($1,$2)', 
-'{form_name,handler_name}', '{form_name, handler_name_ro}', NULL);
+   $TAFI$INSERT INTO qz.form
+    (form_name, handler_name, schema_name, table_name,
+    xml_template, target_div, 
+    add_description, prompt_container)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)$TAFI$, 
+'{form_name,handler_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container}', 
+'{form_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'create', 
-   'SELECT $1::text form_name,
-    ''''::text handler_name', 
+   $TAFC$SELECT  $1::text form_name, 
+    ''::text handler_name, 
+    ''::text schema_name, ''::text table_name, 
+    'base.xml'::text xml_template, 
+    'qz'::text target_div,
+     ''::text add_description, 
+     ''::text prompt_container$TAFC$, 
 '{form_name}', '{form_name, handler_name_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'getall', 
-    'SELECT form_name, handler_name
+    'SELECT form_name, handler_name handler_name_ro
      FROM qz.form
      ORDER BY form_name, handler_name', 
 NULL, '{form_name, handler_name_ro}', 
