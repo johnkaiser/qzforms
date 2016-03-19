@@ -848,7 +848,6 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
                  ta->fieldnames[k]);
                  
              free(paramdata);
-             free(free_array);
              return NULL;
          }
          if (strlen(element) == 0){
