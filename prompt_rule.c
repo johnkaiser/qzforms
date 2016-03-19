@@ -166,6 +166,37 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
 }
 
 /*
+ *  default_prompt_rule
+ *
+ *  Create one for when does not exist.
+ *  Must be freed just like any other rule.
+ */
+struct prompt_rule* default_prompt_rule(struct handler_args* h,
+    char* form_name, char* fieldname){
+
+    unsigned int len = sizeof(struct prompt_rule) + 2;
+    len += strlen(form_name) + 2;
+    len += strlen(fieldname) + 2;
+    char* prompt_type = "intput_text";
+    len += strlen(prompt_type) + 2;
+
+    struct prompt_rule* new_rule = calloc(1, len);
+
+    char* marker = (void*) &new_rule + sizeof(struct prompt_rule);
+
+    memcpy(marker, form_name, strlen(form_name)+1);
+    marker++;
+
+    memcpy(marker, fieldname, strlen(fieldname)+1);
+    marker++;
+
+    memcpy(marker, prompt_type, strlen(prompt_type+1));
+
+    
+    return new_rule;
+}
+
+/*
  *  free_prompt_rule
  *
  *  Frees a previously created prompt rule.
@@ -181,7 +212,11 @@ void free_prompt_rule(struct handler_args* h,
     }
     if (rule->free_options != NULL){
         free(rule->free_options);
-    }    
+    }
+    if (rule->comp_regex != NULL){
+        pcre_free(rule->comp_regex);
+        rule->comp_regex = NULL;
+    }
     free(rule);
 }
 
@@ -798,7 +833,7 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      char* fieldname = NULL;
      asprintf(&fieldname, "\"fieldname\":\"%s\" ", rule->fieldname);
 
-     char* prompt_type = NULL;
+     char* prompt_type = "";
      if ((rule->prompt_type != NULL) && (rule->prompt_type[0] != '\0')){
         asprintf(&prompt_type, "\"prompt_type\":\"%s\", ", rule->prompt_type);
      }
@@ -1025,6 +1060,9 @@ xmlNodePtr add_text_array(struct prompt_add_args* args){
             struct prompt_rule* rule_copy = fetch_prompt_rule(
                 args->hargs, args->rule->form_name, args->rule->fieldname);
 
+            if (rule_copy == NULL) rule_copy = default_prompt_rule(
+                args->hargs, args->rule->form_name, args->rule->fieldname);
+                
             struct prompt_add_args newargs = (struct prompt_add_args){
                 .hargs = args->hargs,
                 .t_action = args->t_action,
@@ -1151,7 +1189,8 @@ void add_prompt(struct handler_args* hargs,
     mod_fname = NULL;
 
     xmlNodePtr fieldset = NULL; 
-    if (strcmp(t_action->prompt_container, "fieldset") == 0){
+    if ((t_action != NULL) && (t_action->prompt_container != NULL) && ( 
+        strcmp(t_action->prompt_container, "fieldset") == 0)){
         // Everything except a hidden field gets a fieldset.
         // XXXXX Make fieldset a field in prompt_rule so that
         // XXXXX multiple fields can exist within one fieldset.
