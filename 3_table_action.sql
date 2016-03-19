@@ -74,28 +74,55 @@ VALUES ('form', 'delete',
 --
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('prompt_rule_edit', 'create', 
-   'SELECT 
+   $PRCTA$SELECT
     $1::text "form_name", 
     $2::text "fieldname",
-    ''input_text''::qz.prompt_types "prompt_type",
-    ''''::text "el_class",
-    ''''::text "options", 
-    ''f''::boolean "readonly",
-    ''''::text "regex_pattern",
-    ''''::text "rows",
-    ''''::text "cols",
-    ''''::text "size"', 
+    'input_text'::qz.prompt_types "prompt_type",
+    ''::text "tabindex",
+    ''::text "el_class", 
+    'f'::text "readonly", 
+    ''::text "regex_pattern", 
+    ''::text "rows", 
+    ''::text "cols", 
+    ''::text "size", 
+    ''::text "maxlength", 
+    ''::text "options", 
+    ''::text "publish_pgtype", 
+    ''::text "expand_percent_n",
+    ''::text "onfocus", 
+    ''::text "onblur", 
+    ''::text "onchange", 
+    ''::text "onselect",
+    ''::text "onclick", 
+    ''::text "ondblclick", 
+    ''::text "onmousedown", 
+    ''::text "onmouseup",
+    ''::text "onmouseover", 
+    ''::text "onmousemove", 
+    ''::text "onmouseout",
+    ''::text "onkeypress", 
+    ''::text "onkeydown", 
+    ''::text "onkeyup"$PRCTA$, 
 '{form_name,fieldname}', '{form_name,fieldname}', NULL);
 
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('prompt_rule_edit', 'insert',
-  'INSERT INTO qz.prompt_rule
-  ("form_name", "fieldname", "prompt_type", "options",
-  "el_class", "readonly", "rows", "cols", "size")
+  $PRITA$INSERT INTO qz.prompt_rule
+  ("form_name", "fieldname", "prompt_type", "tabindex",
+  "el_class", "readonly", "regex_pattern",
+  "rows", "cols", "size",
+  "maxlength", "options", "publish_pgtype", 
+ "expand_percent_n", onfocus, onblur, onchange, onselect,
+ onclick, ondblclick, onmousedown, onmouseup, 
+ onmouseover, onmousemove, onmouseout,
+ onkeypress, onkeydown, onkeyup )
   VALUES
-  ($1,$2,$3,$4,$5,$6,$7,$8,$9)', 
-'{form_name,fieldname,prompt_type,options,el_class,readonly,rows,cols,size}', NULL, NULL);
+  ($1,$2,$3,$4,$5,$6,$7,$8,$9,
+  $10,$11,$12,$13,$14,$15,$16,$17,$18,
+  $19,$20,$21,$22,$23,$24,$25,$26,$27,$28)$PRITA$, 
+'{form_name,fieldname,prompt_type,tabindex,el_class,readonly,regex_pattern,rows,cols,size,maxlength,options,publish_pgtype,expand_percent_n,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup}', 
+NULL, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('prompt_rule_edit', 'getall', 

@@ -160,6 +160,11 @@ SET regex_pattern =
 WHERE form_name = 'menu_set_edit' 
 AND fieldname = 'host_form_name';
 
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, expand_percent_n, onchange)
+VALUES
+('menu_set_edit', 'set_id', 'input_hidden', 't', 'change_status(%n, "U")');
+
 --
 -- prompt_rule_edit
 --
