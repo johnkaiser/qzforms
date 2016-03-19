@@ -8,7 +8,7 @@
 function set_action_options(){
 
     var allowed_options = { 
-        "onetable": ["create", "insert", "edit", "update", "delete"], 
+        "onetable": ["getall", "create", "insert", "edit", "update", "delete"], 
         "grid": ["edit", "save", "insert_row", "update_row", "delete_row"],
         "fs": ["get", "etag_value" ]
     };
