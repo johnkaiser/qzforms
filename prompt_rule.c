@@ -1213,10 +1213,11 @@ void add_prompt(struct handler_args* hargs,
 
     if (input == NULL) return; // Some error occured 
 
-    fprintf(hargs->log, "%f %d %s:%d t_action->add_description=%s\n", 
-        gettime(), hargs->request_id, __func__, __LINE__,
-        (t_action->add_description) ? "true":"false");
-
+    if (t_action != NULL){
+        fprintf(hargs->log, "%f %d %s:%d t_action->add_description=%s\n", 
+            gettime(), hargs->request_id, __func__, __LINE__,
+            (t_action->add_description) ? "true":"false");
+    }
 
     // Add the description off to the side if it is available.
     if ( (t_action != NULL) &&
