@@ -84,7 +84,7 @@ void init_open_table(struct handler_args* h){
 
     // fetch_table_action
 
-    char fetch_query[] = 
+    char fetch_table_action[] = 
         "SELECT fm.schema_name, fm.table_name, ta.sql, "
         "ta.fieldnames, ta.pkey, ta.etag, "
         "fm.target_div, fm.handler_name, fm.xml_template, "
@@ -108,7 +108,7 @@ void init_open_table(struct handler_args* h){
         "AND ta.action = $2";
 
             
-    rs = PQprepare(h->session->conn, "fetch_table_action", fetch_query, 0, NULL);
+    rs = PQprepare(h->session->conn, "fetch_table_action", fetch_table_action, 0, NULL);
 
     char* error_msg = nlfree_error_msg(rs);
     fprintf(h->log, "%f %d %s:%d %s %s %s\n", 

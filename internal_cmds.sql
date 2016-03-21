@@ -1,12 +1,14 @@
+-- These are presented here for documentation and reference.
+-- These commands are compiled into the executable.
 
 PREPARE fetch_table_action AS	
-        SELECT ob.schema_name, ob.table_name, ta.sql, 
+        SELECT fm.schema_name, fm.table_name, ta.sql, 
         ta.fieldnames, ta.pkey, ta.etag, 
-        ob.target_div, ob.handler_name, ob.xml_template, 
-        ob.add_description, ob.prompt_container,  
+        fm.target_div, fm.handler_name, fm.xml_template, 
+        fm.add_description, fm.prompt_container,  
         ta.helpful_text, 
         ARRAY( 
-	      SELECT 'js/get/'|| f.filename filename  
+          SELECT 'js/get/'|| f.filename filename  
           FROM qz.page_js f 
           WHERE f.form_name = $1 
           ORDER BY sequence 
@@ -18,13 +20,13 @@ PREPARE fetch_table_action AS
           ORDER BY sequence 
         ) css_filenames 
         FROM qz.table_action ta 
-        JOIN qz.qzobject ob USING (form_name) 
+        JOIN qz.form fm USING (form_name) 
         WHERE ta.form_name = $1 
         AND ta.action = $2;
 
 
 PREPARE fetch_datum AS
-        SELECT version, table_schema, table_name, column_name, 
+   SELECT version, table_schema, table_name, column_name, 
         ordinal_position, column_default, is_nullable, typname, typtype, 
         typdelim, is_base_type, is_boolean, is_composite, is_domain, is_enum, 
         is_pseudo_type, character_maximum_length, 
@@ -53,7 +55,7 @@ PREPARE fetch_rule AS
         FROM qz.prompt_rule 
         WHERE form_name = $1 AND fieldname = $2;
 
-PREPARE menu_select AS
+PREPARE menu_items AS
         SELECT menu_name, sequence, target_form_name, 
         action, menu_text, context_parameters 
         FROM qz.menu_item 
