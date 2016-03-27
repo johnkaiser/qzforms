@@ -182,7 +182,7 @@ VALUES
 ('status', 'pg_stat_activity',  'SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,waiting,query FROM pg_stat_activity');
 
 
-DELETE FROM qz.table)action
+DELETE FROM qz.table_action
 WHERE form_name = 'pg_stat_activity'
 AND action = 'fetch';
 
