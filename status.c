@@ -104,8 +104,21 @@ void qz_status(struct handler_args* h){
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     xmlNewTextChild(divqz,NULL,"h2", form_name);
     
+    // Version
     snprintf(buf,1023,"QZ Forms Version %.3f", QZVER);
     xmlNewTextChild(divqz,NULL,"p", buf);
+
+    struct table_action* schema_ver_ta = open_table(h, "status", 
+        "schema_version");
+
+    PGresult* schema_ver_rs = perform_post_action(h, schema_ver_ta);
+    char* schema_ver_str;
+    asprintf(&schema_ver_str, "Schema Version %s", 
+        get_value(schema_ver_rs, 0, "schema_version"));
+
+    xmlNewTextChild(divqz, NULL, "p", schema_ver_str);
+    free(schema_ver_str);
+    schema_ver_str = NULL;
 
     // time now
     struct tm time_now;
@@ -118,6 +131,9 @@ void qz_status(struct handler_args* h){
     xmlNodePtr menu = xmlNewChild(divqz, NULL, "div", NULL);
 
     xmlNodePtr menu_item;
+
+    menu_item = xmlNewTextChild(menu, NULL, "button", "change_history");
+    xmlNewProp(menu_item, "onclick", "menu_click(\"change_history\")");
 
     menu_item = xmlNewTextChild(menu, NULL, "button", "pg_stat");
     xmlNewProp(menu_item, "onclick", "menu_click(\"pg_stat_activity\")");
@@ -134,8 +150,15 @@ void qz_status(struct handler_args* h){
     menu_item = xmlNewTextChild(menu, NULL, "button", "form_tags");
     xmlNewProp(menu_item, "onclick", "menu_click(\"form_tags\")");
 
+    // show change history
+    struct table_action* change_history_ta = open_table(h, "status", 
+        "change_history");
+    PGresult* chg_hist_rs = perform_post_action(h, change_history_ta);
+    rs_to_table(divqz, chg_hist_rs, "change_history");
+
+
     // show pg_stat_activity from postgresql
-    struct table_action* stat_ta = open_table(h, "pg_stat_activity", "fetch");
+    struct table_action* stat_ta = open_table(h, "status", "pg_stat_activity");
     PGresult* stat_rs = perform_post_action(h, stat_ta);
     rs_to_table(divqz, stat_rs, "pg_stat_activity");
 
@@ -201,6 +224,7 @@ void qz_status(struct handler_args* h){
     xmlNodePtr ft_tbody = xmlNewChild(ft_table, NULL, "tbody", NULL);
     xmlHashScan(h->session->form_tags, form_tag_status_scanner, ft_tbody);
 
+    PQclear(chg_hist_rs);
     PQclear(stat_rs);
 
     return;

@@ -6,7 +6,7 @@ INSERT INTO qz.change_history
    );
 
 UPDATE qz.constants 
-SET schema_version = '4';
+SET schema_version = '5';
 
 
 SELECT SETVAL('qz.menu_set_set_id_seq', COALESCE(MAX(set_id), 1) ) FROM qz.menu_set;
@@ -175,4 +175,30 @@ SET sql=$PRITA$INSERT INTO qz.prompt_rule
 fieldnames='{form_name,fieldname,prompt_type,tabindex,el_class,readonly,regex_pattern,rows,cols,size,maxlength,options,publish_pgtype,expand_percent_n,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup}'
 WHERE form_name = 'prompt_rule_edit'
 AND action = 'insert';
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'pg_stat_activity',  'SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,waiting,query FROM pg_stat_activity');
+
+
+DELETE FROM qz.table)action
+WHERE form_name = 'pg_stat_activity'
+AND action = 'fetch';
+
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'change_history', 
+  'SELECT change_id, changed, changed_by, 
+    change_description, note 
+  FROM qz.change_history 
+  ORDER BY change_id');
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'schema_version',
+    'SELECT schema_version FROM qz.constants');
 
