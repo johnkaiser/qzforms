@@ -777,3 +777,24 @@ NULL, NULL, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('status', 'view', 'SELECT 1', NULL, NULL, NULL);
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'pg_stat_activity',  'SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,waiting,query FROM pg_stat_activity');
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'change_history', 
+  'SELECT change_id, changed, changed_by, 
+    change_description, note 
+  FROM qz.change_history 
+  ORDER BY change_id');
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'schema_version',
+    'SELECT schema_version FROM qz.constants');
+

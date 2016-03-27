@@ -62,7 +62,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
 	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql \
-	qz_db_update_SV4.sql
+	qz_db_update_SV4.sql qz_db_update_SV5.sql
 
 all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
