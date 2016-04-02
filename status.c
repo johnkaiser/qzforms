@@ -81,8 +81,6 @@ void qz_status(struct handler_args* h){
     xmlNodePtr cur = NULL;
     xmlNodePtr divqz = NULL;
 
-    char buf[1024];
-
     content_type(h, "text/html");
 
     h->page_ta = open_table(h, "status", "view");
@@ -105,27 +103,24 @@ void qz_status(struct handler_args* h){
     xmlNewTextChild(divqz,NULL,"h2", form_name);
     
     // Version
-    snprintf(buf,1023,"QZ Forms Version %.3f", QZVER);
-    xmlNewTextChild(divqz,NULL,"p", buf);
+    char* version;
+    asprintf(&version, "QZ Forms Version %.3f", QZVER);
+    xmlNewTextChild(divqz, NULL, "p", version);
+    free(version);
+
+    asprintf(&version, "Expected Schema Version %s", SCHEMA_VER);
+    xmlNewTextChild(divqz, NULL, "p", version);
+    free(version);
 
     struct table_action* schema_ver_ta = open_table(h, "status", 
         "schema_version");
 
     PGresult* schema_ver_rs = perform_post_action(h, schema_ver_ta);
-    char* schema_ver_str;
-    asprintf(&schema_ver_str, "Schema Version %s", 
+    asprintf(&version, "Installed Schema Version %s", 
         get_value(schema_ver_rs, 0, "schema_version"));
 
-    xmlNewTextChild(divqz, NULL, "p", schema_ver_str);
-    free(schema_ver_str);
-    schema_ver_str = NULL;
-
-    // time now
-    struct tm time_now;
-    time_t clock = time(NULL);
-    localtime_r(&clock, &time_now);
-    strftime(buf, 1024, "%Y-%m-%d %H:%M:%S", &time_now);
-    xmlNewTextChild(divqz,NULL,"p", buf);
+    xmlNewTextChild(divqz, NULL, "p", version);
+    free(version);
 
     // button menu
     xmlNodePtr menu = xmlNewChild(divqz, NULL, "div", NULL);

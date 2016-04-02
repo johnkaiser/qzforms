@@ -136,7 +136,8 @@ test_parse_key_eq_val: parse_key_eq_val.c qz.h gettime.o
 	-o test_parse_key_eq_val
 
 status.o: status.c qz.h
-	$(CC) $(CFLAGS) -DQZVER="$(VERSION)" -c status.c
+	$(CC) $(CFLAGS) -DQZVER="$(VERSION)" \
+	-DSCHEMA_VER=\"$(SCHEMA_VERSION)\" -c status.c
 
 opentable.o: opentable.c qz.h
 	$(CC) $(CFLAGS) -DSCHEMA_VER=\"$(SCHEMA_VERSION)\" -c opentable.c
