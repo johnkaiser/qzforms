@@ -299,7 +299,6 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         "PGHOSTADDR",
         "PGOPTIONS",
         "PGPASSFILE",
-        "PGPASSWORD",
         "PGPORT",
         "PGREALM",
         "PGREQUIREPEER",
@@ -312,7 +311,6 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         "PGSSLMODE",
         "PGSSLROOTCERT",
         "PGTZ",
-        "PGUSER",
         NULL
     };    
     char* var;

@@ -78,7 +78,7 @@ get_session_state(struct handler_args* h){
         return no_session;
     }
 
-    if (strlen(h->session_key)==0){
+    if (strlen(h->session_key) == 0){
         fprintf(h->log, "%f %d %s:%d no_session-session key is null\n", 
             gettime(), h->request_id, __func__, __LINE__);
 
@@ -198,6 +198,7 @@ setup_session(struct handler_args* hargs,
     this_session->opentables = xmlHashCreate(197);
     this_session->pgtype_datum = xmlHashCreate(197);
     this_session->form_tags = xmlHashCreate(197);
+    this_session->form_sets = xmlHashCreate(197);
 
     this_session->integrity_token = conf->integrity_token;
 
@@ -316,6 +317,10 @@ void close_session(struct handler_args* hargs, struct session* this_session){
         xmlHashFree(this_session->form_tags, (xmlHashDeallocator)xmlFree);
         this_session->form_tags = NULL;
     }
+
+    if (this_session->form_sets != NULL){
+        clear_form_sets(this_session);
+    }    
 
     if (this_session->conn != NULL){
         // close_all_tables  clears ->opentables

@@ -48,25 +48,28 @@ struct form_record* register_form(struct handler_args* h,
 
     // build the record
     int action_url_len = strlen(form_action);
-    int form_tag_record_size = sizeof(struct form_record) + action_url_len + 2;
+    int form_rec_record_size = sizeof(struct form_record) + action_url_len + 2;
 
-    struct form_record* form_tag = calloc(1, form_tag_record_size);
+    struct form_record* form_rec = calloc(1, form_rec_record_size);
     
-    uint64_t form_id = qzrandom64ch(form_tag->form_id);
+    uint64_t form_id = qzrandom64ch(form_rec->form_id);
 
     time_t valid_duration = h->conf->form_duration;
 
-    form_tag->is_valid = true;
-    form_tag->created = time(NULL);
-    form_tag->duration = valid_duration;
-    form_tag->expires = form_tag->created + valid_duration;
-    form_tag->submit_only_once = submit_only_once;
-    form_tag->session_integrity_token = h->session->integrity_token;
+    form_rec->is_valid = true;
+    form_rec->created = time(NULL);
+    form_rec->duration = valid_duration;
+    form_rec->expires = form_rec->created + valid_duration;
+    form_rec->submit_only_once = submit_only_once;
+    form_rec->session_integrity_token = h->session->integrity_token;
   
-    snprintf(form_tag->form_action, action_url_len+1, "%s", form_action);
+    snprintf(form_rec->form_action, action_url_len+1, "%s", form_action);
+
+    //  Context 
+    //set_context_parameters(h, form_rec,  
 
     // save the record.
-    xmlHashAddEntry(h->session->form_tags, form_tag->form_id, form_tag);
+    xmlHashAddEntry(h->session->form_tags, form_rec->form_id, form_rec);
 
     // add the hidden input field.
 
@@ -82,11 +85,11 @@ struct form_record* register_form(struct handler_args* h,
 
     char* expires_buf;
     int arc;
-    arc = asprintf(&expires_buf, "%lld", form_tag->expires);
+    arc = asprintf(&expires_buf, "%lld", form_rec->expires);
     xmlNewProp(form_node, "expires", expires_buf);
     free(expires_buf);
 
-    return form_tag;
+    return form_rec;
 }
 
 /*
@@ -137,39 +140,8 @@ void duplicate_registration(struct handler_args* h,
 
 bool post_contains_valid_form_tag(struct handler_args* h){
 
-    char* form_tag = xmlHashLookup(h->postdata, "form_tag");
-    if (form_tag == NULL){
-        fprintf(h->log, "%f %d %s:%d fail form_tag not found in post data\n", 
-           gettime(), h->request_id, __func__, __LINE__); 
- 
-        return false;
-    }    
- 
-    // I need a null after the payload so the integer can be
-    // interpeted as a string for xml hash use.
-    uint64_t payload_int;
-    xmlChar payload_str[9];
-    bzero(payload_str,9);
-
-    payload_int = validate_etag(h->session->tagger_socket_path, form_tag);
-
-    if (payload_int == 0){
-        fprintf(h->log, "%f %d %s:%d form_tag validation failed\n", 
-           gettime(), h->request_id, __func__, __LINE__); 
-
-        return false;
-    }
-    memcpy(payload_str, &payload_int, 8);
-    struct form_record* this_form;
-    this_form = xmlHashLookup(h->session->form_tags, payload_str);
-
-    if (this_form == NULL){ 
-        fprintf(h->log, "%f %d %s:%d fail form record not found in hash table\n", 
-           gettime(), h->request_id, __func__, __LINE__); 
-         
-        return false;
-    } 
-
+    struct form_record* this_form = get_posted_form_record(h);
+    if (this_form == NULL) return false;
 
     if (!this_form->is_valid){
         fprintf(h->log, "%f %d %s:%d fail form record flagged as invalid "
@@ -179,17 +151,6 @@ bool post_contains_valid_form_tag(struct handler_args* h){
 
         return false;
     }    
-
-    if (this_form->session_integrity_token != h->session->integrity_token){
-        fprintf(h->log, 
-            "%f %d %s:%d fail form record integrity token does not match "
-            "form_action=%s\n", 
-            gettime(), h->request_id, __func__, __LINE__,
-            this_form->form_action); 
-
-        return false;
-    }
-
 
     // Compare the url saved in the form record to the url used in 
     // the request.  Note url used is allowed to have extra text, just
@@ -237,7 +198,6 @@ bool post_contains_valid_form_tag(struct handler_args* h){
         gettime(), h->request_id, __func__, __LINE__,
         this_form->form_action); 
         
-
     return true;
 }
 
@@ -298,8 +258,9 @@ void refresh_form_tag(struct handler_args* h){
 }
 
 struct form_tag_housekeeping_data {
-    xmlHashTablePtr form_tags;
-    struct handler_args* hargs;
+    // xmlHashTablePtr form_tags;
+    struct session* this_session;  // the session being cleaned
+    struct handler_args* hargs;    // the housekeeper's not the session's
 };
 
 /*
@@ -322,7 +283,10 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
            form_tag->form_action); 
 
-        xmlHashRemoveEntry(ft_hk_data->form_tags, name, NULL);
+        decrement_form_set(form_tag, ft_hk_data->this_session->form_sets);
+
+
+        xmlHashRemoveEntry(ft_hk_data->this_session->form_tags, name, NULL);
         free(form_tag);
     }else if (time(NULL) > form_tag->expires){
         form_tag->is_valid = false;
@@ -339,7 +303,8 @@ void form_tag_housekeeping(struct handler_args* hargs,
 
     struct form_tag_housekeeping_data ft_hk_data = 
         (struct form_tag_housekeeping_data) {
-            .form_tags = this_session->form_tags,
+            //.form_tags = this_session->form_tags,
+            .this_session = this_session,
             .hargs = hargs
     };
 
@@ -347,5 +312,69 @@ void form_tag_housekeeping(struct handler_args* hargs,
     xmlHashScan(this_session->form_tags, form_tag_housekeeping_scanner, 
         &ft_hk_data);
 
+    xmlHashScan(this_session->form_sets, form_set_housekeeping_scanner, 
+       ft_hk_data.this_session);
 }
+
+/*
+ *  get_posted_form_record
+ *
+ *  Obtain the form record indicated by the form tag 
+ *  in the post data.
+ */
+struct form_record* get_posted_form_record(struct handler_args* h){
+ 
+    if (h->postdata == NULL) return NULL;
+
+    char* form_tag = xmlHashLookup(h->postdata, "form_tag");
+    if (form_tag == NULL){
+        fprintf(h->log, "%f %d %s:%d fail form_tag not found in post data\n", 
+           gettime(), h->request_id, __func__, __LINE__); 
+ 
+        return NULL;
+    }    
+ 
+    // I need a null after the payload so the integer can be
+    // interpeted as a string for xml hash use.
+    uint64_t payload_int;
+    xmlChar payload_str[9];
+    bzero(payload_str,9);
+
+    payload_int = validate_etag(h->session->tagger_socket_path, form_tag);
+
+    if (payload_int == 0){
+        fprintf(h->log, "%f %d %s:%d form_tag validation failed\n", 
+           gettime(), h->request_id, __func__, __LINE__); 
+
+        return NULL;
+    }
+    memcpy(payload_str, &payload_int, 8);
+    struct form_record* this_form;
+    this_form = xmlHashLookup(h->session->form_tags, payload_str);
+
+    if (this_form == NULL){ 
+        fprintf(h->log, "%f %d %s:%d fail form record not found in hash table\n", 
+           gettime(), h->request_id, __func__, __LINE__); 
+         
+        return NULL;
+    } 
+
+    // If the token fails to match then throw a hard error
+    // and kill the session.
+    if (this_form->session_integrity_token != h->session->integrity_token){
+        fprintf(h->log, 
+            "%f %d %s:%d fail form record integrity token does not match "
+            "form_action=%s\n", 
+            gettime(), h->request_id, __func__, __LINE__,
+            this_form->form_action); 
+
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
+        h->session->is_logged_in = false;
+
+        return NULL;
+    }
+
+    return this_form;
+}
+
 

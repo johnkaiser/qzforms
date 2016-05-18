@@ -63,6 +63,36 @@ struct prompt_adder{
 // by init_prompt_type_hash() at program startup.
 static xmlHashTablePtr prompt_type_hash = NULL;
 
+/*
+ *  default_prompt_rule
+ *
+ *  Create one for when does not exist.
+ *  Must be freed just like any other rule.
+ */
+struct prompt_rule* default_prompt_rule(struct handler_args* h,
+    char* form_name, char* fieldname){
+
+    unsigned int len = sizeof(struct prompt_rule) + 2;
+    len += strlen(form_name) + 2;
+    len += strlen(fieldname) + 2;
+    char* prompt_type = "intput_text";
+    len += strlen(prompt_type) + 2;
+
+    struct prompt_rule* new_rule = calloc(1, len);
+
+    char* marker = (void*) &new_rule + sizeof(struct prompt_rule);
+
+    memcpy(marker, form_name, strlen(form_name)+1);
+    marker++;
+
+    memcpy(marker, fieldname, strlen(fieldname)+1);
+    marker++;
+
+    memcpy(marker, prompt_type, strlen(prompt_type+1));
+
+    
+    return new_rule;
+}
 
 /*
  *  fetch_prompt_rule
@@ -161,39 +191,9 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
                 PQcmdStatus(rs),
                 PQresultErrorMessage(rs));
         }
-        return NULL;
+        //ZZZZZZZZZZZZZZZZZZZZZ
+        return default_prompt_rule(h, form_name, fieldname);
     }    
-}
-
-/*
- *  default_prompt_rule
- *
- *  Create one for when does not exist.
- *  Must be freed just like any other rule.
- */
-struct prompt_rule* default_prompt_rule(struct handler_args* h,
-    char* form_name, char* fieldname){
-
-    unsigned int len = sizeof(struct prompt_rule) + 2;
-    len += strlen(form_name) + 2;
-    len += strlen(fieldname) + 2;
-    char* prompt_type = "intput_text";
-    len += strlen(prompt_type) + 2;
-
-    struct prompt_rule* new_rule = calloc(1, len);
-
-    char* marker = (void*) &new_rule + sizeof(struct prompt_rule);
-
-    memcpy(marker, form_name, strlen(form_name)+1);
-    marker++;
-
-    memcpy(marker, fieldname, strlen(fieldname)+1);
-    marker++;
-
-    memcpy(marker, prompt_type, strlen(prompt_type+1));
-
-    
-    return new_rule;
 }
 
 /*
@@ -1057,16 +1057,10 @@ xmlNodePtr add_text_array(struct prompt_add_args* args){
             char* fname_buf;
             asprintf(&fname_buf, "%s[%d]", args->fname, n);
 
-            struct prompt_rule* rule_copy = fetch_prompt_rule(
-                args->hargs, args->rule->form_name, args->rule->fieldname);
-
-            if (rule_copy == NULL) rule_copy = default_prompt_rule(
-                args->hargs, args->rule->form_name, args->rule->fieldname);
-                
             struct prompt_add_args newargs = (struct prompt_add_args){
                 .hargs = args->hargs,
                 .t_action = args->t_action,
-                .rule = rule_copy,
+                .rule = args->rule,
                 .pgtype = args->pgtype,
                 .row_index = n,
                 .child_of = array_item,
@@ -1079,7 +1073,6 @@ xmlNodePtr add_text_array(struct prompt_add_args* args){
             
             set_common_attributes(&newargs, new_input);
 
-            free_prompt_rule(args->hargs, rule_copy);
             free(fname_buf);
         }
 

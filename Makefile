@@ -14,7 +14,7 @@ XMLLIBDIR!=xml2-config --libs
 PCRECFLAGS!=pcre-config --cflags
 PCRELIBS!=pcre-config --libs
 
-CC=clang -Wno-pointer-sign 
+CC=clang -Wno-pointer-sign
 #CC=gcc 
 
 CFLAGS=-Wall \
@@ -33,7 +33,7 @@ OBJ=qzhandlers.o timestamp.o  onetable.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
-	grid.o
+	grid.o form_set.o
 
 FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	templates/base.xml templates/login.xml qzforms.init README.txt \
@@ -45,7 +45,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom64.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
-	form_tag.c prompt_rule.c grid.c
+	form_tag.c prompt_rule.c grid.c form_set.c
 
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
@@ -241,7 +241,10 @@ form_tag.o: form_tag.c
 	$(CC) $(CFLAGS)  -Wall -c form_tag.c 
 
 grid.o: grid.c
-	 $(CC) $(CFLAGS) -Wall -c grid.c
+	$(CC) $(CFLAGS) -Wall -c grid.c
+
+form_set.o: form_set.c
+	$(CC) $(CFLAGS) -Wall -c form_set.c
 
 inc:
 	echo $(VERSION)"+0.001"|bc > Version.new

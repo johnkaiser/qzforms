@@ -67,7 +67,10 @@ void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     // register_form adds a record about the form in a table and adds 
     // a hidden input field named "form_tag" that must be returned and 
     // validated before any http post data is accepted.
-    register_form(h, del_form, SUBMIT_MULTIPLE, action_target);
+     struct form_record* form_rec = register_form(h, del_form, 
+         SUBMIT_MULTIPLE, action_target);
+
+    set_context_parameters(h, form_rec, rs, 0);
 
     // Add a hidden field for each primary key.
     int pcnt;
@@ -129,7 +132,9 @@ void edit_form(struct handler_args* h, char* next_action,
 
     xmlNewProp(form, "enctype", "application/x-www-form-urlencoded");
 
-    register_form(h, form, SUBMIT_MULTIPLE, form_target);
+    struct form_record* form_rec = register_form(h, form, SUBMIT_MULTIPLE, 
+        form_target);
+    set_context_parameters(h, form_rec, edit_rs, 0);
 
     int col;
 

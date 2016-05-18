@@ -85,10 +85,10 @@ void init_open_table(struct handler_args* h){
     // fetch_table_action
 
     char fetch_table_action[] = 
-        "SELECT fm.schema_name, fm.table_name, ta.sql, "
-        "ta.fieldnames, ta.pkey, ta.etag, "
-        "fm.target_div, fm.handler_name, fm.xml_template, "
-        "fm.add_description, fm.prompt_container, " 
+        "SELECT fm.schema_name, fm.table_name, ta.sql, ta.fieldnames, "
+        "ta.pkey, ta.etag, fm.target_div, fm.handler_name, "
+        "fm.xml_template, fm.add_description, fm.prompt_container, "
+        "ta.set_context_parameters, fm.form_set_name, fs.context_parameters, " 
         "ta.helpful_text, "
         "ARRAY( "
         "  SELECT 'js/get/'|| f.filename filename " 
@@ -104,6 +104,7 @@ void init_open_table(struct handler_args* h){
         ") css_filenames "
         "FROM qz.table_action ta "
         "JOIN qz.form fm USING (form_name) "
+        "LEFT JOIN qz.form_set fs ON fm.form_set_name = fs.set_name "
         "WHERE ta.form_name = $1 "
         "AND ta.action = $2";
 
@@ -200,6 +201,113 @@ void init_open_table(struct handler_args* h){
     PQclear(rs);
 
     return;
+}
+
+/*
+ *  log_table_action_details
+ *
+ *  Just for debugging.
+ */
+void log_table_action_details(struct handler_args* h, 
+    struct table_action* ta){
+
+
+    fprintf(h->log, "%f %d %s:%d form_name=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->form_name);
+
+    fprintf(h->log, "%f %d %s:%d action=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->action);
+        
+    fprintf(h->log, "%f %d %s:%d schema_name=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->schema_name);
+
+    fprintf(h->log, "%f %d %s:%d table_name=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->table_name);
+
+    fprintf(h->log, "%f %d %s:%d prepare_name=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->prepare_name);
+
+    fprintf(h->log, "%f %d %s:%d etag=%llx\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->etag);
+
+    fprintf(h->log, "%f %d %s:%d nbr_params=%d\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->nbr_params);
+
+    int k;
+    for (k=0; k<ta->nbr_params; k++){ 
+        fprintf(h->log, "%f %d %s:%d fieldnames[%d]=%s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            k, ta->fieldnames[k]);
+    }
+
+    for (k=0; k<ta->nbr_pkeys; k++){ 
+        fprintf(h->log, "%f %d %s:%d pkey[%d]=%s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            k, ta->pkeys[k]);
+    }
+
+    fprintf(h->log, "%f %d %s:%d target_div=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->target_div);
+
+    fprintf(h->log, "%f %d %s:%d xml_template=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->xml_template);
+
+    fprintf(h->log, "%f %d %s:%d handler_name=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->handler_name);
+        
+    fprintf(h->log, "%f %d %s:%d add_description=%c\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        (ta->add_description) ? 't':'f');
+
+    fprintf(h->log, "%f %d %s:%d prompt_container=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->prompt_container);
+
+    if (ta->js_filenames != NULL){
+        for (k=0; ta->js_filenames[k] != NULL; k++){
+            fprintf(h->log, "%f %d %s:%d js_filename=%s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                ta->js_filenames[k]);
+        }        
+    }
+
+    if (ta->css_filenames != NULL){
+        for (k=0; ta->css_filenames[k] != NULL; k++){
+            fprintf(h->log, "%f %d %s:%d css_filename=%s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                ta->css_filenames[k]);
+        }    
+    }        
+
+    fprintf(h->log, "%f %d %s:%d form_set_name=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->form_set_name);
+        
+    fprintf(h->log, "%f %d %s:%d set_context_parameters=%c\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        (ta->set_context_parameters) ? 't':'f');
+    
+    if (ta->context_parameters != NULL){
+        for (k=0; ta->context_parameters[k] != NULL; k++){
+            fprintf(h->log, "%f %d %s:%d context_parameters=%s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                ta->context_parameters[k]);
+        }
+    }
+
+    fprintf(h->log, "%f %d %s:%d integrity_token=%llx\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->integrity_token);
 }
 
 /*
@@ -364,6 +472,12 @@ void init_table_entry(struct handler_args* hargs,
     }    
     table_entry_size+= prompt_container_len+2;
 
+    int form_set_name_len = PQgetlength(rs_table_action, 0,
+      PQfnumber(rs_table_action, "form_set_name"));
+    char* form_set_name = PQgetvalue(rs_table_action, 0,
+      PQfnumber(rs_table_action, "form_set_name"));
+    if (form_set_name == NULL) form_set_name = empty;
+
     int helpful_text_len = PQgetlength(rs_table_action, 0,
         PQfnumber(rs_table_action, "helpful_text"));
     char* helpful_text = PQgetvalue(rs_table_action, 0,    
@@ -443,6 +557,11 @@ void init_table_entry(struct handler_args* hargs,
         helpful_text_len+1);
     data_target += helpful_text_len+2;
 
+    new_table_action->form_set_name = data_target;
+    memcpy(new_table_action->form_set_name, form_set_name,
+       form_set_name_len+1);
+    data_target += form_set_name_len+2;
+
     // these are char arrays and should be freed separately
 
     char* fieldname_pgarray = PQgetvalue(rs_table_action, 0, 
@@ -464,6 +583,11 @@ void init_table_entry(struct handler_args* hargs,
         PQfnumber(rs_table_action, "css_filenames"));
     char** css_filenames = parse_pg_array(cssfiles_pgarray);
     new_table_action->css_filenames = css_filenames;
+
+    char* context_parameters_pgarray = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "context_parameters"));
+    char** context_parameters = parse_pg_array(context_parameters_pgarray); 
+    new_table_action->context_parameters = context_parameters;
 
     // Count the number of params
     new_table_action->nbr_params = 0;
@@ -499,6 +623,14 @@ void init_table_entry(struct handler_args* hargs,
         new_table_action->add_description = false;
     }    
 
+    char* set_context_parameters = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "set_context_parameters"));
+    if (set_context_parameters[0] == 't'){
+        new_table_action->set_context_parameters = true;
+    }else{
+        new_table_action->set_context_parameters = false;
+    }
+
     // Set the check token
     new_table_action->integrity_token = hargs->session->integrity_token;
 
@@ -520,6 +652,8 @@ void init_table_entry(struct handler_args* hargs,
     fprintf(hargs->log, 
         "%f %d %s:%d init_table_entry complete\n", 
         gettime(), hargs->request_id, __func__, __LINE__);
+
+    if (true) log_table_action_details(hargs, new_table_action); 
     return;
 }
 
@@ -533,6 +667,7 @@ void free_table_action(struct table_action* ta){
     if (ta->pkeys != NULL) free(ta->pkeys);
     if (ta->js_filenames != NULL) free(ta->js_filenames);
     if (ta->css_filenames != NULL) free(ta->css_filenames);
+    if (ta->context_parameters != NULL) free(ta->context_parameters);
     free(ta);
 }
 
@@ -710,7 +845,6 @@ char* build_pgarray_from_post(xmlHashTablePtr postdata, char* element){
  *  When the post data represents a table where the element is in
  *  the form column_name[row] then perform the table action on the
  *  given row.
- *  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZz
  */
 PGresult* perform_post_row_action(struct handler_args* h, 
     struct table_action* ta, int row){

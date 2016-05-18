@@ -9,8 +9,8 @@ CREATE TABLE qz.table_action (
     PRIMARY KEY (form_name, action)
 );    
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
-VALUES ('form', 'insert', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text)
+VALUES ('form', 'insert',
    $TAFI$INSERT INTO qz.form
     (form_name, handler_name, schema_name, table_name,
     xml_template, target_div, 

@@ -81,6 +81,10 @@ enum session_state {no_session, bad_session, session_no_login,
     logged_in, logged_out };
 
 // Explicit initializers for value to text conversion.
+/* is this deletable?
+
+*/
+
 enum prompt_types { none=0, button=1, input_button=2, input_checkbox=3, 
 input_file=4, input_hidden=5, input_image=6, input_password=7, input_radio=8, 
 input_reset=9, input_submit=10, input_text=11, select_enum=12, 
@@ -135,6 +139,7 @@ struct session{
     xmlHashTablePtr opentables;
     xmlHashTablePtr pgtype_datum;
     xmlHashTablePtr form_tags;
+    xmlHashTablePtr form_sets;
     char tagger_socket_path[MAXPATHLEN+1]; 
     uint64_t integrity_token;
 };
@@ -159,6 +164,9 @@ struct table_action{
     char* helpful_text;
     char** js_filenames;
     char** css_filenames;
+    char* form_set_name;
+    bool set_context_parameters;
+    char** context_parameters;
     uint64_t integrity_token;
 };
 
@@ -266,10 +274,22 @@ struct form_record{
     time_t expires;
     time_t duration;
     bool submit_only_once;
+    char form_set_id[17];
     uint64_t session_integrity_token;
     char form_action[];
     // XXXXXX  tie to record key sometimes
 };
+
+
+struct form_set{
+    char id[17];
+    char zero;
+    int64_t ref_count;
+    bool is_valid;
+    xmlHashTablePtr context_parameters;
+    char name[64];
+};
+
 
 static const char QZERR_EXPECTED_EQ[] = "Expected '='";
 static const char QZERR_BAD_VALUE[] = "Bad Value";
@@ -754,6 +774,14 @@ extern struct form_record* register_form(struct handler_args* h,
 extern bool post_contains_valid_form_tag(struct handler_args* h);
 
 /*
+ *  get_posted_form_record
+ *
+ *  Return the form record that invokes the current request.
+ *  The returned form may or may not be flagged as valid.
+ */
+extern struct form_record* get_posted_form_record(struct handler_args* h);
+
+/*
  *  do_housekeeping
  *  session.c
  */
@@ -913,4 +941,15 @@ extern void add_helpful_text(struct handler_args* h, struct table_action* ta,
  *  The result must be freed.
  */
 extern char* base64_encode(char*);
+
+extern void decrement_form_set(struct form_record* form_rec, 
+    xmlHashTablePtr form_sets);
+
+extern void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name);
+
+extern void clear_form_sets(struct session*);
+
+extern void set_context_parameters(struct handler_args* h, 
+    struct form_record* new_form_rec,
+    PGresult* values_rs, int row);
 
