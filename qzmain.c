@@ -50,7 +50,7 @@ struct thread_launch_data {
  */
 void cleanup(sig){
 
-    // kill tagger 
+    // kill tagger
     kill(tagger_pid, SIGTERM);
 
     int status;
@@ -67,10 +67,10 @@ void cleanup(sig){
 struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     int request_id, struct qz_config* conf){
 
-    char* ck; 
+    char* ck;
     struct handler_args* hargs;
     uint64_t session_payload = 0;
-     
+
     if ( (hargs = calloc(1, sizeof(struct handler_args))) == NULL ){
        FCGX_FPrintF(request->err, "calloc failed in init_handler");
        // Just up and die then.
@@ -80,30 +80,31 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
     hargs->log = fopen(conf->logfile_name, "a");
 
-    if (hargs->log == NULL){ 
+    if (hargs->log == NULL){
        free(hargs);
-       FCGX_FPrintF(request->err, "open failed on log file %s\n", 
+       FCGX_FPrintF(request->err, "open failed on log file %s\n",
            conf->logfile_name);
 
        return NULL;
     };
-    
-    
-    if (request != NULL){ 
-        fprintf(hargs->log, "%f %d %s:%d begin init_handler %s\n", 
+
+
+    if (request != NULL){
+        fprintf(hargs->log, "%f %d %s:%d begin init_handler %s\n",
             hargs->starttime, request_id, __func__, __LINE__,
             FCGX_GetParam("REQUEST_URI",request->envp));
 
-        // not the housekeeper 
+        // not the housekeeper
         hargs->request = request;
         hargs->in = request->in;
         hargs->out = request->out;
         hargs->err = request->err;
         hargs->envpfcgi = request->envp;
-        hargs->uri_parts = str_to_array( 
+        hargs->form_sets = xmlHashCreate(19);
+        hargs->uri_parts = str_to_array(
             FCGX_GetParam("REQUEST_URI",request->envp), '/');
     }else{
-        fprintf(hargs->log, "%f %d %s:%d init_handler %s\n", 
+        fprintf(hargs->log, "%f %d %s:%d init_handler %s\n",
             hargs->starttime, request_id, __func__, __LINE__,
             "housekeeper");
 
@@ -111,7 +112,8 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->request = NULL;
         hargs->envpfcgi = NULL;
         hargs->uri_parts = NULL;
-    }    
+        hargs->form_sets = NULL;
+    }
     hargs->cookie_buf = NULL;
     hargs->envpmain = envpmain;
     hargs->request_id = request_id;
@@ -121,7 +123,7 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     hargs->error_exists = false;
 
     if (hargs->uri_parts != NULL){  // null for housekeeper
-        for( hargs->nbr_uri_parts = 0; 
+        for( hargs->nbr_uri_parts = 0;
             hargs->uri_parts[hargs->nbr_uri_parts] != NULL;
             hargs->nbr_uri_parts++)
             ;
@@ -129,17 +131,17 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
     if ( (ck = FCGX_GetParam("HTTP_COOKIE", hargs->envpfcgi)) != NULL ){
         parse_cookie(hargs, ck);
-        
-        char* session_key = xmlHashLookup(hargs->cookiesin, "session_key"); 
+
+        char* session_key = xmlHashLookup(hargs->cookiesin, "session_key");
         if (session_key != NULL){
             // Just check that it could be valid.
             // Don't actually check that it is in sessions and is valid.
             // Content parsing is skipped if this is zero.
-            session_payload = validate_etag(conf->tagger_socket_path, 
+            session_payload = validate_etag(conf->tagger_socket_path,
                 session_key);
 
-            snprintf(hargs->session_key, SESSION_KEY_LENGTH, "%s", session_key); 
-        } 
+            snprintf(hargs->session_key, SESSION_KEY_LENGTH, "%s", session_key);
+        }
 
         fprintf(hargs->log, "%f %d %s:%d cookiesin OK\n",
             gettime(), request_id, __func__, __LINE__);
@@ -154,24 +156,24 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     if (content_length_str != NULL){
         content_length = atoi( content_length_str );
     }
-        
-    if ((content_length > 0) && (session_payload > 0)) {   
+
+    if ((content_length > 0) && (session_payload > 0)) {
         char* buf;
         buf = calloc(1, content_length+2);
         FCGX_GetStr(buf, content_length, hargs->in);
         hargs->postbuf = buf;
         hargs->postdata = NULL;
 
-        // parse_post    
-        fprintf(hargs->log, "%f %d %s:%d parse_post called with %ld bytes\n", 
-            gettime(), hargs->request_id, __func__, __LINE__, 
-            strlen(hargs->postbuf)); 
+        // parse_post
+        fprintf(hargs->log, "%f %d %s:%d parse_post called with %ld bytes\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            strlen(hargs->postbuf));
 
         hargs->postdata = parse_key_eq_val(hargs, hargs->postbuf, '&', true);
 
-        fprintf(hargs->log, "%f %d %s:%d parse_post complete %s\n", 
+        fprintf(hargs->log, "%f %d %s:%d parse_post complete %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
-            (hargs->postdata == NULL) ? hargs->postbuf : "success" ); 
+            (hargs->postdata == NULL) ? hargs->postbuf : "success" );
 
     }else{
         hargs->postdata = NULL;
@@ -196,19 +198,24 @@ void free_handler(struct handler_args* handler){
             xmlHashFree(handler->cookiesin, NULL);
             free(handler->cookie_buf);
             handler->cookie_buf = NULL;
-        }    
+        }
 
-        if (handler->postdata != NULL){  
+        if (handler->postdata != NULL){
             xmlHashFree(handler->postdata, NULL);
             free(handler->postbuf);
             handler->postdata = NULL;
         }
 
+        if  (handler->form_sets != NULL){
+            xmlHashFree(handler->form_sets, NULL);
+            handler->form_sets = NULL;
+        }
+
         FCGX_Finish_r(handler->request);
 
-        if (handler->log!=NULL) fprintf(handler->log, "%f %d %s:%d %s %f\n", 
+        if (handler->log!=NULL) fprintf(handler->log, "%f %d %s:%d %s %f\n",
             gettime(), handler->request_id, __func__, __LINE__,
-            "free_handler - request duration ", 
+            "free_handler - request duration ",
             gettime() - start);
 
         fflush(handler->log);
@@ -231,7 +238,7 @@ void launch_connection_thread(void* data){
     FILE* log = fopen(thread_dat->conf->logfile_name, "a");
 
     if (FCGX_InitRequest(&request, 0, 0) != 0){
-        fprintf(log,"%f %d %s:%d FCGX_InitRequest failed in thread %d\n", 
+        fprintf(log,"%f %d %s:%d FCGX_InitRequest failed in thread %d\n",
             gettime(), 0, __func__, __LINE__, thread_dat->thread_id );
 
         return;
@@ -246,53 +253,53 @@ void launch_connection_thread(void* data){
         pthread_mutex_unlock(&(thread_dat->accept_mutex));
 
         if (rc < 0){
-            fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d\n", 
-                gettime(), next_id, __func__, __LINE__, 
+            fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d\n",
+                gettime(), next_id, __func__, __LINE__,
                 thread_dat->thread_id, rc);
-            
+
         }else{
             struct handler_args* hargs;
             enum session_state this_session_state;
 
-            fprintf(log, "%f %d %s:%d FCGX_Accept_r started thread %d\n", 
+            fprintf(log, "%f %d %s:%d FCGX_Accept_r started thread %d\n",
                 gettime(), next_id, __func__, __LINE__,
                 thread_dat->thread_id);
 
             if (request.out == NULL){
-                fprintf(log, "%f %d %s:%d request with null output\n", 
+                fprintf(log, "%f %d %s:%d request with null output\n",
                     gettime(), next_id, __func__, __LINE__);
 
                 continue;
-            }    
-        
-            hargs = init_handler(&request, thread_dat->envpmain, next_id, 
-                thread_dat->conf); 
+            }
+
+            hargs = init_handler(&request, thread_dat->envpmain, next_id,
+                thread_dat->conf);
 
             if (hargs == NULL ){
                 FCGX_FPrintF(request.err, "qzfcgi init_handler returned NULL");
-                continue; 
+                continue;
             }
 
-            hargs->session = session_from_hargs(hargs, thread_dat->sessions, 
+            hargs->session = session_from_hargs(hargs, thread_dat->sessions,
                 thread_dat->conf);
 
             char login_uri[MAX_LOGIN_URI];
             snprintf(login_uri, MAX_LOGIN_URI, "/%s/login", hargs->uri_parts[0]);
             char logout_uri[MAX_LOGIN_URI];
-            snprintf(logout_uri, MAX_LOGIN_URI, 
+            snprintf(logout_uri, MAX_LOGIN_URI,
                 "/%s/logout", hargs->uri_parts[0]);
 
-            this_session_state = get_session_state(hargs); 
+            this_session_state = get_session_state(hargs);
 
-            // There is a document login_process.html that shows this 
+            // There is a document login_process.html that shows this
             // switch statement as a state table with explanations.
 
-            switch (this_session_state){ 
+            switch (this_session_state){
 
                 case bad_session:
-                // logged_out is from postgres's perspective, 
+                // logged_out is from postgres's perspective,
                 case logged_out:
-                 
+
                 close_session(hargs, hargs->session);
                 hargs->session = NULL;
                 // Fall through.
@@ -301,15 +308,15 @@ void launch_connection_thread(void* data){
                 case no_session:
                     if (uri_part_n_is(hargs, 1, "logout")){
                         logout(hargs);
-                    }else if (uri_part_n_is(hargs, 1, "login") && 
-                        (hargs->nbr_uri_parts==2)) { // i.e. not validate   
-                  
+                    }else if (uri_part_n_is(hargs, 1, "login") &&
+                        (hargs->nbr_uri_parts==2)) { // i.e. not validate
+
                         setup_session(hargs,thread_dat->sessions,
                             thread_dat->conf);
-                    
+
                         req_login(hargs);
 
-                    }else{ 
+                    }else{
                         location(hargs, logout_uri);
                     }
                     break;
@@ -317,7 +324,7 @@ void launch_connection_thread(void* data){
                 case session_no_login:
 
                 // Could be:
-                //   /qz/logout (from refresh failure) - park on logged out 
+                //   /qz/logout (from refresh failure) - park on logged out
                 //   /qz/login - wants the login screen
                 //   /qz/login/validate - try this password
                 //   anything else - call logout
@@ -343,7 +350,7 @@ void launch_connection_thread(void* data){
                             }
                         }else{
                             req_login(hargs);
-                        }    
+                        }
                     }else{
                         req_login(hargs);
                     }
@@ -351,10 +358,10 @@ void launch_connection_thread(void* data){
 
                 case logged_in:
 
-                    if (uri_part_n_is(hargs, 1, "login")){  
-                        
-                        if (hargs->nbr_uri_parts==2) { // i.e. not validate   
-                        
+                    if (uri_part_n_is(hargs, 1, "login")){
+
+                        if (hargs->nbr_uri_parts==2) { // i.e. not validate
+
                             close_session(hargs, hargs->session);
                             hargs->session = NULL;
 
@@ -386,29 +393,29 @@ int main(int argc, char* argv[], char* envpmain[]){
 
     qzrandom64_init();
     struct qz_config* conf = init_config();
-    
+
     int next_id = 0;
     truncate(conf->logfile_name,0);
     FILE* log = fopen(conf->logfile_name,"a+");
 
     if (log == NULL) {
-        fprintf(stderr, "unable to open log file %s exiting now\n", 
+        fprintf(stderr, "unable to open log file %s exiting now\n",
             conf->logfile_name);
 
         exit(12);
-    }    
+    }
 
     // Log the startup condition
-    fprintf(log, "%f %d %s:%d server startup version=%.3f\n", 
+    fprintf(log, "%f %d %s:%d server startup version=%.3f\n",
         gettime(), next_id, __func__, __LINE__, QZVER);
 
-    fprintf(log, "%f %d %s:%d tagger_socket_path=%s\n", 
+    fprintf(log, "%f %d %s:%d tagger_socket_path=%s\n",
         gettime(), next_id, __func__, __LINE__, conf->tagger_socket_path);
 
-    fprintf(log, "%f %d %s:%d template_path=%s\n", 
+    fprintf(log, "%f %d %s:%d template_path=%s\n",
         gettime(), next_id, __func__, __LINE__, conf->template_path);
 
-    fprintf(log, "%f %d %s:%d logfile_name=%s\n", 
+    fprintf(log, "%f %d %s:%d logfile_name=%s\n",
         gettime(), next_id, __func__, __LINE__, conf->logfile_name);
 
     tagger_pid = tagger_init(conf, argv);
@@ -419,18 +426,18 @@ int main(int argc, char* argv[], char* envpmain[]){
     int tch;
     for(tch=0; tch<SERVER_TOKEN_HEX_LENGTH; tch++){
         if (conf->server_token[tch] != 0){
-            fprintf(log, "%f %d %s:%d server token not wiped.\n", 
+            fprintf(log, "%f %d %s:%d server token not wiped.\n",
                 gettime(), next_id, __func__, __LINE__);
-           
+
             exit(13);
        }
     }
     int kch;
     for(kch=0; kch<SERVER_KEY_HEX_LENGTH; kch++){
         if (conf->server_key[kch] != 0){
-            fprintf(log, "%f %d %s:%d server key not wiped.\n", 
+            fprintf(log, "%f %d %s:%d server key not wiped.\n",
                 gettime(), next_id, __func__, __LINE__);
-            
+
             exit(14);
        }
     }
@@ -444,13 +451,13 @@ int main(int argc, char* argv[], char* envpmain[]){
 
     make_etag(tagbuf, conf->tagger_socket_path, tagvalue_in);
 
-    fprintf(log, "%f %d %s:%d tagger test %s\n", 
+    fprintf(log, "%f %d %s:%d tagger test %s\n",
         gettime(), next_id, __func__, __LINE__, tagbuf);
 
     tagvalue_out = validate_etag(conf->tagger_socket_path, tagbuf);
-    
-    fprintf(log, "%f %d %s:%d validate_etag %s\n", 
-        gettime(), next_id, __func__, __LINE__, 
+
+    fprintf(log, "%f %d %s:%d validate_etag %s\n",
+        gettime(), next_id, __func__, __LINE__,
         (tagvalue_in == tagvalue_out) ? "OK":"fail" );
     if (tagvalue_in != tagvalue_out){
         // failed that test
@@ -461,12 +468,12 @@ int main(int argc, char* argv[], char* envpmain[]){
     init_handler_hash();
 
     FCGX_Init();
-    fprintf(log, "%f %d %s:%d FCGX_Init complete\n", 
+    fprintf(log, "%f %d %s:%d FCGX_Init complete\n",
         gettime(), next_id, __func__, __LINE__);
 
     FCGX_Request *request = calloc(1, sizeof(FCGX_Request));
     FCGX_InitRequest(request, 0, 0);
-    fprintf(log, "%f %d %s:%d FCGX_InitRequest complete\n", 
+    fprintf(log, "%f %d %s:%d FCGX_InitRequest complete\n",
         gettime(), next_id, __func__, __LINE__);
 
     xmlHashTablePtr sessions = xmlHashCreate(conf->number_of_users);
@@ -474,7 +481,7 @@ int main(int argc, char* argv[], char* envpmain[]){
         fprintf(stderr, "xmlHashCreate failed with an argument of %d\n",
             conf->number_of_users);
         exit(16);
-    }     
+    }
     fflush(log);
 
     struct thread_launch_data* thread_dat;
@@ -482,8 +489,8 @@ int main(int argc, char* argv[], char* envpmain[]){
     pthread_t threads[conf->number_of_threads];
 
     int i;
-    for(i = 0; i < conf->number_of_threads; i++) 
-    { 
+    for(i = 0; i < conf->number_of_threads; i++)
+    {
         thread_dat = calloc(1,sizeof(struct thread_launch_data));
         thread_dat->conf = conf;
         thread_dat->thread_id = i;
@@ -492,9 +499,9 @@ int main(int argc, char* argv[], char* envpmain[]){
         thread_dat->envpmain = envpmain;
         thread_dat->sessions = sessions;
 
-        pthread_create(&threads[i], NULL, (void*) launch_connection_thread, 
-            (void*) thread_dat); 
-    } 
+        pthread_create(&threads[i], NULL, (void*) launch_connection_thread,
+            (void*) thread_dat);
+    }
 
     struct handler_args* housekeeper;
 

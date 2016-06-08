@@ -30,6 +30,11 @@
 
 #include "qz.h"
 
+/*
+ *  menupage
+ *
+ *  A menu as a handler, a page without a form.
+ */
 
 void menupage( struct handler_args* h ){
 
@@ -40,16 +45,16 @@ void menupage( struct handler_args* h ){
     content_type(h, "text/html");
 
     if ((cur = xmlDocGetRootElement(h->doc)) == NULL){
-        fprintf(h->log, "%f %d %s:%d xml root element not found\n", 
-            gettime(), h->request_id, __func__, __LINE__); 
+        fprintf(h->log, "%f %d %s:%d xml root element not found\n",
+            gettime(), h->request_id, __func__, __LINE__);
 
         error_page(h, SC_EXPECTATION_FAILED,  "xml root element not found");
         return;
     }
 
     if ((divqz = qzGetElementByID(h, cur, "qz")) == NULL){
-        fprintf(h->log, "%f %d %s:%d Element with id qz not found\n", 
-            gettime(), h->request_id, __func__, __LINE__); 
+        fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",
+            gettime(), h->request_id, __func__, __LINE__);
 
         error_page(h, SC_EXPECTATION_FAILED,  "Element with id qz not found");
         return;
@@ -62,16 +67,21 @@ void menupage( struct handler_args* h ){
     return;
 }
 
+/*
+ *  form_name_is_menu
+ *
+ *  Is the form being executed a menupage?
+ */
+
 bool form_name_is_menu(struct handler_args* h){
- 
- 
+
     bool does_exist = false;
 
     char* params[2];
     params[0] = get_uri_part(h, QZ_URI_FORM_NAME);
     params[1] = NULL;
 
-    PGresult* menu_exists_rs = PQexecPrepared(h->session->conn, 
+    PGresult* menu_exists_rs = PQexecPrepared(h->session->conn,
         "menu_exists_check", 1, (const char * const*) params, NULL, NULL, 0);
 
     char* error_msg = nlfree_error_msg(menu_exists_rs);
@@ -82,13 +92,13 @@ bool form_name_is_menu(struct handler_args* h){
     }
 
     fprintf(h->log, "%f %d %s:%d menu_name_exists_rs is %s, %s tuples %d "
-        "fields %d (0,0) %s %d\n", 
+        "fields %d (0,0) %s %d\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(menu_exists_rs)),
         error_msg, PQntuples(menu_exists_rs), PQnfields(menu_exists_rs),
-        PQgetvalue(menu_exists_rs, 0, 0), does_exist); 
- 
-    free(error_msg);    
+        PQgetvalue(menu_exists_rs, 0, 0), does_exist);
+
+    free(error_msg);
     PQclear(menu_exists_rs);
     return does_exist;
 
@@ -101,17 +111,17 @@ bool form_name_is_menu(struct handler_args* h){
 
 // XXXXXXXX add error checks to a hard 500 and stop.
 void init_menu(struct handler_args* hargs){
-  
+
     PGresult* rs;
 
-    char menu_items[] = 
+    char menu_items[] =
         "SELECT menu_name, menu_item_sequence, target_form_name, "
         "action, menu_text, context_parameters "
         "FROM qz.menu_item "
         "WHERE menu_name = $1 "
         "ORDER BY menu_item_sequence ";
 
-   rs = PQprepare(hargs->session->conn, "fetch_menu_items", menu_items, 
+   rs = PQprepare(hargs->session->conn, "fetch_menu_items", menu_items,
        0, NULL);
 
    char* error_msg = nlfree_error_msg(rs);
@@ -124,7 +134,7 @@ void init_menu(struct handler_args* hargs){
    PQclear(rs);
    rs = NULL;
 
-   char menu_set[] = 
+   char menu_set[] =
         "SELECT DISTINCT "
         "s.menu_name, m.target_div, m.description "
         "FROM qz.menu_set s "
@@ -132,7 +142,7 @@ void init_menu(struct handler_args* hargs){
         "WHERE s.host_form_name = $1 "
         "AND (s.action = 'any' OR s.action = $2)";
 
-   rs = PQprepare(hargs->session->conn, "fetch_menu_set", menu_set, 
+   rs = PQprepare(hargs->session->conn, "fetch_menu_set", menu_set,
        0, NULL);
 
    error_msg = nlfree_error_msg(rs);
@@ -145,35 +155,38 @@ void init_menu(struct handler_args* hargs){
    PQclear(rs);
    rs = NULL;
 
-   char menu_item_parameters[] = 
+   char menu_item_parameters[] =
         "SELECT parameter_key, parameter_value "
         "FROM qz.menu_item_parameter "
         "WHERE menu_name = $1 "
         "AND menu_item_sequence = $2 ";
 
-   rs = PQprepare(hargs->session->conn, "fetch_menu_item_parameters", 
+   rs = PQprepare(hargs->session->conn, "fetch_menu_item_parameters",
        menu_item_parameters, 0, NULL);
 
    error_msg = nlfree_error_msg(rs);
 
    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
        gettime(), hargs->request_id, __func__, __LINE__,
-       "fetch_menu_item_parameters", PQresStatus(PQresultStatus(rs)), error_msg );
-   
+       "fetch_menu_item_parameters", PQresStatus(PQresultStatus(rs)),
+       error_msg );
+
    free(error_msg);
    error_msg = NULL;
    PQclear(rs);
    rs = NULL;
 
    //
-   char menu_exists_check[] = 
+   char menu_exists_check[] =
         "SELECT EXISTS ("
         "SELECT form_name "
         "FROM qz.form "
         "WHERE form_name = $1 "
         "AND handler_name = 'menupage') ";
-   
-   rs = PQprepare(hargs->session->conn, "menu_exists_check", menu_exists_check, 0, NULL);
+
+   rs = PQprepare(hargs->session->conn, "menu_exists_check",
+       menu_exists_check, 0, NULL);
+
    error_msg = nlfree_error_msg(rs);
 
    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
@@ -192,14 +205,14 @@ void init_menu(struct handler_args* hargs){
  *
  *  Add one menu to the indicated node.
  *
- *  A menu is a set of one or more button choices. 
+ *  A menu is a set of one or more button choices.
  *  Each menu item contains one html form with data from
- *  current postdata in html hidden fields for each 
+ *  current postdata in html hidden fields for each
  *  pg menu_item parameters array element.
  */
 
-void add_menu(struct handler_args* hargs, 
-    PGresult* menu_rs, 
+void add_menu(struct handler_args* hargs,
+    PGresult* menu_rs,
     xmlNodePtr child_of){
 
 
@@ -219,13 +232,13 @@ void add_menu(struct handler_args* hargs,
 
         if ((action != NULL) && (action[0] != '\0')){
 
-            asprintf(&action_target, "/%s/%s/%s", 
+            asprintf(&action_target, "/%s/%s/%s",
                 get_uri_part(hargs, QZ_URI_BASE_SEGMENT),
-                target_form_name, action ); 
+                target_form_name, action );
 
         }else{
 
-            asprintf(&action_target, "/%s/%s", 
+            asprintf(&action_target, "/%s/%s",
                 get_uri_part(hargs, QZ_URI_BASE_SEGMENT),
                 target_form_name);
 
@@ -245,11 +258,13 @@ void add_menu(struct handler_args* hargs,
 
         // ... that has the data it needs ...
         // ... from the current context ...
-        char** params = parse_pg_array(get_value(menu_rs, row, "context_parameters"));
+        char** params = parse_pg_array(get_value(menu_rs, row,
+            "context_parameters"));
+
         if (params != NULL){
             int p;
             for (p=0; params[p]!=NULL; p++){
-               // ... including data from the current request ... 
+               // ... including data from the current request ...
 
                char* fvalue = xmlHashLookup(hargs->postdata, params[p]);
                if (fvalue != NULL){
@@ -267,7 +282,7 @@ void add_menu(struct handler_args* hargs,
                    fprintf(hargs->log, "%f %d %s:%d fail param %s "
                        "on not found in input\n",
                        gettime(), hargs->request_id, __func__, __LINE__,
-                       params[p]); 
+                       params[p]);
 
                }
             }
@@ -279,9 +294,9 @@ void add_menu(struct handler_args* hargs,
         query_parameters[1] = get_value(menu_rs, row, "menu_item_sequence");
         query_parameters[2] = NULL;
 
-        item_param_rs = PQexecPrepared(hargs->session->conn, 
-          "fetch_menu_item_parameters", 2, (const char * const *)query_parameters,
-          NULL, NULL, 0);
+        item_param_rs = PQexecPrepared(hargs->session->conn,
+          "fetch_menu_item_parameters", 2,
+              (const char * const *)query_parameters, NULL, NULL, 0);
 
         int p_row;
         for(p_row=0; p_row < PQntuples(item_param_rs); p_row++){
@@ -290,20 +305,23 @@ void add_menu(struct handler_args* hargs,
             char* key =  get_value(item_param_rs, p_row, "parameter_key");
             xmlNewProp(p_input, "name", key);
             char* p_value = get_value(item_param_rs, p_row, "parameter_value");
-            xmlNewProp(p_input, "value", p_value); 
+            xmlNewProp(p_input, "value", p_value);
         }
         PQclear(item_param_rs);
 
         // ... that is the menu button.
         xmlNodePtr submit_button = xmlNewChild(form, NULL, "input", NULL);
         xmlNewProp(submit_button, "type", "submit");
-        xmlNewProp(submit_button, "value", get_value(menu_rs, row, "menu_text"));
+        xmlNewProp(submit_button, "value", get_value(menu_rs,row,"menu_text"));
         append_class(submit_button, "menu_button");
 
-        register_form(hargs, form, SUBMIT_MULTIPLE, action_target);
+        struct form_record* form_rec;
+        form_rec = register_form(hargs, form, SUBMIT_MULTIPLE, action_target);
+
+        set_context_parameters(hargs, form_rec, menu_rs, row);
 
         free(action_target);
-    }
+    } // row
 
 }
 
@@ -320,7 +338,7 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
 
     double start_time = gettime();
 
-    // Use menu_set in pg to feed add_menu. 
+    // Use menu_set in pg to feed add_menu.
 
     char* params[3];
     params[0] = get_uri_part(hargs, QZ_URI_FORM_NAME);
@@ -332,17 +350,17 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
     menu_set_rs = PQexecPrepared(hargs->session->conn, "fetch_menu_set", 2,
         (const char * const *) params, NULL, NULL, 0);
 
-    if ((menu_set_rs == NULL) || 
+    if ((menu_set_rs == NULL) ||
         (PQresultStatus(menu_set_rs) != PGRES_TUPLES_OK)){
-        
+
         char* error_msg = nlfree_error_msg(menu_set_rs);
-        fprintf(hargs->log, "%f %d %s:%d fail fetch_menu_set %s\n", 
+        fprintf(hargs->log, "%f %d %s:%d fail fetch_menu_set %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             error_msg);
-        
+
         free(error_msg);
         return;
-    }    
+    }
 
 
     // Each row returned is the menu name and target div for one menu.
@@ -350,7 +368,7 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
     for (row=0; row < PQntuples(menu_set_rs); row++){
         char* menu_name = get_value(menu_set_rs, row, "menu_name");
         char* target_div = get_value(menu_set_rs, row, "target_div");
-        
+
         xmlNodePtr add_here = qzGetElementByID(hargs, root_node, target_div);
 
         if (add_here == NULL){
@@ -358,37 +376,37 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
             fprintf(hargs->log, "%f %d %s:%d fail - target_div %s not found\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 target_div);
-            
+
             return;
-        }    
+        }
 
         char* menu_params[2];
         menu_params[0] = menu_name;
         menu_params[1] = NULL;
 
         PGresult* menu_item_rs;
-        menu_item_rs = PQexecPrepared(hargs->session->conn, "fetch_menu_items", 1,
-            (const char* const* ) menu_params, NULL, NULL, 0);
+        menu_item_rs = PQexecPrepared(hargs->session->conn, "fetch_menu_items",
+            1, (const char* const* ) menu_params, NULL, NULL, 0);
 
         if (PQntuples(menu_item_rs) < 1){
 
             char* error_msg = nlfree_error_msg(menu_item_rs);
 
-            fprintf(hargs->log, "%f %d %s:%d fail - menu_item %s not found %s\n",
+            fprintf(hargs->log, "%f %d %s:%d fail menu_item %s not found %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 menu_name, error_msg);
 
             free(error_msg);
 
         }else{
-         
-            add_menu(hargs, menu_item_rs, add_here); 
+
+            add_menu(hargs, menu_item_rs, add_here);
             fprintf(hargs->log, "%f %d %s:%d menu %s added\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 menu_name);
 
         }
-        
+
         PQclear(menu_item_rs);
     }
 
@@ -397,4 +415,4 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
         gettime() - start_time);
 }
 
-    
+

@@ -8,10 +8,11 @@ INSERT INTO qz.change_history
 UPDATE qz.constants 
 SET schema_version = '5';
 
-
+// A fix for a past mistake
 SELECT SETVAL('qz.menu_set_set_id_seq', COALESCE(MAX(set_id), 1) ) FROM qz.menu_set;
 
 -- Get rid of _Edit in the buttons
+
 UPDATE qz.menu_item
 SET menu_text = 'Table_Action'
 WHERE menu_text = 'Table_Action_Edit';
@@ -24,13 +25,14 @@ UPDATE qz.menu_item
 SET menu_text = 'Menu_Set'
 WHERE menu_text = 'Menu_Set_Edit';
 
-
 -- Add handler_name_ro to context params for form dev
+
 UPDATE qz.menu_item
 SET context_parameters = '{form_name,handler_name_ro}'
 WHERE menu_name = 'form_submenu';
 
 -- Make handler_name_ro a fake pkey and include it in selects
+
 UPDATE qz.table_action
 SET 
   sql=$TAC$SELECT ta.form_name, ta.action, fm.handler_name handler_name_ro,
@@ -53,7 +55,6 @@ SET
 WHERE form_name = 'table_action_edit'
 AND action = 'getall';
 
-
 UPDATE qz.table_action 
 SET pkey = '{form_name, handler_name_ro}'
 WHERE form_name = 'form'
@@ -67,9 +68,9 @@ SET sql=$TAFG$SELECT form_name, handler_name handler_name_ro
 WHERE form_name = 'form'
 AND action = 'getall';
 
-
 -- Creating a new form should preset the whole record
 -- instead of inserting just the key and forcing an edit.
+
 UPDATE qz.table_action
 SET sql=$TAFC$SELECT  $1::text form_name, 
     ''::text handler_name, 
@@ -91,13 +92,15 @@ SET sql=$TAFI$INSERT INTO qz.form
 WHERE form_name = 'form'
 AND action = 'insert';
 
-
-
 UPDATE qz.table_action
 SET fieldnames = '{form_name, action_ro}',
     pkey = '{form_name, action_ro}'
 WHERE form_name = 'table_action_edit'
 AND action = 'delete';
+
+-- Include the handler name in the table action edit form.
+-- Also add set_context_parameters to the form.
+-- More on context_parameters further down.
 
 UPDATE qz.table_action
 SET
@@ -201,6 +204,8 @@ INSERT INTO qz.table_action
 VALUES
 ('status', 'schema_version',
     'SELECT schema_version FROM qz.constants');
+
+-- From here to the end of this file is an update to qzforms.js.
 
 UPDATE qz.js SET data = $QZ$
 var httpRequest;

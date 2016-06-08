@@ -113,6 +113,7 @@ struct handler_args {
     xmlHashTablePtr postdata;
     char* postbuf;
     struct table_action* page_ta; 
+    xmlHashTablePtr form_sets;
     struct strbuf* headers;
     xmlDocPtr doc;
     struct strbuf* data; 
@@ -289,7 +290,6 @@ struct form_set{
     xmlHashTablePtr context_parameters;
     char name[64];
 };
-
 
 static const char QZERR_EXPECTED_EQ[] = "Expected '='";
 static const char QZERR_BAD_VALUE[] = "Bad Value";
