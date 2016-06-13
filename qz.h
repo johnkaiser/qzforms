@@ -264,8 +264,9 @@ struct prompt_rule{
     char* onmouseout;
     char* onmouseover;
     char* onselect;
-
     PGresult* result;
+
+    char strdata[];
 };
 
 struct form_record{

@@ -28,7 +28,7 @@ VALUES ('form', 'create',
     'qz'::text target_div,
      ''::text add_description, 
      ''::text prompt_container$TAFC$, 
-'{form_name}', '{form_name, handler_name_ro}', NULL);
+'{form_name}', '{form_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'getall', 

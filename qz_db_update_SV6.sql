@@ -84,8 +84,23 @@ SET
 WHERE form_name IN ( 'form', 'table_action_edit', 'prompt_rule', 
   'page_js', 'page_css');
 
--- The table action for updating the table action
+-- The table action for editing and updating the table action
 -- needs to set the context parameter flag 
+
+UPDATE qz.table_action
+SET
+  sql = $TATAE$SELECT
+    form_name, action action_ro, 
+    helpful_text, sql,
+    fieldnames, pkey,
+    set_context_parameters
+  FROM
+    qz.table_action
+  WHERE
+    form_name = $1 AND action = $2
+  $TATAE$
+  WHERE form_name = 'table_action_edit'
+  AND action = 'edit';
 
 UPDATE qz.table_action
 SET
@@ -174,6 +189,15 @@ $FSPRCP$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`
 $FSPRFS$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$$FSPRFS$),
 ('form', 'form_set_name', 'select_fkey',
 $FFSN$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$$FFSN$) ;
+
+-- Fix a screw up
+-- remove _ro from handler_name
+
+UPDATE qz.table_action
+  SET pkey = '{form_name}'
+  WHERE form_name = 'form'
+  AND action = 'create';
+
 
 
 

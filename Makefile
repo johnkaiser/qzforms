@@ -25,7 +25,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=5
+SCHEMA_VERSION=6
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
 	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
@@ -92,9 +92,12 @@ session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom64.o \
 	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o  \
 	opentable.o parse_pg_array.o
 	$(CC) $(CFLAGS) -L$(XMLLIBDIR) -L$(PGLIBDIR) $(LFLAGS) -DSESSION_MAIN \
+		-L$(PCRELIBS) \
 		session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom64.o \
 		hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
-		opentable.o parse_pg_array.o  \
+		opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
+		str_to_array.o qzGetElementByID.o login.o prompt_rule.o output.o \
+		input.o menu.o qzhandlers.o timestamp.o status.o qzfs.o onetable.o grid.o \
 		-lpq -o session_test
 
 qzGetElementByID.o: qzGetElementByID.c
@@ -228,9 +231,9 @@ test_prompt_rule: prompt_rule.c qz.h
 	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
-	hex_to_uchar.o qzconfig.o gettime.o form_tag.o \
+	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o form_set.o \
 		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-		-L$(XMLLIBDIR) \
+		-L$(XMLLIBDIR) -L$(PCRELIBS) \
 		-lpq \
 		-o test_prompt_rule
 

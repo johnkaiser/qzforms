@@ -470,13 +470,6 @@ void cleanup(sig){
     exit(0);
 }
 
-// a fake function for testing
-void error_page(struct handler_args* h, int status_code, const char* msg){
-
-     fprintf(h->log, "error_page\nstatus_code=%d\n%s\n", status_code, msg);
-
-}
-
 int main(int argc, char* argv[]){
 
      struct qz_config* conf = init_config();

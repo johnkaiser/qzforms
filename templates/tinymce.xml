@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src='https://cdn.tinymce.com/4/tinymce.min.js'></script>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+  <title> QZ Forms </title>
+</head>
+<body onload='form_refresh_init(30*1000);'>
+
+<h1> QZ Forms &#x2713; </h1>
+
+<div id='qzmenu'></div>
+<div id='qzsubmenu'></div>
+<div id='helpful_text'></div>
+<div id='pagemenu'></div>
+<div id='qz'>
+</div>
+<div id='stuff_zero'></div>
+</body>
+</html>

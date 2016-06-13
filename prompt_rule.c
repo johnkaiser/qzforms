@@ -75,21 +75,23 @@ struct prompt_rule* default_prompt_rule(struct handler_args* h,
     unsigned int len = sizeof(struct prompt_rule) + 2;
     len += strlen(form_name) + 2;
     len += strlen(fieldname) + 2;
-    char* prompt_type = "intput_text";
+    char* prompt_type = "input_text";
     len += strlen(prompt_type) + 2;
 
     struct prompt_rule* new_rule = calloc(1, len);
 
-    char* marker = (void*) &new_rule + sizeof(struct prompt_rule);
+    char* marker =  new_rule->strdata;
 
     memcpy(marker, form_name, strlen(form_name)+1);
-    marker++;
+    new_rule->form_name = marker;
+    marker += strlen(form_name)+2;
 
     memcpy(marker, fieldname, strlen(fieldname)+1);
-    marker++;
+    new_rule->fieldname = marker;
+    marker += strlen(fieldname)+2;
 
-    memcpy(marker, prompt_type, strlen(prompt_type+1));
-
+    memcpy(marker, prompt_type, strlen(prompt_type)+1);
+    new_rule->prompt_type = marker;
     
     return new_rule;
 }
@@ -114,7 +116,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
     PGresult* rs = PQexecPrepared(h->session->conn, "fetch_rule", 2,
         (const char* const*) &paramValues, NULL, NULL, 0);
 
-    if ( (PQresultStatus(rs) == PGRES_TUPLES_OK) && (PQntuples(rs) == 1)) {
+    if ((PQresultStatus(rs) == PGRES_TUPLES_OK) && (PQntuples(rs) == 1)) {
    
         struct prompt_rule* rule = calloc(1,sizeof(struct prompt_rule));
 
@@ -839,7 +841,7 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      }
 
      char* el_class = "";
-     if (rule->el_class[0] != '\0'){
+     if ((rule->el_class != NULL) && (rule->el_class[0] != '\0')){
          asprintf(&el_class, "\"class\":\"%s\", ", rule->el_class);
      }
 
@@ -896,84 +898,84 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      }
      
      char* onblur = "";
-     if (rule->onblur[0] != '\0'){
+     if ((rule->onblur != NULL) && (rule->onblur[0] != '\0')){
          char* onblur64 = base64_encode(rule->onblur);
          asprintf(&onblur, "\"onblur\":\"%s\", ", onblur64);
          free(onblur64);
      }    
 
      char* onchange = "";
-     if (rule->onchange[0] != '\0'){
+     if ((rule->onchange != NULL) &&  (rule->onchange[0] != '\0')){
          char* onchange64 = base64_encode(rule->onchange);
          asprintf(&onchange, "\"onchange\":\"%s\", ", onchange64);
          free(onchange64);
      }    
 
      char* onclick = "";
-     if (rule->onclick[0] != '\0'){
+     if ((rule->onclick != NULL) && (rule->onclick[0] != '\0')){
          char* onclick64 = base64_encode(rule->onclick);
          asprintf(&onclick, "\"onclick\":\"%s\", ", onclick64);
          free(onclick64);
      }    
 
      char* ondblclick = "";
-     if (rule->ondblclick[0] != '\0'){
+     if ((rule->ondblclick != NULL) && (rule->ondblclick[0] != '\0')){
          char* ondblclick64 = base64_encode(rule->ondblclick);
          asprintf(&ondblclick, "\"ondblclick\":\"%s\", ", ondblclick64);
          free(ondblclick64);
      }
 
      char* onfocus = "";
-     if (rule->onfocus[0] != '\0'){ 
+     if ((rule->onfocus != NULL) && (rule->onfocus[0] != '\0')){ 
          char* onfocus64 = base64_encode(rule->onfocus);
          asprintf(&onfocus, "\"onfocus\":\"%s\", ", rule->onfocus);
          free(onfocus64);
      }    
 
      char* onkeypress = "";
-     if (rule->onkeypress[0] != '\0'){
+     if ((rule->onkeypress != NULL) && (rule->onkeypress[0] != '\0')){
          char* onkeypress64 = base64_encode(rule->onkeypress);
          asprintf(&onkeypress, "\"onkeypress\":\"%s\", ", rule->onkeypress);
          free(onkeypress64);
      }    
 
      char* onkeyup = "";
-     if (rule->onkeyup[0] != '\0'){
+     if ((rule->onkeyup != NULL) && (rule->onkeyup[0] != '\0')){
          char* onkeyup64 = base64_encode(rule->onkeyup);
          asprintf(&onkeyup, "\"onkeyup\":\"%s\", ", rule->onkeyup);
          free(onkeyup64);
      }    
 
      char* onkeydown = "";
-     if (rule->onkeydown[0] != '\0'){
+     if ((rule->onkeydown != NULL) && (rule->onkeydown[0] != '\0')){
          char* onkeydown64 = base64_encode(rule->onkeydown);
          asprintf(&onkeydown, "\"onkeydown\":\"%s\", ", rule->onkeydown);
          free(onkeydown64);
      }    
 
      char* onmousedown = "";
-     if (rule->onmousedown[0] != '\0'){
+     if ((rule->onmousedown != NULL) && (rule->onmousedown[0] != '\0')){
          char* onmousedown64 = base64_encode(rule->onmousedown);
          asprintf(&onmousedown, "\"onmousedown\":\"%s\", ", rule->onmousedown);
          free(onmousedown64);
      }
 
      char* onmouseout = "";
-     if (rule->onmouseout[0] != '\0'){
+     if ((rule->onmouseout != NULL) && (rule->onmouseout[0] != '\0')){
          char* onmouseout64 = base64_encode(rule->onmouseout);
          asprintf(&onmouseout, "\"onmouseout\":\"%s\", ", rule->onmouseout);
          free(onmouseout64);
      }
 
      char* onmouseover = "";
-     if (rule->onmouseover[0] != '\0'){
+     if ((rule->onmouseover != NULL) && (rule->onmouseover[0] != '\0')){
          char* onmouseover64 = base64_encode(rule->onmouseover);
          asprintf(&onmouseover, "\"onmouseover\":\"%s\",  ", onmouseover64);
          free(onmouseover64);
      }
 
      char* onselect = "";
-     if (rule->onselect[0] != '\0'){
+     if ((rule->onselect != NULL) && (rule->onselect[0] != '\0')){
          char* onselect64 = base64_encode(rule->onselect);
          asprintf(&onselect, "\"onselect\":\"%s\", ", onselect64);
          free(onselect64);
@@ -1161,6 +1163,15 @@ void add_prompt(struct handler_args* hargs,
     // 
     struct prompt_adder* prompt = xmlHashLookup(prompt_type_hash, 
         args->rule->prompt_type);
+
+    if (prompt == NULL){
+        fprintf(hargs->log, "%f %d %s:%d fail prompt type not found %s\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            args->rule->prompt_type);
+        error_page(hargs, SC_INTERNAL_SERVER_ERROR, "Prompt Type not found");
+
+        return;
+    }
 
     int pk;
     bool is_pkey = false;
@@ -1416,7 +1427,9 @@ int main(int argc, char* argv[]){
 
     qzrandom64_init();
 
-    struct handler_args hargs;
+    struct handler_args hargs = (struct handler_args){
+       .request_id = 1,
+    };
     struct handler_args* h = &hargs;
     hargs.log = stdout;
 
@@ -1435,7 +1448,7 @@ int main(int argc, char* argv[]){
 
     char* vals[] = { "localhost", "info", "qz", "42", "qztest", NULL };
 
-    h->session->conn = PQconnectdbParams(kw, vals, 0);
+    h->session->conn = PQconnectdbParams(kw, (const char* const*) vals, 0);
 
     if (PQstatus(h->session->conn) != CONNECTION_OK){
        fprintf(h->log, "bad connect\n");
@@ -1455,7 +1468,7 @@ int main(int argc, char* argv[]){
 
     char* fields[] = { "uid", "seq", "created", "last_mod", "priority", 
         "summary", "status", "completed", "percent", "description", "location", 
-        "class", "url", NULL};
+        "class", "url", "notfound", NULL};
 
     double start, finish;
 
@@ -1468,7 +1481,8 @@ int main(int argc, char* argv[]){
 
         rule = fetch_prompt_rule(h, "todo", fields[j]);
 
-         add_prompt(h, t_action, rule, NULL,
+         add_prompt(h, t_action, rule, NULL /*type*/,
+              NULL /*options*/, 0 /*row*/,
               qzdiv, fields[j], NULL);
         
         finish = gettime();
@@ -1493,15 +1507,15 @@ int main(int argc, char* argv[]){
 
     rule = fetch_prompt_rule(h, "stuff", "xyz");
     printf("\njson_add_element_args empty rule\n%s\n", 
-        json_add_element_args("stupid_test", rule));
+        json_add_element_args("stupid_test", rule, NULL));
     
     rule = fetch_prompt_rule(h, "stuff", "ar");
     printf("json_add_element_args\n%s\n", 
-        json_add_element_args("stupid_test", rule));
+        json_add_element_args("stupid_test", rule, NULL));
 
     rule = fetch_prompt_rule(h, "test", "test");
     printf("json_add_element_args\n%s\n",
-        json_add_element_args("stupid_test", rule));
+        json_add_element_args("stupid_test", rule, NULL));
 
     char* qpct[] = {"normal(x)", "single(%n)", "else(%x)", 
         "more(%n,%n,%n,%n)", NULL};
@@ -1515,6 +1529,11 @@ int main(int argc, char* argv[]){
     printf("quantify_percent_n(%s)=%s\n", "big(%n)", q);
     free(q);
     
+    struct prompt_rule* defr = fetch_prompt_rule(h, "gluxton", "noctal");
+    printf("default_prompt_rule(%s,%s) prompt_type:%s\n",
+       defr->form_name, defr->fieldname, defr->prompt_type);
+    free(defr);
+
     return 0;
 }
 
