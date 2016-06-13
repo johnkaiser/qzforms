@@ -36,8 +36,8 @@ OBJ=qzhandlers.o timestamp.o  onetable.o \
 	grid.o form_set.o
 
 FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
-	templates/base.xml templates/login.xml qzforms.init README.txt \
-	strbuf.c strbuf.h \
+	templates/base.xml templates/login.xml templates/tinymce.xml \
+	qzforms.init README.txt strbuf.c strbuf.h \
 	http_codes.h qzrandom64.h crypto_etag.h \
 	qzmain.c qzhandlers.c timestamp.c  onetable.c \
 	str_to_array.c qzGetElementByID.c session.c login.c cookie.c \
