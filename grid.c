@@ -199,28 +199,9 @@ void add_row_form_data(xmlNodePtr add_row_form,
  *  is a cell in the table.
  *
  */
-void grid_edit(struct handler_args* h, char* form_name){
+void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
 
     struct table_action* grid_edit_ta = h->page_ta;
-
-    h->doc = doc_from_file(h, grid_edit_ta->xml_template);
-    if (h->doc == NULL){
-        // logged by doc_from_file
-        error_page(h, 500,  "xml conversion failure");
-        return;
-    }
-    content_type(h, "text/html");
-
-
-    xmlNodePtr root_el;
-    if ((root_el = xmlDocGetRootElement(h->doc)) == NULL){
-
-        fprintf(h->log, "%f %d %s:%d fail xml root element not found\n",
-            gettime(), h->request_id, __func__, __LINE__);
-
-        error_page(h, SC_EXPECTATION_FAILED,  "xml document open failure");
-        return;
-    }
 
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, root_el, grid_edit_ta->target_div)) == NULL){
@@ -234,7 +215,6 @@ void grid_edit(struct handler_args* h, char* form_name){
     }
 
     add_helpful_text(h, grid_edit_ta, root_el);
-    add_all_menus(h, root_el);
 
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -352,9 +332,10 @@ void grid_edit(struct handler_args* h, char* form_name){
     struct form_record* form_rec;
     form_rec = register_form(h, form, SUBMIT_MULTIPLE, action_target);
     // XXXXXXX The zero here is problematic as a grid has many rows.
-    set_context_parameters(h, form_rec, grid_edit_rs, 0);
+    save_context_parameters(h, form_rec, grid_edit_rs, 0);
     free(action_target);
     action_target = NULL;
+    if (h->error_exists) return;
 
     // Add any fields submitted to edit before the table.
     // XXXXXXX This is all fields, should this be limited to fields
@@ -534,28 +515,12 @@ void grid_edit(struct handler_args* h, char* form_name){
  *  grid_save
  *
  */
-void grid_save(struct handler_args* h, char* form_name){
+void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
 
     // Need the table action not for the action but for the
     // template name.
     struct table_action* grid_save_ta = h->page_ta;
-
-    h->doc = doc_from_file(h, grid_save_ta->xml_template);
-    if (h->doc == NULL){
-        // logged by doc_from_file
-        error_page(h, 500,  "xml conversion failure");
-        return;
-    }
     content_type(h, "text/html");
-
-    xmlNodePtr root_el;
-    if ((root_el = xmlDocGetRootElement(h->doc)) == NULL){
-        fprintf(h->log, "%f %d %s:%d fail xml root element not found\n",
-            gettime(), h->request_id, __func__, __LINE__);
-
-        error_page(h, SC_EXPECTATION_FAILED,  "xml document open failure");
-        return;
-    }
 
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, root_el, grid_save_ta->target_div)) == NULL){
@@ -566,8 +531,6 @@ void grid_save(struct handler_args* h, char* form_name){
         error_page(h, SC_EXPECTATION_FAILED,  "id element not found");
         return;
     }
-    add_helpful_text(h, grid_save_ta, root_el);
-    add_all_menus(h, root_el);
 
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -584,6 +547,7 @@ void grid_save(struct handler_args* h, char* form_name){
     }
 
     xmlNewTextChild(divqz, NULL, "h2", form_name);
+    save_context_parameters(h, NULL, grid_save_rs, 0);
 
     // BEGIN
     PQexec(h->session->conn, "BEGIN");
@@ -684,11 +648,33 @@ void grid(struct handler_args* h){
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     char* action = get_uri_part(h, QZ_URI_ACTION);
 
+    if (h->page_ta->xml_template != NULL){
+        h->doc = doc_from_file(h, h->page_ta->xml_template);
+    }
+    if (h->doc == NULL){
+        // logged by doc_from_file
+        error_page(h, 500,  "xml conversion failure");
+        return;
+    }
+    content_type(h, "text/html");
+
+
+    xmlNodePtr root_el;
+    if ((root_el = xmlDocGetRootElement(h->doc)) == NULL){
+
+        fprintf(h->log, "%f %d %s:%d fail xml root element not found\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        error_page(h, SC_EXPECTATION_FAILED,  "xml document open failure");
+        return;
+    }
+
+
     if (strcmp("edit", action) == 0){
-        grid_edit(h, form_name);
+        grid_edit(h, form_name, root_el);
 
     }else if (strcmp("save", action) == 0){
-        grid_save(h, form_name);
+        grid_save(h, form_name, root_el);
 
     }else{
 
@@ -696,6 +682,9 @@ void grid(struct handler_args* h){
             gettime(), h->request_id, __func__, __LINE__, action);
 
         error_page(h,400, "unknown action");
+    }
+    if (! h->error_exists){
+        add_all_menus(h, root_el);
     }
 }
 

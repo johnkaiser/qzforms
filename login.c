@@ -146,7 +146,15 @@ void validate_login( struct handler_args* h  ){
         login_uri = NULL;
 
         return;
-    }    
+    }
+    // If the password is 42 then no login should be attempted.
+    // I published some tests with a login of qz and a password 
+    // of 42, so hack attempts should be expected.
+    if ((vals[1] == NULL) || (strcmp(vals[1], "42") == 0)){
+        error_page(h, SC_NOT_ACCEPTABLE, "The answer is not a valid password");
+        return;
+    }
+
 
     if (strlen(user) > MAX_USER_NAME_LENGTH){
         fprintf(h->log, "%f %d %s:%d user name too long %ld\n", 

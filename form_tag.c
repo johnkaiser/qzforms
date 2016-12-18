@@ -65,9 +65,6 @@ struct form_record* register_form(struct handler_args* h,
   
     snprintf(form_rec->form_action, action_url_len+1, "%s", form_action);
 
-    //  Context 
-    //set_context_parameters(h, form_rec,  
-
     // save the record.
     xmlHashAddEntry(h->session->form_tags, form_rec->form_id, form_rec);
 
@@ -88,6 +85,9 @@ struct form_record* register_form(struct handler_args* h,
     arc = asprintf(&expires_buf, "%lld", form_rec->expires);
     xmlNewProp(form_node, "expires", expires_buf);
     free(expires_buf);
+
+    // 
+    form_rec->form_set = h->current_form_set;
 
     return form_rec;
 }
@@ -128,6 +128,32 @@ void duplicate_registration(struct handler_args* h,
     return;
 }
 
+/*
+ *  valid_context_parameter_scanner
+ *
+ *  If any elements in the post data are also in the context
+ *  parameter hash table then they must have the same value.
+ *  The context parameter is given in name and payload, the
+ *  posted value comes from h->postdata
+ */
+void valid_context_parameter_scanner(void* payload, void* data, xmlChar* name){
+    char* saved_value = payload;
+    struct handler_args* h = data;
+
+    char* submitted_value = xmlHashLookup(h->postdata, name);
+
+    if (submitted_value != NULL){
+        if (strcmp(saved_value, submitted_value) != 0){
+           h->posted_form->form_set->is_valid = false;
+           error_page(h, SC_BAD_REQUEST, "Invalid Data");
+
+           fprintf(h->log, "%f %d %s:%d form set context parameter \"%s\" "
+               "changed\n",
+               gettime(), h->request_id, __func__, __LINE__,
+               name);
+        }
+    }
+}
 
 /*
  *  post_contains_valid_form_tag
@@ -192,6 +218,21 @@ bool post_contains_valid_form_tag(struct handler_args* h){
            this_form->expires, this_form->form_action);
 
         return false;   
+    }
+
+    // save the form for later, later includes the next step.
+    h->posted_form = this_form;
+    if (h->posted_form->form_set != NULL){
+        struct form_set* fs = h->posted_form->form_set;
+        fprintf(h->log, "%f %d %s:%d form_set->name=%s sec_token_ok=%c\n",
+           gettime(), h->request_id, __func__, __LINE__,
+           fs->name,  (fs->integrity_token == h->session->integrity_token)? 't':'f' );
+    }
+
+    // Verify the posted values match the form set for any context parameters.
+    if (this_form->form_set != NULL){
+        xmlHashScan(h->posted_form->form_set->context_parameters,
+            valid_context_parameter_scanner, h);
     }
 
     fprintf(h->log, "%f %d %s:%d form tag OK form_action=%s\n", 
@@ -271,25 +312,24 @@ struct form_tag_housekeeping_data {
  */
 void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
 
-    struct form_record* form_tag = payload;
+    struct form_record* form_rec = payload;
     struct form_tag_housekeeping_data * ft_hk_data = data;
 
     // Allow twice the duration before removing 
     // This makes it possible to display expired messages instead
     // of not found messages for recently expired forms.
-    if ( time(NULL) >  (form_tag->expires + 2*form_tag->duration)){
+    if ( time(NULL) >  (form_rec->expires + 2*form_rec->duration)){
 
         fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %s\n", 
            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
-           form_tag->form_action); 
+           form_rec->form_action); 
 
-        decrement_form_set(form_tag, ft_hk_data->this_session->form_sets);
-
+        decrement_form_set(form_rec);
 
         xmlHashRemoveEntry(ft_hk_data->this_session->form_tags, name, NULL);
-        free(form_tag);
-    }else if (time(NULL) > form_tag->expires){
-        form_tag->is_valid = false;
+        free(form_rec);
+    }else if (time(NULL) > form_rec->expires){
+        form_rec->is_valid = false;
     }    
 }
 
@@ -363,16 +403,27 @@ struct form_record* get_posted_form_record(struct handler_args* h){
     // and kill the session.
     if (this_form->session_integrity_token != h->session->integrity_token){
         fprintf(h->log, 
-            "%f %d %s:%d fail form record integrity token does not match "
-            "form_action=%s\n", 
-            gettime(), h->request_id, __func__, __LINE__,
-            this_form->form_action); 
+            "%f %d %s:%d fail form record integrity token invalid\n",
+            gettime(), h->request_id, __func__, __LINE__);
 
         error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
         h->session->is_logged_in = false;
 
         return NULL;
     }
+
+    if ((this_form->form_set != NULL) &&
+        (this_form->form_set->integrity_token != 
+            h->session->integrity_token)){
+
+        fprintf(h->log, 
+            "%f %d %s:%d fail form set integrity token check invalid\n",
+            gettime(), h->request_id, __func__, __LINE__);
+        
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
+        h->session->is_logged_in = false;
+        return NULL;
+    }        
 
     return this_form;
 }

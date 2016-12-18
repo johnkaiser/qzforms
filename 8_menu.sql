@@ -245,6 +245,20 @@ VALUES ('form_submenu', 'page_js', 'any');
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
 VALUES ('form_submenu', 'page_css', 'any');
 
+--
+-- form_set
+--
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, menu_text)
+VALUES
+('form_dev', '50', 'form_set', 'getall', 'form_set');
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('main', 'form_set', 'any'),
+('form_dev', 'form_set', 'any');
+
 
 
 

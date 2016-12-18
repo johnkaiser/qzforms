@@ -7,9 +7,14 @@ CREATE TABLE qz.form(
      target_div qz.variable_name,
      hidden boolean default false, 
      add_description boolean,
-     prompt_container qz.prompt_container_type
+     prompt_container qz.prompt_container_type,
+     form_set_name qz.variable_name
 );
 
+CREATE TABLE qz.form_set (
+  set_name qz.variable_name PRIMARY KEY,
+  context_parameters varchar(63)[]
+);
 
 
 INSERT INTO qz.form(form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
@@ -74,5 +79,26 @@ INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_templ
 VALUES ('page_css', 'grid', 'qz', 'page_css', 'base.xml', 'qz', true, 'no_container');
 
 
+INSERT INTO qz.form
+(form_name, handler_name, schema_name, table_name,
+xml_template, target_div, add_description, 
+prompt_container, form_set_name)
+VALUES
+('form_set', 'onetable', 'qz', 'form_set',
+'base.xml', 'qz', 't', 
+'fieldset', NULL);
+
+INSERT INTO qz.form_set
+(set_name, context_parameters)
+VALUES
+('form_mgt', '{form_name, handler_name}'),
+('menu_mgt', '{menu_name}'),
+('fixed_parameters', '{menu_name,menu_item_sequence}');
+
+UPDATE qz.form
+SET
+  form_set_name = 'form_mgt'
+WHERE form_name IN ( 'form', 'table_action_edit', 'prompt_rule', 
+  'page_js', 'page_css');
 
 

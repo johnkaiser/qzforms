@@ -115,11 +115,17 @@ void init_menu(struct handler_args* hargs){
     PGresult* rs;
 
     char menu_items[] =
-        "SELECT menu_name, menu_item_sequence, target_form_name, "
-        "action, menu_text, context_parameters "
-        "FROM qz.menu_item "
-        "WHERE menu_name = $1 "
-        "ORDER BY menu_item_sequence ";
+        "SELECT mi.menu_name, mi.menu_item_sequence, mi.target_form_name, "
+        "mi.action, mi.menu_text, m.form_set_name, "
+        "  (SELECT count(fp.parameter_key) "
+        "   FROM qz.fixed_parameter fp "
+        "   WHERE fp.menu_name = mi.menu_name "
+        "   AND fp.menu_item_sequence = mi.menu_item_sequence) "
+        "   fixed_parameter_count "
+        "FROM qz.menu_item mi "
+        "JOIN qz.menu m ON (m.menu_name = mi.menu_name) "
+        "WHERE mi.menu_name = $1 "
+        "ORDER BY mi.menu_item_sequence ";
 
    rs = PQprepare(hargs->session->conn, "fetch_menu_items", menu_items,
        0, NULL);
@@ -155,20 +161,20 @@ void init_menu(struct handler_args* hargs){
    PQclear(rs);
    rs = NULL;
 
-   char menu_item_parameters[] =
+   char fixed_parameter[] =
         "SELECT parameter_key, parameter_value "
-        "FROM qz.menu_item_parameter "
+        "FROM qz.fixed_parameter "
         "WHERE menu_name = $1 "
         "AND menu_item_sequence = $2 ";
 
-   rs = PQprepare(hargs->session->conn, "fetch_menu_item_parameters",
-       menu_item_parameters, 0, NULL);
+   rs = PQprepare(hargs->session->conn, "fetch_fixed_parameter",
+       fixed_parameter, 0, NULL);
 
    error_msg = nlfree_error_msg(rs);
 
    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
        gettime(), hargs->request_id, __func__, __LINE__,
-       "fetch_menu_item_parameters", PQresStatus(PQresultStatus(rs)),
+       "fetch_fixed_parameter", PQresStatus(PQresultStatus(rs)),
        error_msg );
 
    free(error_msg);
@@ -200,21 +206,41 @@ void init_menu(struct handler_args* hargs){
 
 }
 
-/*
+struct node_scanner_args {
+    struct handler_args* hargs;
+    xmlNodePtr form_node;
+};
+
+void context_parameter_input_node_scanner(void* payload, void* data,
+    xmlChar* name){
+
+    struct node_scanner_args* scan_args = data;
+    //struct handler_args* hargs = scan_args->hargs;
+    xmlNodePtr form_node = scan_args->form_node;
+
+    char* value = payload;
+
+    xmlNodePtr input_el = xmlNewChild(form_node, NULL, "input", NULL);
+
+    xmlNewProp(input_el, "type", "hidden");
+    xmlNewProp(input_el, "name", name);
+    xmlNewProp(input_el, "value", value);
+}
+
+/*  
  *  add_menu
  *
  *  Add one menu to the indicated node.
  *
  *  A menu is a set of one or more button choices.
  *  Each menu item contains one html form with data from
- *  current postdata in html hidden fields for each
+ *  the form set in html hidden fields for each
  *  pg menu_item parameters array element.
  */
 
 void add_menu(struct handler_args* hargs,
     PGresult* menu_rs,
     xmlNodePtr child_of){
-
 
     append_class(child_of, "menu");
     append_class(child_of, get_value(menu_rs, 0, "menu_name"));
@@ -223,7 +249,7 @@ void add_menu(struct handler_args* hargs,
     xmlNodePtr form;
     for (row=0; row<PQntuples(menu_rs); row++){
 
-        // For each row in _rs add a form ...
+        // For each row in _rs add a form.
         form = xmlNewChild(child_of, NULL, "form", NULL);
         char* action_target;
 
@@ -256,60 +282,77 @@ void add_menu(struct handler_args* hargs,
         append_class(form, "menu");
         append_class(form, get_value(menu_rs, row, "menu_name"));
 
-        // ... that has the data it needs ...
-        // ... from the current context ...
-        char** params = parse_pg_array(get_value(menu_rs, row,
-            "context_parameters"));
+        // Add a hidden form field for each context parameter in the form set
 
-        if (params != NULL){
-            int p;
-            for (p=0; params[p]!=NULL; p++){
-               // ... including data from the current request ...
+        if (hargs->current_form_set != NULL){
+   
+            // The menu form gets data from the current context. 
+            // ZZZZZZZZZ get from page_ta char** context_parameters;
+            // ZZZZZZZZZ if page_ta bool clear_context_parameters 
+            // ZZZZZZZZZ is set then skip. but first...
 
-               char* fvalue = xmlHashLookup(hargs->postdata, params[p]);
-               if (fvalue != NULL){
-
-                   xmlNodePtr input_el = xmlNewChild(form, NULL, "input", NULL);
-                   xmlNewProp(input_el, "type", "hidden");
-                   xmlNewProp(input_el, "name", params[p]);
-                   xmlNewProp(input_el, "value", fvalue);
-
-               }else{
-
-                   // This is probably bad.
-                   // If I had more time I might make this a popup menu,
-                   // but I need it to work first. XXXXXXX
-                   fprintf(hargs->log, "%f %d %s:%d fail param %s "
-                       "on not found in input\n",
-                       gettime(), hargs->request_id, __func__, __LINE__,
-                       params[p]);
-
-               }
+            char** params = hargs->page_ta->context_parameters;
+            
+            if (params != NULL){
+                int p;
+                for (p=0; params[p]!=NULL; p++){
+   
+                    char* pvalue = xmlHashLookup(
+                      hargs->current_form_set->context_parameters, params[p]);
+                    
+                    if (pvalue != NULL){
+   
+                      xmlNodePtr input_el = xmlNewChild(form, NULL, "input", NULL);
+                      xmlNewProp(input_el, "type", "hidden");
+                      xmlNewProp(input_el, "name", params[p]);
+                      xmlNewProp(input_el, "value", pvalue);
+   
+                    }else{
+   
+                      // This is probably bad.
+                      fprintf(hargs->log, "%f %d %s:%d fail menu %s param %s "
+                          "not found in input\n",
+                          gettime(), hargs->request_id, __func__, __LINE__,
+                          get_value(menu_rs, row, "menu_name"), params[p]);
+                    }
+                }
             }
         }
-        // ... and from the parameter values stored in pg ...
-        PGresult* item_param_rs;
-        char* query_parameters[3];
-        query_parameters[0] = get_value(menu_rs, row, "menu_name");
-        query_parameters[1] = get_value(menu_rs, row, "menu_item_sequence");
-        query_parameters[2] = NULL;
 
-        item_param_rs = PQexecPrepared(hargs->session->conn,
-          "fetch_menu_item_parameters", 2,
-              (const char * const *)query_parameters, NULL, NULL, 0);
+        // Add fixed parameters, if any, as hidden input elements.
+        int fixed_parameter_count = atoi(
+            get_value(menu_rs, row, "fixed_parameter_count")
+        );
 
-        int p_row;
-        for(p_row=0; p_row < PQntuples(item_param_rs); p_row++){
-            xmlNodePtr p_input = xmlNewChild(form, NULL, "input", NULL);
-            xmlNewProp(p_input, "type", "hidden");
-            char* key =  get_value(item_param_rs, p_row, "parameter_key");
-            xmlNewProp(p_input, "name", key);
-            char* p_value = get_value(item_param_rs, p_row, "parameter_value");
-            xmlNewProp(p_input, "value", p_value);
-        }
-        PQclear(item_param_rs);
+        if (fixed_parameter_count > 0){
+            char* fixed_params[3];
+            fixed_params[0] = get_value(menu_rs, row, "menu_name");
+            fixed_params[1] = get_value(menu_rs, row, "menu_item_sequence");
+            fixed_params[2] = NULL;
+    
+            PGresult* fixed_params_rs = PQexecPrepared(hargs->session->conn, 
+                "fetch_fixed_parameter", 2, 
+                (const char * const *) fixed_params, 
+                NULL, NULL, 0);
+    
+            if ((PQresultStatus(fixed_params_rs) == PGRES_TUPLES_OK) &&
+                (PQntuples(fixed_params_rs) > 0)){
+    
+               int fpn;
+               for(fpn=0; fpn < PQntuples(fixed_params_rs); fpn++){
+    
+                   xmlNodePtr fp_node = xmlNewChild(form, NULL, "input", NULL);
+                   xmlNewProp(fp_node, "type", "hidden");
+                   xmlNewProp(fp_node, "name", 
+                       get_value(fixed_params_rs, fpn, "parameter_key"));
+    
+                   xmlNewProp(fp_node, "value", 
+                       get_value(fixed_params_rs, fpn, "parameter_value"));
+               }
+            }
+        }    
 
-        // ... that is the menu button.
+        // The menu form has a button.
         xmlNodePtr submit_button = xmlNewChild(form, NULL, "input", NULL);
         xmlNewProp(submit_button, "type", "submit");
         xmlNewProp(submit_button, "value", get_value(menu_rs,row,"menu_text"));
@@ -318,12 +361,45 @@ void add_menu(struct handler_args* hargs,
         struct form_record* form_rec;
         form_rec = register_form(hargs, form, SUBMIT_MULTIPLE, action_target);
 
-        set_context_parameters(hargs, form_rec, menu_rs, row);
-
         free(action_target);
     } // row
 
 }
+
+/*
+ *  log_context_variables
+ *
+ *  Run through the context variables and log them.
+ */
+
+void context_variable_logging_scanner(void* payload, void* data, xmlChar* name){
+ 
+     struct handler_args* hargs = data;
+     char* value = payload;
+
+     fprintf(hargs->log, "%f %d %s:%d context_variable=%s value=%s\n",
+         gettime(), hargs->request_id, "add_all_menus", __LINE__,
+         name, value);
+}
+void log_context_variables(struct handler_args* hargs){
+ 
+     if ((hargs->current_form_set != NULL) && 
+         (hargs->current_form_set->context_parameters != NULL)){
+
+         fprintf(hargs->log, "%f %d %s:%d context_paramters has %d items\n",
+             gettime(), hargs->request_id, __func__, __LINE__,
+             xmlHashSize(hargs->current_form_set->context_parameters));
+         
+         xmlHashScan(hargs->current_form_set->context_parameters, 
+             context_variable_logging_scanner,
+             hargs);
+     }else{
+         fprintf(hargs->log, "%f %d %s:%d form_set or form_set->"
+             "context_parameters is null\n",
+             gettime(), hargs->request_id, __func__, __LINE__);
+     }
+}
+ 
 
 /*
  *  add_all_menus
@@ -338,8 +414,9 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
 
     double start_time = gettime();
 
-    // Use menu_set in pg to feed add_menu.
+    log_context_variables(hargs);
 
+    // Use menu_set in pg to feed add_menu.
     char* params[3];
     params[0] = get_uri_part(hargs, QZ_URI_FORM_NAME);
     params[1] = get_uri_part(hargs, QZ_URI_ACTION);
@@ -401,10 +478,10 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
         }else{
 
             add_menu(hargs, menu_item_rs, add_here);
+
             fprintf(hargs->log, "%f %d %s:%d menu %s added\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 menu_name);
-
         }
 
         PQclear(menu_item_rs);

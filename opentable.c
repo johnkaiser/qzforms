@@ -86,9 +86,9 @@ void init_open_table(struct handler_args* h){
 
     char fetch_table_action[] =
         "SELECT fm.schema_name, fm.table_name, ta.sql, ta.fieldnames, "
-        "ta.pkey, ta.etag, fm.target_div, fm.handler_name, "
-        "fm.xml_template, fm.add_description, fm.prompt_container, "
-        "ta.set_context_parameters, fm.form_set_name, fs.context_parameters, "
+        "ta.pkey, ta.etag, ta.clear_context_parameters, fm.target_div, "
+        "fm.handler_name, fm.xml_template, fm.add_description, "
+        "fm.prompt_container, fm.form_set_name, fs.context_parameters, "
         "ta.helpful_text, "
         "ARRAY( "
         "  SELECT 'js/get/'|| f.filename filename "
@@ -211,7 +211,6 @@ void init_open_table(struct handler_args* h){
 void log_table_action_details(struct handler_args* h,
     struct table_action* ta){
 
-
     fprintf(h->log, "%f %d %s:%d form_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->form_name);
@@ -235,6 +234,10 @@ void log_table_action_details(struct handler_args* h,
     fprintf(h->log, "%f %d %s:%d etag=%llx\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->etag);
+
+    fprintf(h->log, "%f %d %s:%d clear_context_parameters=%c\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        (ta->clear_context_parameters) ? 't':'f');
 
     fprintf(h->log, "%f %d %s:%d nbr_params=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -292,10 +295,6 @@ void log_table_action_details(struct handler_args* h,
     fprintf(h->log, "%f %d %s:%d form_set_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->form_set_name);
-
-    fprintf(h->log, "%f %d %s:%d set_context_parameters=%c\n",
-        gettime(), h->request_id, __func__, __LINE__,
-        (ta->set_context_parameters) ? 't':'f');
 
     if (ta->context_parameters != NULL){
         for (k=0; ta->context_parameters[k] != NULL; k++){
@@ -623,12 +622,13 @@ void init_table_entry(struct handler_args* hargs,
         new_table_action->add_description = false;
     }
 
-    char* set_context_parameters = PQgetvalue(rs_table_action, 0,
-        PQfnumber(rs_table_action, "set_context_parameters"));
-    if (set_context_parameters[0] == 't'){
-        new_table_action->set_context_parameters = true;
+    // clear_context_parameters is a boolean
+    char* clear_context_parameters = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "clear_context_parameters"));
+    if (clear_context_parameters[0] == 't'){
+        new_table_action->clear_context_parameters = true;
     }else{
-        new_table_action->set_context_parameters = false;
+        new_table_action->clear_context_parameters = false;
     }
 
     // Set the check token
@@ -653,7 +653,7 @@ void init_table_entry(struct handler_args* hargs,
         "%f %d %s:%d init_table_entry complete\n",
         gettime(), hargs->request_id, __func__, __LINE__);
 
-    if (false) log_table_action_details(hargs, new_table_action);
+    if (true) log_table_action_details(hargs, new_table_action);
     return;
 }
 

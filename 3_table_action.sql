@@ -6,9 +6,13 @@ CREATE TABLE qz.table_action (
     pkey text[],
     etag bigint not null default nextval('qz.etag_seq'::regclass),
     helpful_text text,
+    set_context_parameters boolean NOT NULL DEFAULT 'f',
     PRIMARY KEY (form_name, action)
 );    
 
+--
+-- Form
+--
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES ('form', 'insert',
    $TAFI$INSERT INTO qz.form
@@ -41,25 +45,26 @@ NULL, '{form_name, handler_name_ro}',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'edit', 
-    'SELECT form_name, handler_name handler_name_ro, 
+  $FTAE$ SELECT form_name, handler_name handler_name_ro, 
      schema_name, table_name, xml_template, target_div,
-     add_description, prompt_container
-     FROM qz.form
-     WHERE form_name = $1', 
+     add_description, prompt_container, form_set_name
+  FROM qz.form
+  WHERE form_name = $1 $FTAE$, 
 '{form_name}', '{form_name, handler_name_ro}', 
 'The handler_name will provide a specific set of actions, such as edit, update, 
  delete.  The xml_template will be used as the starting document.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'update', 
-   'UPDATE qz.form SET 
-    schema_name = $2,
-    table_name = $3,
-    xml_template = $4,
-    target_div = $5,
-    add_description = $6,
-    prompt_container = $7
-    WHERE form_name = $1', 
+   $FTAU$ UPDATE qz.form SET 
+     schema_name = $2,
+     table_name = $3,
+     xml_template = $4,
+     target_div = $5,
+     add_description = $6,
+     prompt_container = $7,
+     form_set_name = $8
+   WHERE form_name = $1 $FTAU$, 
 '{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container}', 
 '{form_name, handler_name_ro}', NULL);
 
@@ -67,7 +72,7 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_t
 VALUES ('form', 'delete', 
    'DELETE FROM qz.form
     WHERE form_name = $1', 
-'{form_name, handler_name_ro}', '{form_name, handler_name_ro}', NULL);
+'{form_name}', '{form_name}', NULL);
 
 --
 -- prompt_rule_edit
@@ -196,36 +201,36 @@ VALUES ('prompt_rule_edit', 'delete',
 --
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'edit', 
-    $tae$SELECT
-      ta.form_name, ta.action action_ro, 
-      fm.handler_name handler_name_ro,
-      ta.helpful_text, ta.sql,
-      ta.fieldnames, ta.pkey 
-    FROM
-      qz.table_action ta
-    JOIN
-      qz.form fm USING (form_name)
-    WHERE
-      ta.form_name = $1 AND ta.action = $2 $tae$, 
+    $tae$ SELECT
+    form_name, action action_ro, 
+    helpful_text, sql,
+    fieldnames, pkey,
+    set_context_parameters
+  FROM
+    qz.table_action
+  WHERE
+    form_name = $1 AND action = $2 $tae$, 
 '{form_name,action}', '{form_name,action}', 
   'A table action binds a URL and HTTP post data to an SQL statement.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'insert', 
    'INSERT INTO qz.table_action
-   (form_name, action, 
-   helpful_text, sql, fieldnames, pkey)
+   (form_name, action, helpful_text, sql, fieldnames, 
+   pkey, set_context_parameters)
    VALUES
-   ($1,$2,$3,$4,$5,$6)', 
-'{form_name,action,helpful_text,sql,fieldnames,pkey}', NULL, NULL);
+   ($1,$2,$3,$4,$5,$6,$7)', 
+'{form_name,action,helpful_text,sql,fieldnames,pkey,set_context_parameters}',
+NULL, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'update', 
-    'UPDATE qz.table_action
-    SET helpful_text=$3,
-    sql=$4, fieldnames=$5, pkey=$6 
-    WHERE form_name = $1 AND action = $2', 
-'{form_name,action_ro,helpful_text,sql,fieldnames,pkey}', 
+    $TATAU$ UPDATE qz.table_action
+  SET helpful_text=$3,
+    sql=$4, fieldnames=$5, pkey=$6,
+    set_context_parameters=$7
+  WHERE form_name = $1 AND action = $2 $TATAU$, 
+'{form_name,action_ro,helpful_text,sql,fieldnames,pkey,set_context_parameters}', 
 '{form_name,action_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
@@ -237,7 +242,8 @@ WHERE form_name = $1 AND action = $2',
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'create', 
     $TAC$SELECT ta.form_name, ta.action, fm.handler_name handler_name_ro,
-    ''::text helpful_text, ta.sql, ta.fieldnames, ta.pkey 
+    ''::text helpful_text, ta.sql, ta.fieldnames, ta.pkey, 
+    'f'::boolean set_context_parameters 
      FROM qz.create_table_action($1,$2) ta
     JOIN qz.form fm USING (form_name)$TAC$, '{form_name, action}', 
 '{form_name, handler_name_ro, action}', NULL);
@@ -797,4 +803,54 @@ INSERT INTO qz.table_action
 VALUES
 ('status', 'schema_version',
     'SELECT schema_version FROM qz.constants');
+
+--
+-- form_set
+--
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('form_set', 'getall', 
+'SELECT set_name FROM qz.form_set ORDER BY set_name', 
+NULL, '{set_name}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('form_set', 'create', 
+$FSC$SELECT ''::text set_name, ''::text context_parameters$FSC$,
+NULL, NULL);
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('form_set', 'insert',
+$FSI$INSERT INTO qz.form_set (set_name,context_parameters) VALUES ($1,$2) $FSI$,
+'{set_name,context_parameters}', '{set_name}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('form_set', 'edit',
+$FSE$SELECT set_name, context_parameters 
+     FROM qz.form_set
+     WHERE set_name = $1$FSE$,
+'{set_name}', '{set_name}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('form_set', 'update',
+$FSU$UPDATE qz.form_set
+     SET context_parameters = $2
+     WHERE set_name = $1$FSU$,
+'{set_name,context_parameters}', '{set_name}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('form_set', 'delete',
+$FSD$DELETE FROM qz.form_set
+     WHERE set_name = $1$FSD$,
+'{set_name}', '{set_name}');
 

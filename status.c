@@ -73,17 +73,24 @@ void form_tag_status_scanner(void* val, void* data, xmlChar* name){
 
     xmlNewTextChild(tr, NULL,  "td", 
         (form_tag->submit_only_once) ?  "t":"f");
-    
-    xmlNewTextChild(tr, NULL, "td", form_tag->form_set_id);
+   
+    if (form_tag->form_set != NULL){
+        uint64_t id_val;
+        memcpy(&id_val, form_tag->form_set->id, 8);
+        char* id_str;
+        asprintf(&id_str, "%lld", id_val);
+        xmlNewTextChild(tr, NULL, "td", id_str);
+        free(id_str);
+    }else{
+        xmlNewTextChild(tr, NULL, "td", "NULL");
+    }
 
     return;
 }
 
-void cntx_param_scanner(void* val, void* data, xmlChar* name){
+void cntx_param_scanner(void* value, void* data, xmlChar* name){
 
     xmlNodePtr ul = data;
-
-    char* value = val + strlen(name) + 1;
 
     char* keqv;
     asprintf(&keqv, "%s=%s%c", name, value, '\0');

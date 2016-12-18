@@ -35,18 +35,26 @@
  *
  *  Adds a delete button if there is a table action delete.
  *  No confirmation, that should be done in Javascript.
+ *  The bookkeeping for context parameters must be done
+ *  after this, so return the form node and form record
+ *  for later.
  */
 
-void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
+struct delete_details{
+    xmlNodePtr html_node;
+    struct form_record* form_record;
+};
+struct delete_details* 
+add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     struct table_action* delete_ta = open_table(h, form_name, "delete");
 
     // delete is optional, missing action is not an error.
-    if (delete_ta == NULL) return;
+    if (delete_ta == NULL) return NULL;
 
     // Can't delete without a primary key
-    if (delete_ta->nbr_pkeys < 1) return;
+    if (delete_ta->nbr_pkeys < 1) return NULL;
 
     char* action_target;
     char* uri_parts[] = {
@@ -67,10 +75,10 @@ void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     // register_form adds a record about the form in a table and adds 
     // a hidden input field named "form_tag" that must be returned and 
     // validated before any http post data is accepted.
-     struct form_record* form_rec = register_form(h, del_form, 
-         SUBMIT_MULTIPLE, action_target);
+    struct form_record* form_record = 
+        register_form(h, del_form, SUBMIT_MULTIPLE, action_target);
 
-    set_context_parameters(h, form_rec, rs, 0);
+    if (h->error_exists) return NULL;
 
     // Add a hidden field for each primary key.
     int pcnt;
@@ -88,8 +96,12 @@ void add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     xmlNewProp(button, "type", "submit");
     xmlNewProp(button, "value", "Delete");
     
+    struct delete_details* deldet = calloc(1, sizeof(struct delete_details));
+    deldet->html_node = del_form;
+    deldet->form_record = form_record;
+
     free(action_target);
-    return;
+    return deldet;
 }
 
 /*
@@ -111,7 +123,7 @@ void edit_form(struct handler_args* h, char* next_action,
     xmlNodePtr root_el = xmlDocGetRootElement(h->doc);
     add_helpful_text(h, edit_ta, root_el);
 
-    add_delete(h, divqz, edit_rs);
+    struct delete_details* deldet = add_delete(h, divqz, edit_rs);
 
     char* form_target;
 
@@ -134,7 +146,11 @@ void edit_form(struct handler_args* h, char* next_action,
 
     struct form_record* form_rec = register_form(h, form, SUBMIT_MULTIPLE, 
         form_target);
-    set_context_parameters(h, form_rec, edit_rs, 0);
+    save_context_parameters(h, form_rec, edit_rs, 0);
+    if (deldet != NULL){
+        save_context_parameters(h, deldet->form_record, edit_rs, -1);
+    }
+    if (h->error_exists) return;
 
     int col;
 
@@ -390,6 +406,10 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                 //  XXXXXX get timeout and submit_only_once flag from pg
                 form_tag = register_form(h, form, SUBMIT_MULTIPLE, 
                     action_target);
+    
+                if (h->current_form_set == NULL){
+                    save_context_parameters(h, form_tag, getall_rs, -1);
+                }    
 
             }else{
                 duplicate_registration(h, form_tag, form);
@@ -458,6 +478,13 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             append_class(td, fname);
         } // col
     } // row
+
+    // For forms with data, the form set would be created when the first data
+    // is encountered. For the empty set, the context variables still need
+    // to be copied.
+    if (h->current_form_set == NULL){
+        save_context_parameters(h, NULL, getall_rs, -1);
+    }    
 
     free(action_target);
     PQclear(getall_rs);
@@ -604,6 +631,7 @@ void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
          ||
          (PQresultStatus(insert_rs) == PGRES_COMMAND_OK) ){
         // Yeah, it worked.
+        save_context_parameters(h, NULL, insert_rs, 0);
 
         // Redisplay the first screen.
         onetable_getall(h, form_name, divqz);
@@ -702,6 +730,8 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
          (PQresultStatus(delete_rs) == PGRES_COMMAND_OK) ){
         // Yeah, it worked.
 
+        save_context_parameters(h, NULL, delete_rs, 0);
+
     }else{
         char* err_msg = PQresultErrorMessage(delete_rs);
         xmlNodePtr delete_error = xmlNewTextChild(divqz, NULL, "pre", err_msg);
@@ -754,8 +784,6 @@ void onetable(struct handler_args* h){
     }
     content_type(h, "text/html");
 
-    add_all_menus(h, root_el);
-
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, root_el, this_ta->target_div)) == NULL){
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n", 
@@ -791,4 +819,9 @@ void onetable(struct handler_args* h){
 
         error_page(h,400, "unknown action");
     }
+
+    if (! h->error_exists){
+        add_all_menus(h, root_el);
+    }
+    return;
 }

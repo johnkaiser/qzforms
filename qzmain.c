@@ -100,7 +100,6 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->out = request->out;
         hargs->err = request->err;
         hargs->envpfcgi = request->envp;
-        hargs->form_sets = xmlHashCreate(19);
         hargs->uri_parts = str_to_array(
             FCGX_GetParam("REQUEST_URI",request->envp), '/');
     }else{
@@ -112,7 +111,6 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->request = NULL;
         hargs->envpfcgi = NULL;
         hargs->uri_parts = NULL;
-        hargs->form_sets = NULL;
     }
     hargs->cookie_buf = NULL;
     hargs->envpmain = envpmain;
@@ -120,6 +118,8 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     hargs->conf = conf;
     hargs->page_ta = NULL;
     hargs->headers = NULL;
+    hargs->posted_form = NULL;
+    hargs->current_form_set = NULL;
     hargs->error_exists = false;
 
     if (hargs->uri_parts != NULL){  // null for housekeeper
@@ -162,7 +162,6 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         buf = calloc(1, content_length+2);
         FCGX_GetStr(buf, content_length, hargs->in);
         hargs->postbuf = buf;
-        hargs->postdata = NULL;
 
         // parse_post
         fprintf(hargs->log, "%f %d %s:%d parse_post called with %ld bytes\n",
@@ -204,11 +203,6 @@ void free_handler(struct handler_args* handler){
             xmlHashFree(handler->postdata, NULL);
             free(handler->postbuf);
             handler->postdata = NULL;
-        }
-
-        if  (handler->form_sets != NULL){
-            xmlHashFree(handler->form_sets, NULL);
-            handler->form_sets = NULL;
         }
 
         FCGX_Finish_r(handler->request);

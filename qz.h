@@ -109,11 +109,12 @@ struct handler_args {
     char** uri_parts;
     int nbr_uri_parts;
     char* cookie_buf;
+    char* postbuf;
     xmlHashTablePtr cookiesin;
     xmlHashTablePtr postdata;
-    char* postbuf;
     struct table_action* page_ta; 
-    xmlHashTablePtr form_sets;
+    struct form_record* posted_form;
+    struct form_set* current_form_set;
     struct strbuf* headers;
     xmlDocPtr doc;
     struct strbuf* data; 
@@ -166,8 +167,8 @@ struct table_action{
     char** js_filenames;
     char** css_filenames;
     char* form_set_name;
-    bool set_context_parameters;
     char** context_parameters;
+    bool clear_context_parameters;
     uint64_t integrity_token;
 };
 
@@ -276,7 +277,7 @@ struct form_record{
     time_t expires;
     time_t duration;
     bool submit_only_once;
-    char form_set_id[17];
+    struct form_set* form_set;
     uint64_t session_integrity_token;
     char form_action[];
     // XXXXXX  tie to record key sometimes
@@ -284,12 +285,14 @@ struct form_record{
 
 
 struct form_set{
-    char id[17];
+    char id[9];
     char zero;
     int64_t ref_count;
     bool is_valid;
+    // A context parameter is in the form "value\0key\0".
     xmlHashTablePtr context_parameters;
     char name[64];
+    uint64_t integrity_token;
 };
 
 static const char QZERR_EXPECTED_EQ[] = "Expected '='";
@@ -943,14 +946,25 @@ extern void add_helpful_text(struct handler_args* h, struct table_action* ta,
  */
 extern char* base64_encode(char*);
 
-extern void decrement_form_set(struct form_record* form_rec, 
-    xmlHashTablePtr form_sets);
+extern void decrement_form_set(struct form_record* form_rec);
 
 extern void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name);
 
 extern void clear_form_sets(struct session*);
 
-extern void set_context_parameters(struct handler_args* h, 
+extern void save_context_parameters(struct handler_args* h, 
     struct form_record* new_form_rec,
     PGresult* values_rs, int row);
 
+
+/*
+ *  get_form_set
+ *  form_set.c
+ */
+extern struct form_set* get_form_set(struct handler_args*, char* form_set_id);
+
+/*
+ *  
+ *
+ */
+extern void clear_context_parameters(struct handler_args* h, char* form_set_name);

@@ -35,6 +35,8 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_edit', 20,
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_set_edit', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('fixed_parameters', 20, 'form_edit.css');
 
+INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('form_set', 1, 'qzforms.css');
+
 
 
 --
@@ -96,6 +98,8 @@ INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 10, 'jq
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 20, 'jquery.tablesorter.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 40, 'document_ready.js');
+
+INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('form_set', 1, 'qzforms.js');
 
 
 

@@ -62,7 +62,9 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
 	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql \
-	qz_db_update_SV4.sql qz_db_update_SV5.sql
+	qz_db_update_SV4.sql qz_db_update_SV5.sql qz_db_update_SV6.sql \
+	qz_db_update_SV7.sql
+
 
 all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
@@ -248,6 +250,20 @@ grid.o: grid.c
 
 form_set.o: form_set.c
 	$(CC) $(CFLAGS) -Wall -c form_set.c
+
+test_form_set: form_set.c
+	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DFORM_SET_MAIN form_set.c \
+	qzhandlers.o timestamp.o  onetable.o \
+	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o \
+	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
+	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
+	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
+	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
+		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+		-L$(XMLLIBDIR) -L$(PCRELIBS) \
+		-lpq \
+		-o test_form_set
+
 
 inc:
 	echo $(VERSION)"+0.001"|bc > Version.new

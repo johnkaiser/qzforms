@@ -32,8 +32,6 @@
 
 /*
  *  Turn a file name into an xml node tree,
- *  The handler is required for logging, but may be null
- *  for use without logging.
  */  
 xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
 
@@ -46,6 +44,14 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
             gettime(), h->request_id, __func__, __LINE__,
             "doc_from_file called with h->doc defined");
     }
+
+    if (h->conf == NULL){
+        fprintf(h->log, "%f %d %s:%d fail h->conf is null\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        return NULL;
+    }
+
     xmlDocPtr doc;
 
     char* docname; 
