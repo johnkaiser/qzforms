@@ -2,8 +2,10 @@
 CREATE TABLE qz.menu(
     menu_name qz.variable_name PRIMARY KEY,
     target_div qz.variable_name,
-    description text
+    description text,
+    form_set_name qz.variable_name
 );
+ALTER TABLE qz.menu ADD FOREIGN KEY (form_set_name) REFERENCES qz.form_set(set_name);
 
 
 CREATE TABLE qz.menu_item (
@@ -25,7 +27,7 @@ CREATE TABLE qz.menu_set (
 );
 
 
-CREATE TABLE qz.menu_item_parameter(
+CREATE TABLE qz.fixed_parameter(
     menu_name qz.variable_name,
 	menu_item_sequence integer,
 	parameter_key qz.variable_name,
@@ -34,8 +36,6 @@ CREATE TABLE qz.menu_item_parameter(
 	FOREIGN KEY (menu_name, menu_item_sequence) 
         REFERENCES qz.menu_item(menu_name, menu_item_sequence)
 );
-
-
 
 --
 -- Data for Name: menu; Type: TABLE DATA; 
@@ -56,11 +56,11 @@ VALUES ('table_action_edit', 'pagemenu', 'Table actions for this form_name');
 INSERT INTO qz.menu (menu_name, target_div, description) 
 VALUES ('fixed_parameters', 'pagemenu', 'Set specific values');
 
-INSERT INTO qz.menu (menu_name, target_div, description) 
-VALUES ('menu_submenu', 'pagemenu', 'Build menu details');
+INSERT INTO qz.menu (menu_name, target_div, description, form_set_name) 
+VALUES ('menu_submenu', 'pagemenu', 'Build menu details', 'menu_mgt');
 
-INSERT INTO qz.menu (menu_name, target_div, description) 
-VALUES ('form_submenu', 'pagemenu', 'Edit form particulars');
+INSERT INTO qz.menu (menu_name, target_div, description, form_set_name) 
+VALUES ('form_submenu', 'pagemenu', 'Edit form particulars', 'form_mgt');
 
 
 --
@@ -98,9 +98,6 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, actio
 VALUES ('menu_submenu', 1, 'menu_item_edit', 'getall', 'Menu_Item', '{menu_name}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('menu_submenu', 2, 'menu_set_edit', 'edit', 'Menu_Set', '{menu_name}');
-
-INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_submenu', 1, 'form', 'edit', 'form', '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
@@ -115,8 +112,12 @@ VALUES ('form_submenu', 40, 'page_js', 'edit', 'page_js', '{form_name, handler_n
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_submenu', 50, 'page_css', 'edit', 'page_css', '{form_name, handler_name_ro}');
 
-
-
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name,
+  action, menu_text, context_parameters)
+VALUES
+('form_submenu', '60', 'page_menus',
+  'edit', 'page_menus', '{form_name, handler_name_ro}');
 
 --
 -- Data for Name: menu_set; Type: TABLE DATA; Schema: qz; Owner: qz
@@ -225,9 +226,6 @@ INSERT INTO qz.menu_set (menu_name, host_form_name, action)
 VALUES ('menu_submenu', 'fixed_parameters', 'any');
 
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
-VALUES ('table_action_edit', 'form', 'getall');
-
-INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
 VALUES ('form_submenu', 'form', 'edit');
 
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
@@ -245,6 +243,13 @@ VALUES ('form_submenu', 'page_js', 'any');
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
 VALUES ('form_submenu', 'page_css', 'any');
 
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('main', 'page_menus', 'any'),
+('form_submenu', 'page_menus', 'any'),
+('form_dev', 'page_menus', 'any');
+
 --
 -- form_set
 --
@@ -258,6 +263,10 @@ INSERT INTO qz.menu_set
 VALUES
 ('main', 'form_set', 'any'),
 ('form_dev', 'form_set', 'any');
+
+-- Add a foreign key so select_fkey works.
+ALTER TABLE qz.form ADD FOREIGN KEY (form_set_name) REFERENCES qz.form_set(set_name);
+
 
 
 

@@ -34,8 +34,6 @@ CREATE TABLE qz.page_js (
     filename text REFERENCES qz.js(filename),
     PRIMARY KEY (form_name, sequence)
 );
-
-
 --
 -- css
 --
@@ -228,6 +226,17 @@ $DR$
   }
 $DR$);
 
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('page_menus', '1', 'qzforms.js');
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('page_menus', '1', 'qzforms.css'),
+('page_menus', '10', 'form_edit.css');
 
 
 

@@ -25,7 +25,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=6
+SCHEMA_VERSION=7
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
 	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\

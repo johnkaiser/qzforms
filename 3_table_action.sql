@@ -6,7 +6,7 @@ CREATE TABLE qz.table_action (
     pkey text[],
     etag bigint not null default nextval('qz.etag_seq'::regclass),
     helpful_text text,
-    set_context_parameters boolean NOT NULL DEFAULT 'f',
+    clear_context_parameters boolean NOT NULL DEFAULT 'f',
     PRIMARY KEY (form_name, action)
 );    
 
@@ -16,32 +16,34 @@ CREATE TABLE qz.table_action (
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES ('form', 'insert',
    $TAFI$INSERT INTO qz.form
-    (form_name, handler_name, schema_name, table_name,
-    xml_template, target_div, 
-    add_description, prompt_container)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)$TAFI$, 
+     (form_name, handler_name, schema_name, table_name,
+     xml_template, target_div, 
+     add_description, prompt_container)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)$TAFI$, 
 '{form_name,handler_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container}', 
 '{form_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'create', 
-   $TAFC$SELECT  $1::text form_name, 
-    ''::text handler_name, 
+   $TAFC$SELECT  
+    $1::text form_name, 
+    $2::text handler_name, 
     ''::text schema_name, ''::text table_name, 
     'base.xml'::text xml_template, 
     'qz'::text target_div,
-     ''::text add_description, 
-     ''::text prompt_container$TAFC$, 
-'{form_name}', '{form_name}', NULL);
+    ''::text add_description, 
+    ''::text prompt_container$TAFC$, 
+'{form_name,new_handler_name}', '{form_name,new_handler_name}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, 
+    helpful_text, clear_context_parameters) 
 VALUES ('form', 'getall', 
     'SELECT form_name, handler_name handler_name_ro
      FROM qz.form
      ORDER BY form_name, handler_name', 
 NULL, '{form_name, handler_name_ro}', 
 'A form on this list will match incoming data to a particular set of table 
- actions.  The form_name is the 2nd segment of the URL.');
+ actions.  The form_name is the 2nd segment of the URL.', 't');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'edit', 
@@ -201,36 +203,32 @@ VALUES ('prompt_rule_edit', 'delete',
 --
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'edit', 
-    $tae$ SELECT
-    form_name, action action_ro, 
-    helpful_text, sql,
-    fieldnames, pkey,
-    set_context_parameters
-  FROM
-    qz.table_action
-  WHERE
-    form_name = $1 AND action = $2 $tae$, 
+    $TAE$SELECT
+      form_name, action, helpful_text, sql, fieldnames, pkey, clear_context_parameters
+    FROM
+      qz.table_action
+    WHERE
+    form_name = $1 AND action = $2 $TAE$, 
 '{form_name,action}', '{form_name,action}', 
   'A table action binds a URL and HTTP post data to an SQL statement.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'insert', 
-   'INSERT INTO qz.table_action
-   (form_name, action, helpful_text, sql, fieldnames, 
-   pkey, set_context_parameters)
-   VALUES
-   ($1,$2,$3,$4,$5,$6,$7)', 
-'{form_name,action,helpful_text,sql,fieldnames,pkey,set_context_parameters}',
+   $TAI$INSERT INTO qz.table_action
+      (form_name, action, helpful_text, sql, fieldnames, pkey, 
+      clear_context_parameters)
+      VALUES
+      ($1,$2,$3,$4,$5,$6,$7)$TAI$, 
+'{form_name,new_action,helpful_text,sql,fieldnames,pkey,clear_context_parameters}',
 NULL, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'update', 
-    $TATAU$ UPDATE qz.table_action
-  SET helpful_text=$3,
-    sql=$4, fieldnames=$5, pkey=$6,
-    set_context_parameters=$7
-  WHERE form_name = $1 AND action = $2 $TATAU$, 
-'{form_name,action_ro,helpful_text,sql,fieldnames,pkey,set_context_parameters}', 
+    $TAU$UPDATE qz.table_action
+    SET helpful_text=$3,
+    sql=$4, fieldnames=$5, pkey=$6, clear_context_parameters=$7
+    WHERE form_name = $1 AND action = $2 $TAU$, 
+'{form_name,action_ro,helpful_text,sql,fieldnames,pkey,clear_context_parameters}', 
 '{form_name,action_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
@@ -241,9 +239,9 @@ WHERE form_name = $1 AND action = $2',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'create', 
-    $TAC$SELECT ta.form_name, ta.action, fm.handler_name handler_name_ro,
+    $TAC$SELECT ta.form_name, ta.action new_action, fm.handler_name,
     ''::text helpful_text, ta.sql, ta.fieldnames, ta.pkey, 
-    'f'::boolean set_context_parameters 
+    'f'::boolean clear_context_parameters 
      FROM qz.create_table_action($1,$2) ta
     JOIN qz.form fm USING (form_name)$TAC$, '{form_name, action}', 
 '{form_name, handler_name_ro, action}', NULL);
@@ -256,7 +254,7 @@ VALUES ('table_action_edit', 'getall',
     JOIN qz.form fm USING (form_name)
     WHERE form_name = $1
     ORDER BY form_name, action$TAG$, 
-'{form_name}', '{form_name, handler_name_ro, action}', 
+'{form_name}', '{form_name, handler_name, action}', 
 'Edit the table actions for a given form_name.');
 
 
@@ -308,44 +306,48 @@ for the given host_form_name.');
 -- menu_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, 
+    helpful_text, clear_context_parameters) 
 VALUES ('menu_edit', 'getall', 
     'SELECT menu_name, target_div, description
     FROM qz.menu
     ORDER BY menu_name, target_div',
 NULL, '{menu_name}', 
-'This is a list of menus that have been created.  Press Insert to add a new menu.  Press Edit on a menu for more details.');
+'This is a list of menus that have been created.  Press Insert to add a new menu.  Press Edit on a menu for more details.', 't');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('menu_edit', 'edit', 
-    'SELECT menu_name, target_div, description
+    $MED$SELECT menu_name, target_div, description, form_set_name
     FROM qz.menu
-    WHERE menu_name = $1
-    ORDER BY menu_name', 
+    WHERE menu_name = $1 $MED$, 
 '{menu_name}', '{menu_name}',  
 'Press Menu_Item to add, change, or delete the items on a menu.
 Press Menu_Set to manage which page gets a particular menu.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('menu_edit', 'update', 
-    'UPDATE qz.menu
+    $MUPD$UPDATE qz.menu
     SET
     target_div = $2,
-    description = $3
-    WHERE menu_name = $1', 
-'{menu_name,target_div,description}', '{menu_name}', NULL);
+    description = $3,
+    form_set_name = $4
+    WHERE menu_name = $1 $MUPD$, 
+'{menu_name,target_div,description,form_set_name}', '{menu_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('menu_edit', 'insert', 
-    'INSERT INTO qz.menu
-    (menu_name, target_div, description)
-    VALUES 
-    ($1,$2,$3)', 
-'{menu_name,target_div,description}', NULL, NULL);
+    $MINS$INSERT INTO qz.menu
+    (menu_name, target_div, description, form_set_name)
+    VALUES
+    ($1,$2,$3,$4)$MINS$, 
+'{menu_name,target_div,description,form_set_name}', NULL, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('menu_edit', 'create',  
-    'SELECT ''''::text menu_name, ''''::text target_div, ''''::text description', 
+    $MCR$SELECT ''::text menu_name,
+    ''::text target_div,
+    ''::text description,
+    ''::text form_set_name$MCR$, 
 NULL, NULL, 
 'Create a new menu  name.  The target_div is the html id of a <div> tag in the xml template that the menu will be placed into.  ');
 
@@ -486,7 +488,7 @@ VALUES ('fixed_parameters', 'save',  'SELECT 1', NULL, NULL, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('fixed_parameters', 'delete_row', 
-    'DELETE FROM qz.menu_item_parameter
+    'DELETE FROM qz.fixed_parameter
     WHERE menu_name = $1 
     AND menu_item_sequence = $2
     AND parameter_key = $3', 
@@ -494,7 +496,7 @@ VALUES ('fixed_parameters', 'delete_row',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES ('fixed_parameters', 'insert_row', 
-    'INSERT INTO qz.menu_item_parameter
+    'INSERT INTO qz.fixed_parameters
     (menu_name, menu_item_sequence, parameter_key, parameter_value)
     VALUES
     ($1,$2,$3,$4)', 
@@ -502,7 +504,7 @@ VALUES ('fixed_parameters', 'insert_row',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('fixed_parameters', 'update_row', 
-    'UPDATE qz.menu_item_parameter
+    'UPDATE qz.fixed_parameters
     SET parameter_value = $4
     WHERE menu_name = $1
     AND menu_item_sequence = $2
@@ -515,7 +517,7 @@ VALUES ('fixed_parameters', 'edit',
     parameter_key,
     parameter_value, menu_item_sequence
     FROM
-    qz.menu_item_parameter
+    qz.fixed_parameters
     WHERE
     menu_name = $1
     AND 
@@ -853,4 +855,51 @@ VALUES
 $FSD$DELETE FROM qz.form_set
      WHERE set_name = $1$FSD$,
 '{set_name}', '{set_name}');
+
+---
+--- page_menus
+---
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey, helpful_text)
+VALUES
+('page_menus', 'edit', 
+$PMED$SELECT set_id, host_form_name, menu_name, action 
+FROM qz.menu_set
+WHERE host_form_name = $1
+ORDER BY menu_name, action$PMED$,
+'{form_name}', '{set_id}', 'Change the menus this form contains');
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('page_menus', 'save', 'SELECT 1');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames)
+VALUES
+('page_menus', 'insert_row', 
+    $PMIR$INSERT INTO qz.menu_set
+    (menu_name, host_form_name, action)
+    VALUES
+    ($1,$2,$3)$PMIR$, 
+ '{menu_name, form_name, action}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('page_menus', 'update_row', 
+    $PMUR$UPDATE qz.menu_set
+    SET "menu_name" = $2,
+        "host_form_name" = $3,
+        "action" = $4
+    WHERE set_id = $1$PMUR$,
+'{set_id, menu_name, form_name, action}', '{set_id}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('page_menus', 'delete_row',
+   $PMDR$DELETE FROM qz.menu_set
+   WHERE set_id = $1$PMDR$,
+ '{set_id}', '{set_id}');
 

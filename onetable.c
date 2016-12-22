@@ -149,6 +149,9 @@ void edit_form(struct handler_args* h, char* next_action,
     save_context_parameters(h, form_rec, edit_rs, 0);
     if (deldet != NULL){
         save_context_parameters(h, deldet->form_record, edit_rs, -1);
+        //  Just free the delete_details struct, 
+        //  its' contents are managed elsewhere
+        free(deldet);
     }
     if (h->error_exists) return;
 

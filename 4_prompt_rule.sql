@@ -217,9 +217,9 @@ INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols
 VALUES ('form', 'handler_name_ro', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', NULL, false, NULL);
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
-VALUES ('form', 'handler_name', NULL, false,
+VALUES ('form', 'handler_name', NULL, true,
  '^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$',
-NULL, NULL, NULL, '{fs,grid,menu,menupage,onetable}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_options', false, false, NULL);
+NULL, NULL, NULL, '{fs,grid,menu,menupage,onetable}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', false, false, NULL);
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
 VALUES ('form', 'add_description', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', NULL, false, NULL);
@@ -238,6 +238,13 @@ VALUES ('form', 'schema_name', 'input_text',
 INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
 VALUES ('form', 'table_name', 'input_text', 
 '^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$');
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, readonly, regex_pattern, options, prompt_type)
+VALUES 
+('form', 'new_handler_name', 'f', 
+$PRNH$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$$PRNH$,
+'{fs,grid,menu,menupage,onetable}',
+'select_options');
 
 --
 -- table_action
@@ -298,8 +305,8 @@ VALUES
 'input_text');
 
 INSERT INTO qz.prompt_rule
-(form_name, fieldname, prompt_type)
-VALUES ('table_action_edit', 'set_context_parameters', 'input_radio');
+(form_name, fieldname, prompt_type, options)
+VALUES ('table_action_edit', 'clear_context_parameters', 'input_radio', '{yes,no}');
 
 --
 -- onetable_edit
@@ -376,4 +383,14 @@ VALUES
 ('form', 'form_set_name', 'select_fkey',
 $FFSN$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$$FFSN$) ;
 
+---
+--- page_menus
+---
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, expand_percent_n, onchange)
+VALUES
+ ('page_menus', 'set_id', 'input_text', 't', $C1$change_status(%n, 'U')$C1$),
+ ('page_menus', 'host_form_name', 'input_text', 't', $C2$change_status(%n, 'U')$C2$),
+ ('page_menus', 'menu_name', 'input_text', 't', $C3$change_status(%n, 'U')$C3$),
+ ('page_menus', 'action', 'input_text', 't', $C4$change_status(%n, 'U')$C4$);
 

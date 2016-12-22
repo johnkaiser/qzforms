@@ -290,6 +290,54 @@ WHERE menu_name = 'menu_submenu'
 AND menu_item_sequence = '2'
 AND menu_text = 'Menu_Set';
 
+UPDATE qz.form_set
+SET context_parameters = '{menu_name, menu_item_sequence}'
+WHERE set_name = 'menu_mgt';
+
+---
+--- rename
+---
+
+ALTER TABLE qz.menu_item_parameter
+RENAME TO fixed_parameter;
+
+UPDATE qz.table_action
+SET sql = $FPTADR$DELETE FROM qz.fixed_parameter
+    WHERE menu_name = $1 
+    AND menu_item_sequence = $2
+    AND parameter_key = $3 $FPTADR$
+WHERE form_name = 'fixed_parameters'
+AND action = 'delete_row';
+
+UPDATE qz.table_action
+SET sql = $FPTAUR$UPDATE qz.fixed_parameters
+    SET parameter_value = $4
+    WHERE menu_name = $1
+    AND menu_item_sequence = $2
+    AND parameter_key = $3$FPTAUR$
+WHERE form_name = 'fixed_parameters'
+AND action = 'update_row';
+
+UPDATE qz.table_action
+SET sql = $FPTAIR$INSERT INTO qz.fixed_parameters
+    (menu_name, menu_item_sequence, parameter_key, parameter_value)
+    VALUES
+    ($1,$2,$3,$4)$FPTAIR$
+WHERE form_name = 'fixed_parameters'
+AND action = 'insert_row';
+
+UPDATE qz.table_action
+SET sql = $FPTAE$SELECT
+    parameter_key,
+    parameter_value, menu_item_sequence
+    FROM
+    qz.fixed_parameters
+    WHERE
+    menu_name = $1
+    AND 
+    menu_item_sequence = $2 $FPTAE$
+WHERE form_name = 'fixed_parameters'
+AND action = 'edit';
 
 ---
 --- Clean up
