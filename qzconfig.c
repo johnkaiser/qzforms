@@ -192,6 +192,29 @@ xmlHashTablePtr parse_config(char* filebuf){
 }
 
 /*
+ *  is_true
+ *
+ *  turn a string into a boolean
+ */
+bool is_true(char* str){
+
+    if (str != NULL){
+
+        if (strncasecmp("TRUE", str, 4) == 0) return true;
+        if (strncasecmp("yes", str, 4) == 0) return true;
+        if (strncasecmp("on", str, 4) == 0) return true;
+        if (strlen(str) == 1){
+            if (str[0] == 't') return true;
+            if (str[0] == 'y') return true;
+            if (str[0] == '1') return true;
+        }
+
+        return false;
+    }else{
+        return false;
+    }
+}
+/*
  *  set_config
  *
  *  Set the attributes of conf from the values in conf_hash
@@ -216,6 +239,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->session_inactivity_timeout = DEFAULT_SESSION_INACTIVITY_TIMEOUT;
     conf->form_duration = DEFAULT_FORM_DURATION;
     conf->housekeeper_nap_time = DEFAULT_HOUSEKEEPER_NAP_TIME;
+    conf->audit_form_set_ref_count = DEFAULT_AUDIT_FORM_SET_REF_COUNT;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -275,7 +299,10 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
             strtol(setting, NULL, 10);
         conf->housekeeper_nap_time = housekeeper_nap_time;
     }    
-
+    setting = xmlHashLookup(conf_hash, "AUDIT_FORM_SET_REF_COUNT");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->audit_form_set_ref_count = is_true(setting);
+    }
 
     setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_THREADS");
     if ((setting != NULL) && (strlen(setting) > 0)){

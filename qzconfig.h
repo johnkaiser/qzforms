@@ -10,6 +10,7 @@
 #define DEFAULT_FORM_DURATION 240
 #define DEFAULT_NUMBER_OF_THREADS 10
 #define DEFAULT_HOUSEKEEPER_NAP_TIME 120
+#define DEFAULT_AUDIT_FORM_SET_REF_COUNT false
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -30,6 +31,7 @@ struct qz_config {
     unsigned int form_duration;
     unsigned int housekeeper_nap_time;
     uint64_t integrity_token;
+    bool audit_form_set_ref_count;
 };
 
 
