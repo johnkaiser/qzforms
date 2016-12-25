@@ -112,6 +112,21 @@ SET sql=$FI$INSERT INTO qz.form
 WHERE form_name = 'form'
 AND action = 'insert';
 
+-- form update
+UPDATE qz.table_action
+SET sql=$FTAU$ UPDATE qz.form SET 
+     schema_name = $2,
+     table_name = $3,
+     xml_template = $4,
+     target_div = $5,
+     add_description = $6,
+     prompt_container = $7,
+     form_set_name = $8
+   WHERE form_name = $1 $FTAU$, 
+   fieldnames = '{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container, form_set_name}'
+WHERE form_name = 'form'
+AND action = 'update';
+
 -- prompt_rule form new_handler_name
 INSERT INTO qz.prompt_rule
 (form_name, fieldname, readonly, regex_pattern, options, prompt_type)

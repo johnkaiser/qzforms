@@ -314,7 +314,7 @@ VALUES ('form', 'update',
      prompt_container = $7,
      form_set_name = $8
    WHERE form_name = $1 $FTAU$, 
-'{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container}', 
+'{form_name,schema_name,table_name,xml_template,target_div,add_description,prompt_container, form_set_name}', 
 '{form_name, handler_name_ro}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
@@ -13454,7 +13454,7 @@ function set_action_options(){
 
    var handler_el = document.getElementById('handler_name_ro');
 
-   if (handler_el){
+   if (handler_el && (handler_el.length > 0)){
 
        var action_el = document.getElementById("action");
        console.log("set_action_options found "+ action_el.children.length +
