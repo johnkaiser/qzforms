@@ -78,7 +78,7 @@ void form_tag_status_scanner(void* val, void* data, xmlChar* name){
         uint64_t id_val;
         memcpy(&id_val, form_tag->form_set->id, 8);
         char* id_str;
-        asprintf(&id_str, "%lld", id_val);
+        asprintf(&id_str, "%llx", id_val);
         xmlNewTextChild(tr, NULL, "td", id_str);
         free(id_str);
     }else{
@@ -106,8 +106,13 @@ void form_set_scanner(void* val, void* data, xmlChar* name){
     xmlNodePtr tr = xmlNewChild(thead, NULL, "tr", NULL);
     xmlNewTextChild(tr, NULL, "td", form_set->name);
 
-    xmlNewTextChild(tr, NULL, "td", form_set->id);
-
+    uint64_t id_val;
+    memcpy(&id_val, form_set->id, 8);
+    char* id_str;
+    asprintf(&id_str, "%llx", id_val);
+    xmlNewTextChild(tr, NULL, "td", id_str);
+    free(id_str);
+ 
     char* ref_count;
     asprintf(&ref_count, "%lld", form_set->ref_count);
     xmlNewTextChild(tr, NULL, "td", ref_count);

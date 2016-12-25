@@ -291,6 +291,15 @@ void add_menu(struct handler_args* hargs,
             // ZZZZZZZZZ if page_ta bool clear_context_parameters 
             // ZZZZZZZZZ is set then skip. but first...
 
+            if ( ! form_set_is_valid(hargs, hargs->current_form_set)){ 
+                 fprintf(hargs->log, "%f %d %s:%d fail current form set "
+                     "is invalid\n",
+                     gettime(), hargs->request_id, "add_all_menus", __LINE__);
+
+                 error_page(hargs, SC_INTERNAL_SERVER_ERROR, "bad token");
+                 return;
+            }     
+
             char** params = hargs->page_ta->context_parameters;
             
             if (params != NULL){
@@ -414,6 +423,12 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
 
     double start_time = gettime();
 
+    if ((hargs->current_form_set != NULL) && 
+        ( ! form_set_is_valid(hargs, hargs->current_form_set) )){
+
+        error_page(hargs, SC_INTERNAL_SERVER_ERROR, "form set invalid");
+        return;
+    }    
     log_context_variables(hargs);
 
     // Use menu_set in pg to feed add_menu.
@@ -478,6 +493,8 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
         }else{
 
             add_menu(hargs, menu_item_rs, add_here);
+
+            if (hargs->error_exists) return;
 
             fprintf(hargs->log, "%f %d %s:%d menu %s added\n",
                 gettime(), hargs->request_id, __func__, __LINE__,

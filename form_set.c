@@ -40,16 +40,51 @@ struct form_set* get_form_set(struct handler_args* h, char* form_set_id){
 
     struct form_set* fs = xmlHashLookup(h->session->form_sets, form_set_id);
 
-    if (fs->integrity_token != h->session->integrity_token){
-        fprintf(h->log, "%f %d %s:%d  fail form_set integrity_token check\n",
-        gettime(), h->request_id, __func__, __LINE__);
-
+    if ( ! form_set_is_valid(h, fs)){
         error_page(h, SC_INTERNAL_SERVER_ERROR, "bad token"); 
         return NULL;
 
     }else{
         return fs;
     }    
+}
+
+/*
+ *  form_set_is_valid
+ *
+ *  Return t/f for a valid form set,
+ */
+bool form_set_is_valid(struct handler_args* h, struct form_set* fs){
+    if (fs == NULL) return false;
+
+    if (!fs->is_valid) return false;
+
+    if (fs->integrity_token != h->session->integrity_token){
+
+        fprintf(h->log, "%f %d %s:%d fail session integrity token is invalid.\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        return false;
+    }
+
+    size_t name_len = strnlen(fs->name,64);
+    if ((name_len <1) || (name_len > 63)){
+    
+        fprintf(h->log, "%f %d %s:%d fail name length error.\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        return false;
+    }    
+
+    if (strnlen(fs->id,10) != 8){
+
+        fprintf(h->log, "%f %d %s:%d fail id length error.\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        return false;
+    }    
+    // OK then,
+    return true;
 }
 
 /*
@@ -274,6 +309,13 @@ void clear_context_parameters(struct handler_args* h, char* form_set_name){
     }
 }
 
+/*
+ *  clear_form_sets
+ *  clear_form_set_scanner
+ *
+ *  Remove all form sets from the current session.
+ */
+
 void clear_form_set_scanner(void* payload, void* data, xmlChar* name){
     struct form_set* fs = payload;
     struct session* session = (struct session*)data;
@@ -289,13 +331,119 @@ void clear_form_sets(struct session* session){
     xmlHashScan(session->form_sets, clear_form_set_scanner, (void*)session);
 }
 
+
+/*
+ *  audit_form_set_scanner
+ *
+ *  Search form_tags for references to the form_set being audited.
+ *  For each tag found, increment audit_count.
+ */
+struct audit_details {
+    struct form_set* form_set;
+    uint64_t integrity_token;
+    struct handler_args* hargs;
+};
+
+void audit_form_set_scanner(void* payload, void* data, xmlChar* name){
+
+    struct audit_details* aud_det = data;
+    struct form_set* form_set = aud_det->form_set;
+    struct handler_args* h = aud_det->hargs;
+
+    struct form_record* form_rec = payload;
+
+    // Is there something to check?
+    if (form_rec->form_set == NULL) return; // many forms are not in a set. 
+    if (form_set == NULL) return;
+
+    // Is the form set valid?
+    if (form_set->integrity_token != aud_det->integrity_token){
+        
+        fprintf(h->log, "%f %d %s:%d form_set integrity "
+           "token failed validation\n",
+           gettime(), 0, __func__, __LINE__);
+ 
+        return;
+    }
+    size_t name_len = strnlen(form_set->name,64);
+    if ((name_len <1) || (name_len > 63)){
+
+        fprintf(h->log, "%f %d %s:%d form_set name length fail %ld\n",
+           gettime(), h->request_id, __func__, __LINE__,
+           name_len);
+
+        return;
+    }    
+
+    if (strnlen(form_set->id,10) != 8){
+
+        fprintf(h->log, "%f %d %s:%d form_set id length fail %ld\n",
+           gettime(), h->request_id, __func__, __LINE__,
+           strnlen(form_set->id,10));
+
+        return;
+    }    
+    //form_set  seems OK.
+
+    // Does the form rec reference the form set being checked?
+    if (strncmp(form_rec->form_set->id, form_set->id, 9) == 0){ 
+        form_set->audit_count++;
+    }
+}
+
+/*
+ *  form_set_housekeeping_scanner
+ *
+ *  An xmlHashScan to remove no longer referenced form sets.
+ *  If a config option is set, then audit the reference count.
+ */
+
 void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name){
 
+    struct form_tag_housekeeping_data* ft_hk_data = data; 
+    struct session* session = ft_hk_data->this_session;
     struct form_set* form_set = payload;
-    struct session* session = data;
+    struct handler_args* h = ft_hk_data->hargs;
 
-    if  (form_set->ref_count == 0){
-        remove_form_set(session, form_set->id);
+    if (h->conf->audit_form_set_ref_count){
+
+        // Do a slow check of the reference count and log details.
+
+        struct audit_details aud_det = 
+            (struct audit_details) {
+                .form_set = form_set,
+                .integrity_token = session->integrity_token,
+                .hargs = ft_hk_data->hargs
+        };
+    
+        form_set->audit_count = 0;
+        xmlHashScan(session->form_tags, audit_form_set_scanner, &aud_det);
+    
+        uint64_t fsid;
+        memcpy(&fsid, form_set->id, 8);
+        if (form_set->audit_count == form_set->ref_count){
+    
+            fprintf(h->log, "%f %d %s:%d form_set %s %llx audit passed\n",
+               gettime(), h->request_id, __func__, __LINE__,
+               form_set->name, fsid);
+    
+            // What this is all about
+            if  (form_set->ref_count == 0){
+                remove_form_set(session, form_set->id);
+            }    
+        }else{
+            fprintf(h->log, "%f %d %s:%d form_set %s %llx "
+                "ref count %lld audit count %lld\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                form_set->name, fsid, form_set->ref_count, form_set->audit_count);
+        }
+    }else{
+     
+        // The normal case - auditing is turned off.
+
+        if  (form_set->ref_count == 0){
+            remove_form_set(session, form_set->id);
+        }    
     }
 }
 

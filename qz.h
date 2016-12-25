@@ -288,11 +288,18 @@ struct form_set{
     char id[9];
     char zero;
     int64_t ref_count;
+    int64_t audit_count;
     bool is_valid;
     // A context parameter is in the form "value\0key\0".
     xmlHashTablePtr context_parameters;
     char name[64];
     uint64_t integrity_token;
+};
+
+// Used by housekeeper for xmlHashScan data passing
+struct form_tag_housekeeping_data {
+    struct session* this_session;  // the session being cleaned
+    struct handler_args* hargs;    // the housekeeper's not the session's
 };
 
 static const char QZERR_EXPECTED_EQ[] = "Expected '='";
@@ -968,3 +975,11 @@ extern struct form_set* get_form_set(struct handler_args*, char* form_set_id);
  *
  */
 extern void clear_context_parameters(struct handler_args* h, char* form_set_name);
+
+/*
+ *  form_set_is_valid
+ *  form_set.c
+ *
+ *  Return t/f for a form set's validity.
+ */
+extern bool form_set_is_valid(struct handler_args* h, struct form_set* fs); 

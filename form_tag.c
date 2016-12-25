@@ -86,8 +86,13 @@ struct form_record* register_form(struct handler_args* h,
     xmlNewProp(form_node, "expires", expires_buf);
     free(expires_buf);
 
-    // 
-    form_rec->form_set = h->current_form_set;
+    //
+    if (form_set_is_valid(h, h->current_form_set)){
+        form_rec->form_set = h->current_form_set;
+        h->current_form_set->ref_count++;
+    }else{
+        form_rec->form_set = NULL;
+    }    
 
     return form_rec;
 }
@@ -298,11 +303,6 @@ void refresh_form_tag(struct handler_args* h){
         FCGX_GetParam("REQUEST_URI",h->envpfcgi), h->data->str);
 }
 
-struct form_tag_housekeeping_data {
-    // xmlHashTablePtr form_tags;
-    struct session* this_session;  // the session being cleaned
-    struct handler_args* hargs;    // the housekeeper's not the session's
-};
 
 /*
  *  form_tag_scanner
@@ -353,7 +353,7 @@ void form_tag_housekeeping(struct handler_args* hargs,
         &ft_hk_data);
 
     xmlHashScan(this_session->form_sets, form_set_housekeeping_scanner, 
-       ft_hk_data.this_session);
+       &ft_hk_data);
 }
 
 /*
@@ -412,9 +412,8 @@ struct form_record* get_posted_form_record(struct handler_args* h){
         return NULL;
     }
 
-    if ((this_form->form_set != NULL) &&
-        (this_form->form_set->integrity_token != 
-            h->session->integrity_token)){
+    if ( (this_form->form_set != NULL) && 
+        (! form_set_is_valid(h, this_form->form_set))){
 
         fprintf(h->log, 
             "%f %d %s:%d fail form set integrity token check invalid\n",
