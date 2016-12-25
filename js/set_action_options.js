@@ -15,7 +15,7 @@ function set_action_options(){
 
    var handler_el = document.getElementById('handler_name_ro');
 
-   if (handler_el){
+   if (handler_el && (handler_el.length > 0)){
 
        var action_el = document.getElementById("action");
        console.log("set_action_options found "+ action_el.children.length +

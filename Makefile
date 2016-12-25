@@ -52,6 +52,11 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jquery.sql 7_jscss_data.sql 8_menu.sql \
 	9_functions.sql  pgtype_datum.sql comment.sql 
 
+SQLUTIL= internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql \
+	qz_db_update_SV4.sql qz_db_update_SV5.sql qz_db_update_SV6.sql \
+	qz_db_update_SV7.sql qz_db_install_SV$(SCHEMA_VERSION).sql
+ 
+
 JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/add_input_radio.js js/add_input_text.js js/add_prompt.js \
 	js/add_select_options.js js/add_text_area.js js/base64_attribs.js\
@@ -60,11 +65,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
 	js/set_action_options.js
 
-DOCS=COPYRIGHT.txt opentable.txt design_principles.html \
-	internal_cmds.sql qz_examples.sql qz_db_update_SV3.sql \
-	qz_db_update_SV4.sql qz_db_update_SV5.sql qz_db_update_SV6.sql \
-	qz_db_update_SV7.sql
-
+DOCS=COPYRIGHT.txt opentable.txt design_principles.html 
 
 all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
@@ -299,7 +300,7 @@ qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
 
 tar:
 	tar -cz -s '|^|qzforms-$(VERSION)/|' -f qzforms-$(VERSION).tgz \
-    $(FILES) $(SQL) $(DOCS) $(JS)
+    $(FILES) $(SQL) $(SQLUTIL) $(DOCS) $(JS)
 
 # XXXXX add all the tests
 clean:

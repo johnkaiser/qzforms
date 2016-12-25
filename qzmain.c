@@ -255,10 +255,6 @@ void launch_connection_thread(void* data){
             struct handler_args* hargs;
             enum session_state this_session_state;
 
-            fprintf(log, "%f %d %s:%d FCGX_Accept_r started thread %d\n",
-                gettime(), next_id, __func__, __LINE__,
-                thread_dat->thread_id);
-
             if (request.out == NULL){
                 fprintf(log, "%f %d %s:%d request with null output\n",
                     gettime(), next_id, __func__, __LINE__);
