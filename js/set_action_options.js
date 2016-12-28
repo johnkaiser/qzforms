@@ -13,9 +13,9 @@ function set_action_options(){
         "fs": ["get", "etag_value" ]
     };
 
-   var handler_el = document.getElementById('handler_name_ro');
+   var handler_el = document.getElementById('handler_name');
 
-   if (handler_el && (handler_el.length > 0)){
+   if (handler_el && (handler_el.value.length > 0)){
 
        var action_el = document.getElementById("action");
        console.log("set_action_options found "+ action_el.children.length +
@@ -24,7 +24,7 @@ function set_action_options(){
            console.log("Removing " +  action_el.children.item(0).value);
            action_el.children.item(0).remove();
        }
-       console.log("handler_name_ro is " + handler_el.value);
+       console.log("handler_name is " + handler_el.value);
 
        // if handler_el is null, don't go whacking the values above.XXXXXXXXXXX
 
