@@ -8,7 +8,7 @@ INSERT INTO qz.change_history
 UPDATE qz.constants 
 SET schema_version = '5';
 
-// A fix for a past mistake
+--- A fix for a past mistake
 SELECT SETVAL('qz.menu_set_set_id_seq', COALESCE(MAX(set_id), 1) ) FROM qz.menu_set;
 
 -- Get rid of _Edit in the buttons
