@@ -24,9 +24,11 @@ struct form_set* create_form_set(struct handler_args* h, char name[64]){
     snprintf(fs->name, 64, "%s", name);
     xmlHashAddEntry(h->session->form_sets, fs->id, fs);
 
-    fprintf(h->log, "%f %d %s:%d  %s %s\n",
+    uint64_t fsid;
+    memcpy(&fsid, fs->id, 8);
+    fprintf(h->log, "%f %d %s:%d  %s %llx\n",
         gettime(), h->request_id, __func__, __LINE__,
-        fs->name, fs->id);
+        fs->name, fsid);
 
     return fs;
 }
