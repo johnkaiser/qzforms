@@ -25,8 +25,8 @@ VALUES ('form', 'onetable', 'qz', 'form', 'base.xml', 'qz', true, 'fieldset');
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
 VALUES ('menu_item_edit', 'onetable', 'qz', 'menu_item', 'base.xml', 'qz', false, 'fieldset', 'menu_mgt');
 
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('fixed_parameters', 'grid', 'qz', 'menu_item_parameter', 'base.xml', 'qz', false, 'no_container');
+INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
+VALUES ('fixed_parameters', 'grid', 'qz', 'menu_item_parameter', 'base.xml', 'qz', false, 'no_container', 'menu_mgt');
 
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
 VALUES ('prompt_rule_edit', 'onetable', 'qz', 'prompt_rule', 'base.xml', 'qz', true, 'fieldset', 'form_mgt');
@@ -91,8 +91,7 @@ INSERT INTO qz.form_set
 (set_name, context_parameters)
 VALUES
 ('form_mgt', '{form_name, handler_name}'),
-('menu_mgt', '{menu_name, menu_item_sequence}'),
-('fixed_parameters', '{menu_name,menu_item_sequence}');
+('menu_mgt', '{menu_name, menu_item_sequence}');
 
 UPDATE qz.form
 SET

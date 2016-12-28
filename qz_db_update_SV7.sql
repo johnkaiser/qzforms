@@ -325,7 +325,7 @@ WHERE form_name = 'fixed_parameters'
 AND action = 'delete_row';
 
 UPDATE qz.table_action
-SET sql = $FPTAUR$UPDATE qz.fixed_parameters
+SET sql = $FPTAUR$UPDATE qz.fixed_parameter
     SET parameter_value = $4
     WHERE menu_name = $1
     AND menu_item_sequence = $2
@@ -334,7 +334,7 @@ WHERE form_name = 'fixed_parameters'
 AND action = 'update_row';
 
 UPDATE qz.table_action
-SET sql = $FPTAIR$INSERT INTO qz.fixed_parameters
+SET sql = $FPTAIR$INSERT INTO qz.fixed_parameter
     (menu_name, menu_item_sequence, parameter_key, parameter_value)
     VALUES
     ($1,$2,$3,$4)$FPTAIR$
@@ -346,7 +346,7 @@ SET sql = $FPTAE$SELECT
     parameter_key,
     parameter_value, menu_item_sequence
     FROM
-    qz.fixed_parameters
+    qz.fixed_parameter
     WHERE
     menu_name = $1
     AND 
@@ -362,4 +362,87 @@ WHERE menu_name = 'table_action_edit';
 
 
 
+
+UPDATE qz.table_action
+SET sql = $FMTAUP$SELECT form_name, handler_name
+    FROM qz.form
+    ORDER BY form_name$FMTAUP$
+WHERE form_name = 'form'
+AND action = 'getall';
+
+UPDATE qz.table_action
+SET sql = $FMTAED$SELECT form_name, handler_name,
+    schema_name, table_name, xml_template, target_div,
+    add_description, prompt_container, form_set_name
+   FROM qz.form
+   WHERE form_name = $1 $FMTAED$
+WHERE form_NAME = 'form'
+AND action = 'edit';
+
+UPDATE qz.table_action
+SET pkey = '{form_name, handler_name, action}'
+WHERE form_name = 'table_action_edit'
+AND action = 'create';
+
+UPDATE qz.table_action
+SET sql = $TATAED$SELECT
+    parameter_key, parameter_value
+    FROM
+    qz.fixed_parameter
+    WHERE
+    menu_name = $1
+    AND 
+    menu_item_sequence = $2 $TATAED$
+WHERE form_name = 'fixed_parameters'
+AND action = 'edit';
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, expand_percent_n, onchange)
+VALUES
+('fixed_parameters', 'parameter_key', 'input_text', 't', 
+$PRFK$change_status(%n, 'U')$PRFK$),
+('fixed_parameters', 'parameter_value', 'input_text', 't', 
+$PRFK$change_status(%n, 'U')$PRFK$);
+
+UPDATE qz.form
+SET form_set_name = 'menu_mgt'
+WHERE form_name = 'fixed_parameters';
+
+UPDATE qz.menu_item
+SET menu_text = 'Menu Items'
+WHERE menu_name = 'menu_submenu'
+AND menu_item_sequence = 1;
+
+DELETE FROM qz.form_set
+WHERE set_name = 'fixed_parameters';
+
+UPDATE qz.table_action
+SET sql = $PMED$SELECT set_id, menu_name, action
+           FROM qz.menu_set
+           WHERE host_form_name = $1
+           ORDER BY menu_name, action $PMED$
+WHERE form_name = 'page_menus'           
+AND action = 'edit';
+
+UPDATE qz.prompt_rule
+SET prompt_type = 'select_fkey'
+WHERE form_name = 'page_menus'
+AND fieldname = 'menu_name';
+
+UPDATE qz.prompt_rule
+SET prompt_type = 'input_hidden'
+WHERE form_name = 'page_menus'
+AND fieldname = 'set_id';
+
+UPDATE qz.table_action
+SET helpful_text = 'Change the menus this form contains. Set the action to "any" if uncertain'
+WHERE form_name = 'page_menus'
+AND action = 'edit';
+
+UPDATE qz.table_action
+SET helpful_text = 'A form set allows menu items to share context parameters, 
+    attributes returned from a table action and named in a form set are 
+    added to menu items as hidden fields.'
+WHERE form_name = 'form_set'
+AND (action) IN ('getall','edit','create');
 

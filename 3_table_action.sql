@@ -38,16 +38,16 @@ VALUES ('form', 'create',
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, 
     helpful_text, clear_context_parameters) 
 VALUES ('form', 'getall', 
-    'SELECT form_name, handler_name handler_name_ro
+    'SELECT form_name, handler_name 
      FROM qz.form
-     ORDER BY form_name, handler_name', 
+     ORDER BY form_name', 
 NULL, '{form_name, handler_name_ro}', 
 'A form on this list will match incoming data to a particular set of table 
  actions.  The form_name is the 2nd segment of the URL.', 't');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('form', 'edit', 
-  $FTAE$ SELECT form_name, handler_name handler_name_ro, 
+  $FTAE$ SELECT form_name, handler_name, 
      schema_name, table_name, xml_template, target_div,
      add_description, prompt_container, form_set_name
   FROM qz.form
@@ -228,8 +228,8 @@ VALUES ('table_action_edit', 'update',
     SET helpful_text=$3,
     sql=$4, fieldnames=$5, pkey=$6, clear_context_parameters=$7
     WHERE form_name = $1 AND action = $2 $TAU$, 
-'{form_name,action_ro,helpful_text,sql,fieldnames,pkey,clear_context_parameters}', 
-'{form_name,action_ro}', NULL);
+'{form_name,action,helpful_text,sql,fieldnames,pkey,clear_context_parameters}', 
+'{form_name,action}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'delete', 
@@ -244,7 +244,7 @@ VALUES ('table_action_edit', 'create',
     'f'::boolean clear_context_parameters 
      FROM qz.create_table_action($1,$2) ta
     JOIN qz.form fm USING (form_name)$TAC$, '{form_name, action}', 
-'{form_name, handler_name_ro, action}', NULL);
+'{form_name, handler_name, action}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('table_action_edit', 'getall', 
@@ -496,7 +496,7 @@ VALUES ('fixed_parameters', 'delete_row',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES ('fixed_parameters', 'insert_row', 
-    'INSERT INTO qz.fixed_parameters
+    'INSERT INTO qz.fixed_parameter
     (menu_name, menu_item_sequence, parameter_key, parameter_value)
     VALUES
     ($1,$2,$3,$4)', 
@@ -504,7 +504,7 @@ VALUES ('fixed_parameters', 'insert_row',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('fixed_parameters', 'update_row', 
-    'UPDATE qz.fixed_parameters
+    'UPDATE qz.fixed_parameter
     SET parameter_value = $4
     WHERE menu_name = $1
     AND menu_item_sequence = $2
@@ -513,15 +513,14 @@ VALUES ('fixed_parameters', 'update_row',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
 VALUES ('fixed_parameters', 'edit', 
-    'SELECT
-    parameter_key,
-    parameter_value, menu_item_sequence
+    $TAFPED$SELECT
+    parameter_key, parameter_value
     FROM
-    qz.fixed_parameters
+    qz.fixed_parameter
     WHERE
     menu_name = $1
     AND 
-    menu_item_sequence = $2', 
+    menu_item_sequence = $2 $TAFPED$, 
 '{menu_name,menu_item_sequence}', '{menu_name,menu_item_sequence}', 
 'Fixed parameters are key value pairs
 that are set to a specific key and value.
@@ -810,18 +809,24 @@ VALUES
 -- form_set
 --
 INSERT INTO qz.table_action
-(form_name, action, sql, fieldnames, pkey)
+(form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES
 ('form_set', 'getall', 
 'SELECT set_name FROM qz.form_set ORDER BY set_name', 
-NULL, '{set_name}');
+NULL, '{set_name}',
+'A form set allows menu items to share context parameters, 
+    attributes returned from a table action and named in a form set are 
+    added to menu items as hidden fields.');
 
 INSERT INTO qz.table_action
-(form_name, action, sql, fieldnames, pkey)
+(form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES
 ('form_set', 'create', 
 $FSC$SELECT ''::text set_name, ''::text context_parameters$FSC$,
-NULL, NULL);
+NULL, NULL,
+'A form set allows menu items to share context parameters, 
+    attributes returned from a table action and named in a form set are 
+    added to menu items as hidden fields.');
 
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, pkey)
@@ -831,13 +836,16 @@ $FSI$INSERT INTO qz.form_set (set_name,context_parameters) VALUES ($1,$2) $FSI$,
 '{set_name,context_parameters}', '{set_name}');
 
 INSERT INTO qz.table_action
-(form_name, action, sql, fieldnames, pkey)
+(form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES
 ('form_set', 'edit',
 $FSE$SELECT set_name, context_parameters 
      FROM qz.form_set
      WHERE set_name = $1$FSE$,
-'{set_name}', '{set_name}');
+'{set_name}', '{set_name}',
+'A form set allows menu items to share context parameters, 
+    attributes returned from a table action and named in a form set are 
+    added to menu items as hidden fields.');
 
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, pkey)
@@ -867,7 +875,8 @@ $PMED$SELECT set_id, host_form_name, menu_name, action
 FROM qz.menu_set
 WHERE host_form_name = $1
 ORDER BY menu_name, action$PMED$,
-'{form_name}', '{set_id}', 'Change the menus this form contains');
+'{form_name}', '{set_id}', 
+'Change the menus this form contains. Set the action to "any" if uncertain');
 
 INSERT INTO qz.table_action
 (form_name, action, sql)
