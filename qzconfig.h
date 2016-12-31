@@ -1,6 +1,7 @@
 
 #include <sys/types.h>
 #include <sys/param.h>
+#include <stdbool.h>
 
 #define DEFAULT_CONFIG_FILE  "config/qzforms.conf"
 #define DEFAULT_TAGGER_SOCKET_PATH  "run/qzfcgi.sock"
