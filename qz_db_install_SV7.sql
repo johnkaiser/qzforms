@@ -12880,8 +12880,8 @@ COMMENT ON COLUMN qz.form.add_description IS 'Add the PostgreSQL attribute comme
 COMMENT ON COLUMN qz.form.handler_name IS 'The handler is a function name that will process the HTTP request.  Different handlers support different actions and present data differently.';
 COMMENT ON COLUMN qz.form.form_name IS 'The form_name is the second segment of the URL and ties a particular handler to a set of actions';
 COMMENT ON COLUMN qz.form.prompt_container IS 'Input prompts will be placed in this kind of HTML tag.  Use no_container for grid items.';
-COMMENT ON COLUMN qz.form.schema_name IS 'This is advisory, may be blank for now';
-COMMENT ON COLUMN qz.form.table_name IS 'This is advisory, may be blank for now';
+COMMENT ON COLUMN qz.form.schema_name IS 'The schema the table is in.';
+COMMENT ON COLUMN qz.form.table_name IS 'The name of the table being edited';
 COMMENT ON COLUMN qz.form.target_div IS 'An HTML div with the given id that exists in the xml_template that will contain the results.';
 COMMENT ON COLUMN qz.form.xml_template IS 'An xml file that exists in the QZ_TEMPLATE_PATH directory that will be the starting document.';
 COMMENT ON COLUMN qz.table_action.action IS 'Different objects will support different sets of actions. The form_name, action tuple will identify a particular SQL statement and name mapping.';
