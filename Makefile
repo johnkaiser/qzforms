@@ -1,7 +1,7 @@
 
 ## One source of randomness must be selected.
-QZRANDOM=-DQZ_ARC4RANDOM
-#  QZRANDOM=-DQZ_RAND_DEV=\"/dev/arandom\"
+## QZRANDOM=-DQZ_ARC4RANDOM
+QZRANDOM=-DQZ_RAND_DEV=\"/dev/urandom\"
 
 LFLAGS=-L/usr/local/lib -lfcgi -lpthread -lcrypto -lxml2 
 
@@ -14,13 +14,14 @@ XMLLIBDIR!=xml2-config --libs
 PCRECFLAGS!=pcre-config --cflags
 PCRELIBS!=pcre-config --libs
 
-CC=clang -Wno-pointer-sign
-#CC=gcc 
+CC=clang
+#CC=gcc
 
 CFLAGS=-Wall \
 	-I/usr/local/include \
 	-ggdb  \
 	-fPIC \
+    --Wno-pointer-sign \
 	$(XMLCFLAGS) \
 	-I$(PGINCLUDEDIR)
 
@@ -207,7 +208,7 @@ tagger.o:tagger.c
 tagger_test: tagger.c qzrandom64.o crypto_etag.o hex_to_uchar.o qzconfig.o
 	$(CC) -Wall -g -lcrypto  -DTAGGER_MAIN tagger.c \
 		qzrandom64.o crypto_etag.o qzconfig.o hex_to_uchar.o \
-		$(XMLCFLAGS) -L$(XMLLIBDIR)\
+		$(XMLCFLAGS) $(XMLLIBDIR)\
 		-o tagger_test
 
 # send tests to a running tagger
