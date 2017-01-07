@@ -458,7 +458,7 @@ VALUES
 
 UPDATE qz.prompt_rule
 SET regex_pattern = $NPRRX$^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$$NPRRX$
-WHERE regex_pattern = $OPRRX$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$$OPRRX$
+WHERE regex_pattern = $OPRRX$^[^\s\x01-\x1f\x5c\|\!\"\#\$\%\&\(\)\[\]\*\+\,\-\.\/\:\;\<\=\>\?\@\/\^\`\{\}\~]{1,63}$$OPRRX$;
 
 
 -- Filename 
