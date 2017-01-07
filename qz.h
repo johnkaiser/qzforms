@@ -1,5 +1,7 @@
 
 
+// This is needed to get asprintf on Linux
+#define _GNU_SOURCE
 
 #include <ctype.h>
 #include <fcgi_config.h>
@@ -17,6 +19,7 @@
 #include <libxml/xmlstring.h>
 #include <libxml/xpath.h>
 #include <limits.h>
+#include <netdb.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <pcre.h>
@@ -31,6 +34,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -57,7 +61,8 @@
 //#define MAX_VALUE_BUF_LENGTH (128)
 #define PATH_SEPARATOR "/"
 
-// This length includes the ending null
+// This length includes the ending null.
+// This is the same as tagger.c TAG_MAX_LENGTH
 #define SESSION_KEY_LENGTH 50 
 
 #define PG_NAMEDATALEN 63
@@ -166,7 +171,7 @@ struct table_action{
     char* helpful_text;
     char** js_filenames;
     char** css_filenames;
-    char* form_set_name;
+    char form_set_name[PG_NAMEDATALEN+2];
     char** context_parameters;
     bool clear_context_parameters;
     uint64_t integrity_token;

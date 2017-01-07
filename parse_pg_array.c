@@ -27,6 +27,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
+// For asprintf:
+#define _GNU_SOURCE
 
 #include <string.h>
 #include <stdbool.h>

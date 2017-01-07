@@ -472,10 +472,12 @@ void init_table_entry(struct handler_args* hargs,
     table_entry_size+= prompt_container_len+2;
 
     int form_set_name_len = PQgetlength(rs_table_action, 0,
-      PQfnumber(rs_table_action, "form_set_name"));
-    char* form_set_name = PQgetvalue(rs_table_action, 0,
-      PQfnumber(rs_table_action, "form_set_name"));
-    if (form_set_name == NULL) form_set_name = empty;
+        PQfnumber(rs_table_action, "form_set_name"));
+    char* form_set_name = empty;
+    if (form_set_name_len > 0){
+        form_set_name = PQgetvalue(rs_table_action, 0,
+           PQfnumber(rs_table_action, "form_set_name"));
+    }
 
     int helpful_text_len = PQgetlength(rs_table_action, 0,
         PQfnumber(rs_table_action, "helpful_text"));
@@ -556,10 +558,9 @@ void init_table_entry(struct handler_args* hargs,
         helpful_text_len+1);
     data_target += helpful_text_len+2;
 
-    new_table_action->form_set_name = data_target;
+    // form_set_name is an array, not a pointer.
     memcpy(new_table_action->form_set_name, form_set_name,
        form_set_name_len+1);
-    data_target += form_set_name_len+2;
 
     // these are char arrays and should be freed separately
 
