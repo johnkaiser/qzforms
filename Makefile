@@ -19,9 +19,9 @@ CC=clang
 
 CFLAGS=-Wall \
 	-I/usr/local/include \
+	-Wno-pointer-sign \
 	-ggdb  \
 	-fPIC \
-    --Wno-pointer-sign \
 	$(XMLCFLAGS) \
 	-I$(PGINCLUDEDIR)
 
