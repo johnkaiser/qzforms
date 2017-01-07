@@ -118,7 +118,6 @@ void tagger_serve(struct qz_config* conf, bool debug){
     BF_set_key(bf_key, 16, server_key);
 
     // setup socket
-    unlink(conf->tagger_socket_path);
     mode_t old_umask = umask(077);
 
     struct sockaddr_un addr;
@@ -240,6 +239,8 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
     pid_t pid; 
     static char* tagger = "tagger";
 
+    unlink(conf->tagger_socket_path);
+
     if ((pid = fork()) < 0){
         fprintf(stderr, "tagger fork failed\n");
         exit(26);
@@ -250,7 +251,21 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
             bzero(conf->server_token, SERVER_TOKEN_HEX_LENGTH);
             bzero(conf->server_key, SERVER_KEY_HEX_LENGTH);
 
-            return pid;       
+            // wait for socket to appear before returning.
+            int tries;
+            int st;
+            struct stat sb;
+            for (tries = 60; tries > 0; tries--){
+                st = stat(conf->tagger_socket_path, &sb);
+                if ((st == 0) && (sb.st_mode & S_IFSOCK)){
+                    // Success
+                    return pid;
+                }
+                usleep(200);
+            }
+            // time out waiting for tagger
+            fprintf(stderr, "time out waiting for tagger\n");
+            exit(67);
         }
     }
     // child continues
