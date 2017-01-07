@@ -51,6 +51,7 @@
 #include <time.h>
 
 #define TAGBUF 1024
+#define TAG_MAX_LENGTH 50
 
 #define DEBUG if (debug) fprintf
 #define FLUSH if (debug) fflush(log)
@@ -309,7 +310,7 @@ void make_etag(char* tagbuf, char* sockname, uint64_t payload){
     int bytesread;
 
     write(socket, &payload, sizeof(payload));
-    bytesread = read(socket, tagbuf, 1024);
+    bytesread = read(socket, tagbuf, TAG_MAX_LENGTH);
 
     close(socket);
 }
