@@ -42,7 +42,7 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
     if (h->doc != NULL){
         fprintf(h->log, "%f %d %s:%d danger %s\n", 
             gettime(), h->request_id, __func__, __LINE__,
-            "doc_from_file called with h->doc defined");
+            "doc_from_file called with h->doc undefined");
     }
 
     if (h->conf == NULL){
@@ -144,13 +144,38 @@ void validate_regex(void* val, void* data, xmlChar* key){
 }
 
 
-void regex_patterns_are_valid(struct handler_args* h){
+bool regex_patterns_are_valid(struct handler_args* h){
     
+    // The existance of a strbuf chain at hargs->data
+    // is the sentinal indicating a regex_pattern validation
+    // failure.  To work, it must be null now, which it
+    // is because no output has been generated yet.
+    // This note and check are to prevent future changes
+    // from breaking this.
+    if (h->data != NULL) exit(50);
+
     xmlHashScan(h->postdata, validate_regex, h);
 
-    fprintf(h->log, "%f %d %s:%d validation complete\n",
+    // It might be now, indicating a validation failure
+    if (h->data != NULL){
+        error_page(h, SC_BAD_REQUEST, "fail");
+        return false;
+    }
+    fprintf(h->log, "%f %d %s:%d regex validation complete\n",
         gettime(), h->request_id, __func__, __LINE__);
 
+
+    return true;
 }
 
 
+bool check_postdata(struct handler_args* h){
+
+    /* utf8 checking is done in parse_key_eq_val */
+
+    if ( ! regex_patterns_are_valid(h)){
+        return false;
+    }
+
+    return true;
+}

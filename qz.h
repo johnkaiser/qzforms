@@ -355,7 +355,7 @@ extern xmlDocPtr doc_from_file( struct handler_args*, char*);
  *  Search the postdata for prompt_rules with a compiled regex pattern,
  *  and validate data values for any patterns found.
  */
-void regex_patterns_are_valid(struct handler_args* h);
+bool regex_patterns_are_valid(struct handler_args* h);
 
 /*
  *  req_login
@@ -988,3 +988,13 @@ extern void clear_context_parameters(struct handler_args* h, char* form_set_name
  *  Return t/f for a form set's validity.
  */
 extern bool form_set_is_valid(struct handler_args* h, struct form_set* fs); 
+
+/*
+ *  check_postdata
+ *  input.c
+ *
+ *  Run a series of checks on the postdata keys and values
+ *  returning false if any data does not conform.
+ */
+extern bool check_postdata(struct handler_args* h);
+

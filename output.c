@@ -230,7 +230,8 @@ void catch_notifies(struct handler_args* h){
  */
 void do_page( struct handler_args* hargs ){
     
-    // This can happen if non-utf8 data is posted.
+    // This can happen if non-utf8 data is posted,
+    // or if content length is not bytes read.
     if (hargs->error_exists){
         return;
     }    
@@ -356,19 +357,9 @@ void do_page( struct handler_args* hargs ){
                 if (handler != NULL){
                     catch_notifies(hargs);
                     handler->count++;
-    
-                    // The existance of a strbuf chain at hargs->data
-                    // is the sentinal indicating a regex_pattern validation
-                    // failure.  To work, it must be null now, which it
-                    // is because no output has yet been generated yet.
-                    // This note and check are to prevent future changes
-                    // from breaking this.
-                    if (hargs->data != NULL) exit(50);
 
-                    regex_patterns_are_valid(hargs);
-
-                    if (hargs->data == NULL){
-                        // Execute the selected handler
+                    if ( check_postdata(hargs) ){
+                       // Execute the selected handler
                         handler->handler( hargs );
                     }    
                 } 
