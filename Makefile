@@ -66,7 +66,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
 	js/set_action_options.js
 
-DOCS=COPYRIGHT.txt opentable.txt design_principles.html 
+DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html 
 
 all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
 
