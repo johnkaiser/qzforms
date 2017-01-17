@@ -159,21 +159,33 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
     if ((content_length > 0) && (session_payload > 0)) {
         char* buf;
+        int bytes_read;
         buf = calloc(1, content_length+2);
-        FCGX_GetStr(buf, content_length, hargs->in);
+        bytes_read = FCGX_GetStr(buf, content_length, hargs->in);
         hargs->postbuf = buf;
 
+        if (bytes_read != content_length){
+            fprintf(hargs->log, "%f %d %s:%d fail "
+                "content_length=%d bytesread=%d\n",
+                gettime(), hargs->request_id, __func__, __LINE__,
+                content_length, bytes_read);
+            // According to the fcgi spec, this
+            // must be an abort on this condition.
+            error_page(hargs, SC_BAD_REQUEST, "content length read error");
+        }
+
         // parse_post
-        fprintf(hargs->log, "%f %d %s:%d parse_post called with %ld bytes\n",
+        if ( ! hargs->error_exists ){ // possibly set by error_page() above
+            fprintf(hargs->log, "%f %d %s:%d parse_post called with %ld %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
-            strlen(hargs->postbuf));
+            strlen(hargs->postbuf), "bytes");
 
-        hargs->postdata = parse_key_eq_val(hargs, hargs->postbuf, '&', true);
+            hargs->postdata = parse_key_eq_val(hargs, hargs->postbuf, '&',true);
 
-        fprintf(hargs->log, "%f %d %s:%d parse_post complete %s\n",
-            gettime(), hargs->request_id, __func__, __LINE__,
-            (hargs->postdata == NULL) ? hargs->postbuf : "success" );
-
+            fprintf(hargs->log, "%f %d %s:%d parse_post complete %s\n",
+                gettime(), hargs->request_id, __func__, __LINE__,
+                (hargs->postdata == NULL) ? hargs->postbuf : "success" );
+        }
     }else{
         hargs->postdata = NULL;
         hargs->postbuf = NULL;
@@ -229,6 +241,8 @@ void launch_connection_thread(void* data){
 
     struct thread_launch_data* thread_dat = data;
     FCGX_Request request;
+    // XXXXXXXXX This is a long lived open file
+    // XXXXXXXXX Log to fcgi err instead.
     FILE* log = fopen(thread_dat->conf->logfile_name, "a");
 
     if (FCGX_InitRequest(&request, 0, 0) != 0){
@@ -265,7 +279,7 @@ void launch_connection_thread(void* data){
             hargs = init_handler(&request, thread_dat->envpmain, next_id,
                 thread_dat->conf);
 
-            if (hargs == NULL ){
+            if (hargs == NULL){
                 FCGX_FPrintF(request.err, "qzfcgi init_handler returned NULL");
                 continue;
             }
