@@ -171,6 +171,8 @@ struct table_action{
     char* helpful_text;
     char** js_filenames;
     char** css_filenames;
+    char*  inline_js;
+    char*  inline_css;
     char form_set_name[PG_NAMEDATALEN+2];
     char** context_parameters;
     bool clear_context_parameters;

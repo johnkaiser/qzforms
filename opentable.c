@@ -89,7 +89,7 @@ void init_open_table(struct handler_args* h){
         "ta.pkey, ta.etag, ta.clear_context_parameters, fm.target_div, "
         "fm.handler_name, fm.xml_template, fm.add_description, "
         "fm.prompt_container, fm.form_set_name, fs.context_parameters, "
-        "ta.helpful_text, "
+        "ta.helpful_text, ta.inline_js, ta.inline_css, "
         "ARRAY( "
         "  SELECT 'js/get/'|| f.filename filename "
         "  FROM qz.page_js f "
@@ -291,6 +291,14 @@ void log_table_action_details(struct handler_args* h,
                 ta->css_filenames[k]);
         }
     }
+    fprintf(h->log, "%f %d %s:%d inline_js %lu bytes\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        (ta->inline_js == NULL) ? 0 : strlen(ta->inline_js));
+
+    fprintf(h->log, "%f %d %s:%d inline_css %lu bytes\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        (ta->inline_css == NULL) ? 0 : strlen(ta->inline_css));
+
 
     fprintf(h->log, "%f %d %s:%d form_set_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -321,7 +329,7 @@ void log_table_action_details(struct handler_args* h,
 void init_table_entry(struct handler_args* hargs,
     char* form_name,  char* action){
 
-    static char empty[] = "\0\0";
+    static char empty[] = "\0\0\0";
     static char base_xml_template[] = "base.xml";
     static char default_prompt_container[] = "fieldset";
 
@@ -486,6 +494,20 @@ void init_table_entry(struct handler_args* hargs,
     if (helpful_text == NULL) helpful_text = empty;
     table_entry_size+= helpful_text_len+2;
 
+    int inline_js_len = PQgetlength(rs_table_action, 0,
+        PQfnumber(rs_table_action, "inline_js"));
+    char* inline_js = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "inline_js"));
+    if (inline_js == NULL) inline_js = empty;
+    table_entry_size+= inline_js_len+2;
+
+    int inline_css_len = PQgetlength(rs_table_action, 0,
+        PQfnumber(rs_table_action, "inline_css"));
+    char* inline_css = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "inline_css"));
+    if (inline_css == NULL) inline_css = empty;
+    table_entry_size+= inline_css_len+2;
+
     // Send the sql right back to create a prepared statement
     PGresult* rs_prep;
     rs_prep = PQprepare(hargs->session->conn, prepared_name, sql, 0, NULL);
@@ -557,6 +579,16 @@ void init_table_entry(struct handler_args* hargs,
     memcpy(new_table_action->helpful_text, helpful_text,
         helpful_text_len+1);
     data_target += helpful_text_len+2;
+
+    new_table_action->inline_js = data_target;
+    memcpy(new_table_action->inline_js, inline_js,
+        inline_js_len+1);
+    data_target += inline_js_len+2;
+
+    new_table_action->inline_css = data_target;
+    memcpy(new_table_action->inline_css, inline_css,
+        inline_css_len+1);
+    data_target += inline_css_len+2;
 
     // form_set_name is an array, not a pointer.
     memcpy(new_table_action->form_set_name, form_set_name,

@@ -280,13 +280,13 @@ void add_jscss_links(struct handler_args* h, xmlDocPtr doc){
                 int j;
                 xmlNodePtr link_el;
 
-                for (j=0; css_f[j] != NULL; j++){
-                    char* link;
-                    asprintf(&link, "/%s/%s", 
-                        get_uri_part(h, QZ_URI_BASE_SEGMENT),
-                        css_f[j]);
-                    
-                    link_el = xmlNewChild(head, NULL, "link", NULL);
+                    for (j=0; css_f[j] != NULL; j++){
+                        char* link;
+                        asprintf(&link, "/%s/%s",
+                            get_uri_part(h, QZ_URI_BASE_SEGMENT),
+                            css_f[j]);
+
+                        link_el = xmlNewChild(head, NULL, "link", NULL);
                     xmlNewProp(link_el, "rel", "stylesheet");
                     xmlNewProp(link_el, "href", link);
 
@@ -300,6 +300,13 @@ void add_jscss_links(struct handler_args* h, xmlDocPtr doc){
             }else{
                 fprintf(h->log, "%f %d %s:%d  css_filenames is null\n",
                     gettime(), h->request_id, __func__, __LINE__);
+            }
+
+            if (has_data(h->page_ta->inline_js)){
+                xmlNewTextChild(head, NULL, "script", h->page_ta->inline_js);
+            }
+            if (has_data(h->page_ta->inline_css)){
+                xmlNewTextChild(head, NULL, "style", h->page_ta->inline_css);
             }
 
             // stop here 
