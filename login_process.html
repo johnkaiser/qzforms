@@ -1,0 +1,144 @@
+
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="description" content="XXXXXXX">
+<meta name="viewport" content="initial-scale = 1.0, maximum-scale = 1.0, user-scalable = no, width = device-width" />
+
+<title> QZ Forms Login Process </title>
+<style>
+
+body {
+  margin: 3% 5% 0 5% ;
+}
+
+dt {
+    font-weight: bold;
+    margin-top: 1ex;
+}
+
+dd {
+   margin-bottom: 1.0ex;
+}
+
+table {
+    border-collapse: collapse;
+    border: 2pt solid black;
+}
+
+th {
+    border: 1pt solid grey;
+    font-weight: bold;
+    padding: 2pt;
+}
+
+td {
+    border: 1pt dotted grey;
+    font-size: 85%;
+    text-align: center;
+    padding: 2pt;
+}
+
+i {
+    color: blue;
+}
+</style>
+</head>
+<body>
+
+<h1> QZ Forms Login Process </h1>
+<table>
+<tr>
+<th> Starting \ Input <br>State \ URI </th>
+<th> /qz/login </th>
+<th> /qz/login/validate </th>
+<th> /qz/logout </th>
+<th> any other </th>
+</tr>
+
+<tr>
+<th> no_session </th>
+<td> run setup_session<br> run req_login <br> <i> session_no_login </i> </td>
+<td> loc logout </td>
+<td> loc logout </td>
+<td> loc logout </td>
+</tr>
+
+<tr>
+<th> bad_session </th>
+<td> run close_session <br> run setup_session <br> run req_login <br>
+    <i> session_no_login </i> </td>
+<td> run close_session <br> loc logout <br> <i> no_session </i> </td>
+<td> run close_session <br> run logout <br> <i> no_session </i> </td>
+<td> run close_session <br> loc logout <br> <i> no_session </i> </td>
+</tr>
+
+<tr>
+<th> session_no_login </th>
+<td> run req_login </td>
+<td> check form_tag <br> run validate <br> <i> logged_in </i><br> or <br> 
+close session, loc login </td>
+<td> run logout </td>
+<td> loc login </td>
+</tr>
+
+<tr>
+<th> logged_in </th>
+<td> run close_session <br> run setup_session <br> run login <br> <i> logged_out </i> </td>
+<td> run close_session <br> loc logout <br> <i> logged_out </i> <br> (not in normal flow) </td>
+<td> run logout <br> <i> logged_out </i> </td>
+<td> <b> run it </b> </td>
+</tr>
+
+<tr>
+<th> logged_out </th>
+<td> run close_sesson <br> run setup_session <br> run req_login <br> <i> session_no_login </i> </td>
+<td> run close_sesson <br> loc logout </td>
+<td> run close_sesson <br> loc logout </td>
+<td> run close_sesson <br> loc logout </td>
+</tr>
+
+</table>
+
+<dl>
+<dt> loc x </td> 
+<dd> redirect to location x </dd>
+
+<dt> run x </td>
+<dd> execute function x </dd>
+
+<dt> no_session </dt>
+<dd> no_session means a session key was not found in an incoming cookie or
+     the session key found did not reference a valid session struct.
+</dd>
+
+<dt> bad_session </dt>
+<dd> bad_session is the extraordinary event that the integrity of the internal
+     data structure for the session can not be afirmed.
+</dd>
+
+<dt> session_no_login </dt>
+<dd> session_no_login means a valid session was found but login 
+     credentials to Postgresql have not yet been presented.
+</dd>
+
+<dt> logged in </dt>
+<dt> logged out </dt>
+<dd> logged in means PQstatus returns CONNECTION OK, otherwise logged out.
+     Logged in and logged out are from Postgresql's perspective. 
+     When the session "is_logged_in" flag is false the state is
+     session_no_login. State logged_out is not in the normal flow,
+     but represents a session that lost its Postgreql connection.
+</dd>
+
+<dt> run logout </dt>
+<dd> logout will only remove a session in the extraordinary event that the 
+    session is corrupted.  Normal flow is to change the "is_logged_in" flag 
+    to false but leave the session record in place.
+</dd>
+
+</dl>
+
+</body>
+</html>
+
