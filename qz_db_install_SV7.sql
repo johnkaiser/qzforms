@@ -33,7 +33,7 @@ CREATE SCHEMA IF NOT EXISTS qz;
 --
 -- Types
 --
-CREATE DOMAIN qz.variable_name AS TEXT
+CREATE DOMAIN qz.variable_name AS VARCHAR(63) 
 CHECK(
    VALUE !~  '([[:cntrl:]]| |\!|\"|#|\$|%|&|[\x027]|[\(]|[\)]|\*|\+|,|\-|\.|/|\:|\;|<|=|>|\?|@|\[|\/|\]|\^|`|\{|\||\}|\~|\x07f)'
    AND
@@ -42,7 +42,7 @@ CHECK(
 
 );
 
-CREATE DOMAIN qz.file_name AS TEXT
+CREATE DOMAIN qz.file_name AS VARCHAR(63)
 CHECK (
    VALUE !~  '([[:cntrl:]]| |\!|\"|#|\$|%|&|[\x027]|[\(]|[\)]|\*|\+|,|\-|/|\:|\;|<|=|>|\?|@|\[|\/|\]|\^|`|\{|\||\}|\~|\x07f)'
    AND 
