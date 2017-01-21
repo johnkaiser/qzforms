@@ -404,7 +404,7 @@ void init_table_entry(struct handler_args* hargs,
     if (PQntuples(rs_table_action) == 0){
         fprintf(hargs->log, "%f %d %s:%d %s (%s, %s) %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
-            "fail, requested table_action tuple",
+            "warning, requested table_action tuple",
             paramValues[0],
             paramValues[1],
             "does not exist.");
