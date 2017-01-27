@@ -1238,7 +1238,7 @@ void add_prompt(struct handler_args* hargs,
         xmlNewProp(description, "class", "description");
     } 
     
-    if ((args->rule->readonly) || (is_pkey && (fvalue!=NULL))){  
+    if ((args->rule->readonly) || (is_pkey && has_data(fvalue))){
         xmlNewProp(input,"readonly","readonly"); 
     }
 

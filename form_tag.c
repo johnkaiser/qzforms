@@ -152,7 +152,7 @@ void valid_context_parameter_scanner(void* payload, void* data, xmlChar* name){
            h->posted_form->form_set->is_valid = false;
            error_page(h, SC_BAD_REQUEST, "Invalid Data");
 
-           fprintf(h->log, "%f %d %s:%d form set context parameter \"%s\" "
+           fprintf(h->log, "%f %d %s:%d fail form set context parameter \"%s\" "
                "changed\n",
                gettime(), h->request_id, __func__, __LINE__,
                name);

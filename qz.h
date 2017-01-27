@@ -274,7 +274,7 @@ struct prompt_rule{
     char* onselect;
     PGresult* result;
 
-    char strdata[];
+    char strdata[]; // XXXXX don't think this is being used.
 };
 
 struct form_record{
