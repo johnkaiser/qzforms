@@ -141,12 +141,19 @@ void init_menu(struct handler_args* hargs){
    rs = NULL;
 
    char menu_set[] =
-        "SELECT DISTINCT "
-        "s.menu_name, m.target_div, m.description "
-        "FROM qz.menu_set s "
-        "JOIN qz.menu m ON ( m.menu_name = s.menu_name ) "
-        "WHERE s.host_form_name = $1 "
-        "AND (s.action = 'any' OR s.action = $2)";
+       "SELECT CASE "
+       "WHEN s.menu_name = 'main' THEN "
+       "  COALESCE( "
+            "(SELECT u.main_menu FROM qz.user u "
+            "WHERE u.user_name = current_user), "
+       "  'main') "
+       "  ELSE s.menu_name "
+       "END menu_name, "
+       "m.target_div, m.description "
+       "FROM qz.menu_set s "
+       "JOIN qz.menu m ON ( m.menu_name = s.menu_name ) "
+       "WHERE s.host_form_name = $1 "
+       "AND (s.action = 'any' OR s.action = $2) ";
 
    rs = PQprepare(hargs->session->conn, "fetch_menu_set", menu_set,
        0, NULL);
@@ -319,7 +326,7 @@ void add_menu(struct handler_args* hargs,
                     }else{
    
                       // This is probably bad.
-                      fprintf(hargs->log, "%f %d %s:%d fail menu %s param %s "
+                      fprintf(hargs->log, "%f %d %s:%d warning menu %s param %s "
                           "not found in input\n",
                           gettime(), hargs->request_id, __func__, __LINE__,
                           get_value(menu_rs, row, "menu_name"), params[p]);
