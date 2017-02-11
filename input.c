@@ -31,6 +31,8 @@
 #include "qz.h"
 
 /*
+ *  doc_from_file
+ *
  *  Turn a file name into an xml node tree,
  */  
 xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
@@ -89,6 +91,12 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
     return doc;
 }
 
+/*
+ *  validate_regex
+ *
+ *  Check that postdata matches its regex pattern if it
+ *  is defined in the prompt rule.
+ */
 void validate_regex(void* val, void* data, xmlChar* key){
     struct handler_args* h = data;
 
@@ -126,6 +134,7 @@ void validate_regex(void* val, void* data, xmlChar* key){
 
             h->data = new_strbuf(regex_failure_hdr, 0);
             content_type(h, "text/plain");
+            h->regex_check = failed;
         }
 
         char* error_msg;
@@ -143,39 +152,95 @@ void validate_regex(void* val, void* data, xmlChar* key){
     }
 }
 
+/*
+ *  valid_pkey_value_scanner
+ *
+ *  For each value+primary key record saved in the form record,
+ *  check that the value posted, if any, matches.
+ */
+void valid_pkey_value_scanner(void* payload, void* data, xmlChar* name){
+    char* saved_value = payload;
+    struct handler_args* hargs = data;
 
-bool regex_patterns_are_valid(struct handler_args* h){
-    
-    // The existance of a strbuf chain at hargs->data
-    // is the sentinal indicating a regex_pattern validation
-    // failure.  To work, it must be null now, which it
-    // is because no output has been generated yet.
-    // This note and check are to prevent future changes
-    // from breaking this.
-    if (h->data != NULL) exit(50);
+    char* posted_value = xmlHashLookup(hargs->postdata, name);
 
-    xmlHashScan(h->postdata, validate_regex, h);
+    if (has_data(posted_value) && (strcmp(saved_value, posted_value) != 0)){
+        hargs->pkey_check = failed;
 
-    // It might be now, indicating a validation failure
-    if (h->data != NULL){
-        error_page(h, SC_BAD_REQUEST, "fail");
-        return false;
+        fprintf(hargs->log, "%f %d %s:%d fail primary key validation key=%s\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            name);
     }
-    fprintf(h->log, "%f %d %s:%d regex validation complete\n",
-        gettime(), h->request_id, __func__, __LINE__);
-
-
-    return true;
 }
 
-
+/*
+ *  check_postdata
+ *
+ *  Scan the postdata, set *_check flags in the handler.
+ *  Test that each supplied attribute is appropriate for its type.
+ *  More checks required, add them here.
+ */
 bool check_postdata(struct handler_args* h){
 
     /* utf8 checking is done in parse_key_eq_val */
 
-    if ( ! regex_patterns_are_valid(h)){
+    xmlHashScan(h->postdata, validate_regex, h);
+
+    if (h->regex_check == failed){
+        error_page(h, SC_BAD_REQUEST, "fail");
         return false;
+    }else{
+        h->regex_check = passed;
     }
 
+    struct form_record* form_rec = get_posted_form_record(h);
+    if (form_rec != NULL){
+        xmlHashScan(form_rec->pkey_values, valid_pkey_value_scanner, h);
+
+        if (h->pkey_check == failed){
+            error_page(h, SC_BAD_REQUEST, "Primary key validation failed");
+            return false;
+        }else{
+            h->pkey_check = passed;
+        }
+    }
     return true;
 }
+
+/*
+ *  save_pkey_values
+ *
+ *  Save any value whose key is in the table action's pkey list
+ *  and also in PGresult into the form records pkey_values hash table.
+ */
+void save_pkey_values(struct handler_args* h,
+    struct form_record* form_rec,
+    struct table_action* ta,
+    PGresult* rs,
+    int row){
+
+    if (ta == NULL) return;
+    if (rs == NULL) return;
+    if (form_rec == NULL) return;
+
+    int n;
+    char* value;
+    char* pkey_value_record;
+    char* this_key;
+
+    for(n=0; n < ta->nbr_pkeys; n++){
+        value = get_value(rs, row, ta->pkeys[n]);
+        if (has_data(value)){
+
+            // This is "value\0key\0" so lookup on key returns value.
+            asprintf(&pkey_value_record, "%s%c%s%c",
+                value, '\0', ta->pkeys[n], '\0');
+
+            this_key =  pkey_value_record + strlen(pkey_value_record) + 1;
+
+            xmlHashAddEntry(form_rec->pkey_values, this_key, pkey_value_record);
+
+        }
+    }
+}
+

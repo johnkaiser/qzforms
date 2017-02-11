@@ -121,6 +121,8 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     hargs->posted_form = NULL;
     hargs->current_form_set = NULL;
     hargs->error_exists = false;
+    hargs->regex_check = notchecked;
+    hargs->pkey_check = notchecked;
 
     if (hargs->uri_parts != NULL){  // null for housekeeper
         for( hargs->nbr_uri_parts = 0;

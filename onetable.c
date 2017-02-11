@@ -80,6 +80,8 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
 
     if (h->error_exists) return NULL;
 
+    save_pkey_values(h, form_record, delete_ta, rs, 0);
+
     // Add a hidden field for each primary key.
     int pcnt;
     for (pcnt=0; pcnt<delete_ta->nbr_pkeys; pcnt++){
@@ -146,7 +148,11 @@ void edit_form(struct handler_args* h, char* next_action,
 
     struct form_record* form_rec = register_form(h, form, SUBMIT_MULTIPLE,
         form_target);
+
     save_context_parameters(h, form_rec, edit_rs, 0);
+
+    save_pkey_values(h, form_rec, edit_ta, edit_rs, 0);
+
     if (deldet != NULL){
         save_context_parameters(h, deldet->form_record, edit_rs, -1);
         //  Just free the delete_details struct,

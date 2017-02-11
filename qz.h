@@ -96,7 +96,8 @@ input_reset=9, input_submit=10, input_text=11, select_enum=12,
 select_options=13, select_fkey=14, textarea=15, text_array=16};
 
 // XXXXXXXXXXX add td, div, 
-enum prompt_container_type {no_container, fieldset}; 
+enum prompt_container_type {no_container, fieldset};
+enum precheck_status {notchecked,failed,passed};
 
 struct handler_args {
     char session_key[SESSION_KEY_LENGTH];
@@ -123,6 +124,8 @@ struct handler_args {
     struct strbuf* headers;
     xmlDocPtr doc;
     struct strbuf* data; 
+    enum precheck_status regex_check;
+    enum precheck_status pkey_check;
     bool error_exists;
     uint64_t integrity_token;
 };
@@ -285,6 +288,7 @@ struct form_record{
     time_t duration;
     bool submit_only_once;
     struct form_set* form_set;
+    xmlHashTablePtr pkey_values;
     uint64_t session_integrity_token;
     char form_action[];
     // XXXXXX  tie to record key sometimes
@@ -1000,3 +1004,14 @@ extern bool form_set_is_valid(struct handler_args* h, struct form_set* fs);
  */
 extern bool check_postdata(struct handler_args* h);
 
+/*
+ *  save_pkey_values
+ *
+ *  Record the primary key and value in the form record hash table
+ *  pkey_values from the PostgreSQL result set rs for the row.
+ */
+extern void save_pkey_values(struct handler_args* h,
+    struct form_record* form_rec,
+    struct table_action* ta,
+    PGresult* rs,
+    int row);
