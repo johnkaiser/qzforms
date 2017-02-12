@@ -37,6 +37,12 @@ CREATE TABLE qz.fixed_parameter(
         REFERENCES qz.menu_item(menu_name, menu_item_sequence)
 );
 
+CREATE TABLE qz.user(
+  user_name qz.variable_name PRIMARY KEY,
+  main_menu qz.variable_name REFERENCES qz.menu(menu_name)
+);
+
+
 --
 -- Data for Name: menu; Type: TABLE DATA; 
 --

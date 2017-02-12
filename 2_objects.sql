@@ -125,4 +125,3 @@ VALUES
 ('user_menus', 'onetable', 'qz', 'user', 'base.xml',
 'qz', 't', 'fieldset');
 
-

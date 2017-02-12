@@ -85,12 +85,4 @@ INSERT INTO qz.change_history
   ('First install Schema Version '||
     (SELECT schema_version FROM qz.constants));
 
----
----  user menus
----
-CREATE TABLE qz.user(
-  user_name qz.variable_name PRIMARY KEY,
-  main_menu qz.variable_name REFERENCES qz.menu(menu_name)
-);
-
 

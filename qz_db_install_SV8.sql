@@ -85,14 +85,6 @@ INSERT INTO qz.change_history
   ('First install Schema Version '||
     (SELECT schema_version FROM qz.constants));
 
----
----  user menus
----
-CREATE TABLE qz.user(
-  user_name qz.variable_name PRIMARY KEY,
-  main_menu qz.variable_name REFERENCES qz.menu(menu_name)
-);
-
 
 
 CREATE TABLE qz.handler (
@@ -271,7 +263,6 @@ target_div, add_description, prompt_container)
 VALUES
 ('user_menus', 'onetable', 'qz', 'user', 'base.xml',
 'qz', 't', 'fieldset');
-
 
 CREATE TABLE qz.table_action (
     form_name qz.variable_name references qz.form(form_name),
@@ -1148,7 +1139,7 @@ INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES
 ('page_menus', 'edit', 
-$PMED$SELECT set_id, host_form_name, menu_name, action 
+$PMED$SELECT set_id, menu_name, action 
 FROM qz.menu_set
 WHERE host_form_name = $1
 ORDER BY menu_name, action$PMED$,
@@ -12399,6 +12390,12 @@ CREATE TABLE qz.fixed_parameter(
 	FOREIGN KEY (menu_name, menu_item_sequence) 
         REFERENCES qz.menu_item(menu_name, menu_item_sequence)
 );
+
+CREATE TABLE qz.user(
+  user_name qz.variable_name PRIMARY KEY,
+  main_menu qz.variable_name REFERENCES qz.menu(menu_name)
+);
+
 
 --
 -- Data for Name: menu; Type: TABLE DATA; 
