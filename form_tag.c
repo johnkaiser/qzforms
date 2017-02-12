@@ -36,8 +36,6 @@
  *
  *  Add an entry to the form_tag hash and add an
  *  html hidden input of the tag.
- *  The returned record pointer is useful with the 
- *  duplicate_registration function, but not otherwise.
  */
 
 struct form_record* register_form(struct handler_args* h, 
@@ -61,6 +59,8 @@ struct form_record* register_form(struct handler_args* h,
     form_rec->duration = valid_duration;
     form_rec->expires = form_rec->created + valid_duration;
     form_rec->submit_only_once = submit_only_once;
+    // XXXXXX Another size to add to config
+    form_rec->pkey_values = xmlHashCreate(23);
     form_rec->session_integrity_token = h->session->integrity_token;
   
     snprintf(form_rec->form_action, action_url_len+1, "%s", form_action);
@@ -98,42 +98,6 @@ struct form_record* register_form(struct handler_args* h,
 }
 
 /*
- *  duplicate_registration
- *
- *  In the case where a large html table generates an edit form
- *  for every row, and all the edit buttons have the same form action,
- *  the html form_tag can reference the same struct form_record.
- *  This function uses the previously created form_record for a new
- *  html form tag.
- */
-void duplicate_registration(struct handler_args* h, 
-    struct form_record* previous_tag, xmlNodePtr new_node){
-
-    uint64_t form_id;
-    memcpy(&form_id, previous_tag->form_id, 8);
-
-    // add the hidden input field.
-
-    xmlNodePtr tag_node = xmlNewChild(new_node, NULL, "input", NULL);
-    xmlNewProp(tag_node, "type", "hidden");
-    xmlNewProp(tag_node, "name", "form_tag");
-    xmlNewProp(tag_node, "refresh", "0");
-    xmlChar tagbuf[ETAG_MAX_LENGTH];
-    make_etag(tagbuf, h->session->tagger_socket_path, form_id);
-    xmlNewProp(tag_node, "value", tagbuf);
-
-    // add an expires attribute
-
-    char* expires_buf;
-    int arc;
-    arc = asprintf(&expires_buf, "%lld", previous_tag->expires);
-    xmlNewProp(new_node, "expires", expires_buf);
-    free(expires_buf);
-
-    return;
-}
-
-/*
  *  valid_context_parameter_scanner
  *
  *  If any elements in the post data are also in the context
@@ -147,7 +111,7 @@ void valid_context_parameter_scanner(void* payload, void* data, xmlChar* name){
 
     char* submitted_value = xmlHashLookup(h->postdata, name);
 
-    if (submitted_value != NULL){
+    if (has_data(saved_value) && has_data(submitted_value)){
         if (strcmp(saved_value, submitted_value) != 0){
            h->posted_form->form_set->is_valid = false;
            error_page(h, SC_BAD_REQUEST, "Invalid Data");
@@ -171,10 +135,30 @@ void valid_context_parameter_scanner(void* payload, void* data, xmlChar* name){
 
 bool post_contains_valid_form_tag(struct handler_args* h){
 
+    // refresh returns many tags using form_tag[n] notation.
+    // Just check for the first one. There is no need to validate
+    // the tag matches the called handler.
+    if (uri_part_n_is(h, QZ_URI_FORM_NAME, "refresh")){
+
+        char* form_tag_zero;
+        uint64_t tag_value;
+
+        form_tag_zero = xmlHashLookup(h->postdata, "form_tag[0]" );
+        if (form_tag_zero != NULL){
+            tag_value = validate_etag(h->session->tagger_socket_path,
+                form_tag_zero);
+
+            if (tag_value > 0) return true;
+        }
+        return false;
+    }
+
+    // Not a refresh
+
     struct form_record* this_form = get_posted_form_record(h);
     if (this_form == NULL) return false;
 
-    if (!this_form->is_valid){
+    if ( ! this_form->is_valid){
         fprintf(h->log, "%f %d %s:%d fail form record flagged as invalid "
            "form_action=%s\n", 
            gettime(), h->request_id, __func__, __LINE__,
@@ -187,7 +171,6 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     // the request.  Note url used is allowed to have extra text, just
     // the part saved has to match the begining of what is used.
     // This allows the url to pass additional information as needed.
-    // For /qz/refresh requests, skip url match and submit only once flag.
 
     int form_action_length = strlen(this_form->form_action);
     char* request_url = FCGX_GetParam("REQUEST_URI",h->envpfcgi); 
@@ -248,61 +231,103 @@ bool post_contains_valid_form_tag(struct handler_args* h){
 }
 
 /*
+ *  refresh returns an JSON thing
+ *  {[ {form_id: expires},...]}
+ *
+ *  {[ {menu[0]:1486745337}, {menu[1]:1486745337}, {edit[0]:1486745337} ]}
+ */
+void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
+
+    uint64_t payload_int;
+    xmlChar payload_str[9];
+    struct form_record* this_form;
+    char* result = NULL;
+    char comma = ',';
+
+    // No comma before the first element
+    if (h->data == NULL){
+        h->data = new_strbuf("{[ ",0);
+        comma = ' ';
+    }
+
+    payload_int = validate_etag(h->session->tagger_socket_path, form_tag);
+
+    // An invalid tag is never OK.
+    if (payload_int == 0){
+        fprintf(h->log, "%f %d %s:%d fail invalid form tag\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        error_page(h, SC_BAD_REQUEST, "Invalid form tag submitted to refresh");
+        return;
+    }
+
+    memcpy(payload_str, &payload_int, 8);
+    payload_str[8] = '\0';
+
+    this_form = (struct form_record*) xmlHashLookup(h->session->form_tags,
+        payload_str);
+
+    if (this_form == NULL){
+       asprintf(&result, "%c {%s:%d}", comma, form_id, 0);
+
+    }else if ((this_form->is_valid) && (this_form->expires >= time(NULL))){
+
+        time_t new_expires = time(NULL) + this_form->duration;
+        this_form->expires = new_expires;
+
+        asprintf(&result, "%c {%s:%lld}", comma, form_id, new_expires);
+
+    }else{
+        //  not valid, no change, return zero
+        asprintf(&result, "%c {%s,%d}", comma, form_id, 0);
+    }
+    strbuf_append(h->data, new_strbuf(result,0));
+    free(result);
+}
+
+/*
  *  refresh_form_tag
  *
  *  Find the form tag referenced
  *  if it has not yet expired,
  *  extend the expiration time by duration
- *  and return the new expire time 
+ *  and return the new expire time
  *  via http as text/plain
  */
 void refresh_form_tag(struct handler_args* h){
 
-    content_type(h, "text/plain");
+    char* form_id_key;
+    char* form_id_value;
+    char* form_tag_key;
+    char* form_tag_value;
+    int k;
 
-    // function post_contains_valid_form_tag has already
-    // been run and passed, error checking already done.  
+    content_type(h, "application/json");
 
-    char* form_tag = xmlHashLookup(h->postdata, "form_tag");
-    
-    uint64_t payload_int;
-    xmlChar payload_str[9];
-    bzero(payload_str,9);
+    for(k=0; ;k++){
+        asprintf(&form_id_key, "form_id[%d]", k);
+        form_id_value = xmlHashLookup(h->postdata, form_id_key);
 
-    payload_int = validate_etag(h->session->tagger_socket_path, form_tag);
-    if (payload_int == 0) return;
+        asprintf(&form_tag_key, "form_tag[%d]", k);
+        form_tag_value = xmlHashLookup(h->postdata, form_tag_key);
 
-    memcpy(payload_str, &payload_int, 8);
-    struct form_record* this_form;
-    this_form = (struct form_record*) xmlHashLookup(h->session->form_tags, 
-        payload_str);
+        if (has_data(form_id_value) && has_data(form_tag_value)){
+            refresh_one_tag(h, form_id_value, form_tag_value);
 
-    if (this_form == NULL) return;
-
-    if ((this_form->is_valid) && (this_form->expires >= time(NULL))){
-        // This is the only write to the form tag, and it is an
-        // atomic assignment of a single int.  Housekeeper would 
-        // not be touching it now because it is still valid.  
-        // Still, this could be a race condition if refresh requests
-        // come in faster than they can be processed and get handled
-        // out of order.  In which case the form expires sooner rather
-        // than later.
-        time_t new_expires = time(NULL) + this_form->duration;
-        this_form->expires = new_expires;
-
-        // longest 64 bit number is 20 chars, using 32
-        struct strbuf* sb = new_strbuf(NULL, 32); 
-        snprintf(sb->str, 32, "%lld", new_expires);
-        h->data = sb;
-    }else{
-        //  not valid, no change, return zero
-        h->data = new_strbuf("0", 0); 
+            if (h->error_exists) break;
+        }else{
+            break;
+        }
     }
-    fprintf(h->log, "%f %d %s:%d refresh for %s set to %s\n", 
-        gettime(), h->request_id, __func__, __LINE__,
-        FCGX_GetParam("REQUEST_URI",h->envpfcgi), h->data->str);
+    if (h->data != NULL){
+        strbuf_append(h->data, new_strbuf(" ]}",0));
+    }
 }
 
+
+void pkey_values_deallocator(void* pkey_value, xmlChar* pkey){
+    free(pkey_value);
+}
 
 /*
  *  form_tag_scanner
@@ -326,6 +351,11 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
 
         decrement_form_set(form_rec);
 
+        // A hash table scanner calling another hash table scanner.
+        // This one will free primary key value records.
+        if (form_rec->pkey_values != NULL){
+            xmlHashFree(form_rec->pkey_values, pkey_values_deallocator);
+        }
         xmlHashRemoveEntry(ft_hk_data->this_session->form_tags, name, NULL);
         free(form_rec);
     }else if (time(NULL) > form_rec->expires){

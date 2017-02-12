@@ -775,17 +775,6 @@ extern struct form_record* register_form(struct handler_args* h,
 );
 
 /*
- *  duplicate_registration
- *  form_tag.c
- *
- *  Reuse a struct form_record for a new html form.
- */
-
- extern void duplicate_registration(struct handler_args* h, 
-     struct form_record* previous_tag, 
-     xmlNodePtr new_node);
-
-/*
  *  post_contains_valid_form_tag
  *  form_tab.c
  *

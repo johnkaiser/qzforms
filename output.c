@@ -88,6 +88,7 @@ void serve_output( struct handler_args* hargs ){
         struct strbuf* a_datum;
         for(a_datum=hargs->data; a_datum!=NULL; a_datum=a_datum->next){
             FCGX_FPrintF(hargs->out, "%s", a_datum->str);
+
         }
     } else {
         error_page(hargs, SC_EXPECTATION_FAILED, "No content generated" );

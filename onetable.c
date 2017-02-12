@@ -465,19 +465,11 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             xmlNewProp(form, "id", form_prop_name);
             free(form_prop_name);
 
-            // Make a new form_tag for the 1st edit row,
-            // and clone it for all the other edit rows.
-            if (form_tag == NULL){
-                //  XXXXXX get timeout and submit_only_once flag from pg
-                form_tag = register_form(h, form, SUBMIT_MULTIPLE,
-                    action_target);
+            //  XXXXXX get timeout and submit_only_once flag from pg
+            form_tag = register_form(h, form, SUBMIT_MULTIPLE, action_target);
 
-                if (h->current_form_set == NULL){
-                    save_context_parameters(h, form_tag, getall_rs, -1);
-                }
-
-            }else{
-                duplicate_registration(h, form_tag, form);
+            if (h->current_form_set == NULL){
+                save_context_parameters(h, form_tag, getall_rs, -1);
             }
 
             // add a hidden field for each part of the primary key
@@ -485,6 +477,7 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                 input = xmlNewChild(form, NULL, "input", NULL);
                 xmlNewProp(input, "type", "hidden");
                 int f_nbr = PQfnumber(getall_rs, getall_ta->pkeys[k]);
+
                 if (PQfname(getall_rs, f_nbr) != NULL){
                     xmlNewProp(input, "name", getall_ta->pkeys[k]);
 

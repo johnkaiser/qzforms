@@ -1,3 +1,8 @@
+/*
+ *  set_common_attributes
+ *
+ *  Add attributes that are common to all prompts.
+ */
 function set_common_attributes(new_input_el, fieldname, prompt_rule, row_index){
 
     var attribs = ['pattern', 'onfocus', 'onblur', 'onchange', 'onselect',
