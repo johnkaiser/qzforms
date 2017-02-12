@@ -42,6 +42,7 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey,
 VALUES ('form', 'getall', 
     'SELECT form_name, handler_name 
      FROM qz.form
+     WHERE NOT hidden
      ORDER BY form_name', 
 NULL, '{form_name, handler_name_ro}', 
 'A form on this list will match incoming data to a particular set of table 
@@ -873,7 +874,7 @@ INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, pkey, helpful_text)
 VALUES
 ('page_menus', 'edit', 
-$PMED$SELECT set_id, host_form_name, menu_name, action 
+$PMED$SELECT set_id, menu_name, action 
 FROM qz.menu_set
 WHERE host_form_name = $1
 ORDER BY menu_name, action$PMED$,
@@ -1008,4 +1009,9 @@ VALUES
  WHERE user_name = $1 $UMDL$,
  '{user_name}', '{user_name}');
 
+---
+--- Hide from the standard view
+---
+UPDATE qz.form
+SET hidden = 't';
 
