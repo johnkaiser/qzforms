@@ -33,10 +33,6 @@ CREATE TABLE qz.prompt_rule (
     PRIMARY KEY (form_name, fieldname)
 );
 
-
-
-
-
 -- 
 --  Prompt Rules
 -- 
@@ -408,4 +404,28 @@ VALUES
 $PRFK$change_status(%n, 'U')$PRFK$),
 ('fixed_parameters', 'parameter_value', 'input_text', 't', 
 $PRFK$change_status(%n, 'U')$PRFK$);
+
+---
+--- inline js and css
+---
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, rows, cols, readonly)
+VALUES
+('inline_js', 'inline_js', 'textarea', 40, 80, 'f'),
+('inline_js_', 'inline_js', 'textarea', 2, 30, 't'),
+('inline_css', 'inline_css', 'textarea', 40, 80, 'f'),
+('inline_css_', 'inline_js', 'textarea', 2, 30, 't');
+
+---
+--- user menus
+---
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, size, regex_pattern)
+VALUES
+('user_menus', 'user_name', 'input_text', '63',
+ '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$'),
+('user_menus', 'main_menu', 'select_fkey', '63', NULL);
+
+
 

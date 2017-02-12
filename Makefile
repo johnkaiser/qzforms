@@ -26,7 +26,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=7
+SCHEMA_VERSION=8
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
 	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
@@ -55,7 +55,7 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 
 SQLUTIL= qz_examples.sql qz_db_update_SV3.sql \
 	qz_db_update_SV4.sql qz_db_update_SV5.sql qz_db_update_SV6.sql \
-	qz_db_update_SV7.sql qz_db_install_SV$(SCHEMA_VERSION).sql
+	qz_db_update_SV7.sql qz_db_install_SV8.sql
  
 
 JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \

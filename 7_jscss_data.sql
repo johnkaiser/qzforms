@@ -101,5 +101,43 @@ INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 40, 'do
 
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('form_set', 1, 'qzforms.js');
 
+---
+---  inline js and css
+---
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('inline_js', '1', 'jquery-2.1.4.js'),
+('inline_js', '2', 'jquery.tablesorter.js'),
+('inline_js', '3', 'qzforms.js'),
+('inline_css', '1', 'jquery-2.1.4.js'),
+('inline_css', '2', 'jquery.tablesorter.js'),
+('inline_css', '3', 'qzforms.js');
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('inline_js', '1', 'qzforms.css'),
+('inline_css','1', 'qzforms.css'),
+('inline_js', '2', 'form_edit.css'),
+('inline_css','2', 'form_edit.css');
+
+---
+---  user menus
+---
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('user_menus', '1', 'jquery-2.1.4.js'),
+('user_menus', '2', 'jquery.tablesorter.js'),
+('user_menus', '3', 'qzforms.js');
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('user_menus', '1', 'qzforms.css'),
+('user_menus', '2', 'form_edit.css');
 
 

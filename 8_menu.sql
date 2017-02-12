@@ -267,6 +267,50 @@ VALUES
 -- Add a foreign key so select_fkey works.
 ALTER TABLE qz.form ADD FOREIGN KEY (form_set_name) REFERENCES qz.form_set(set_name);
 
+---
+--- inline js and css
+---
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, 
+menu_text, context_parameters)
+VALUES
+('form_submenu', '70', 'inline_js', 'getall', 'inline_js', 
+'{form_name, handler_name_ro}'),
+('form_submenu', '80', 'inline_css', 'getall', 'inline_css', 
+'{form_name, handler_name_ro}');
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('main', 'inline_js', 'any'),
+('main', 'inline_css', 'any'),
+('form_submenu', 'inline_js','any'),
+('form_submenu', 'inline_css', 'any'),
+('form_dev', 'inline_js', 'any'),
+('form_dev', 'inline_css', 'any');
+
+---
+---  user menus
+---
+
+INSERT INTO qz.menu
+(menu_name, target_div, description)
+VALUES
+('user_menus', 'pagemenu', 'Assign menus to users');
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, menu_text)
+VALUES
+('user_menus', '1', 'user_menus', 'getall', 'User Menus');
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('user_menus', 'menu_edit', 'getall'),
+('main', 'user_menus', 'any'),
+('form_dev', 'user_menus', 'any');
+
 
 
 

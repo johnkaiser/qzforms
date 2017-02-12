@@ -6,6 +6,8 @@ CREATE TABLE qz.table_action (
     pkey text[],
     etag bigint not null default nextval('qz.etag_seq'::regclass),
     helpful_text text,
+    inline_js text,
+    inline_css text,
     clear_context_parameters boolean NOT NULL DEFAULT 'f',
     PRIMARY KEY (form_name, action)
 );    
@@ -911,4 +913,99 @@ VALUES
    $PMDR$DELETE FROM qz.menu_set
    WHERE set_id = $1$PMDR$,
  '{set_id}', '{set_id}');
+
+--- inline js and css
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('inline_js', 'edit',
+$TAJSED$ SELECT form_name, action, inline_js
+    FROM qz.table_action
+    WHERE form_name = $1 and action = $2 $TAJSED$,
+'{form_name,action}', '{form_name,action}'),
+
+('inline_js', 'update', 
+$TAJSUP$ UPDATE qz.table_action
+    SET inline_js = $3
+    WHERE form_name = $1 and action = $2 $TAJSUP$,
+'{form_name,action,inline_js}', '{form_name,action}'),
+
+('inline_js', 'getall',
+$TAJSGA$ SELECT form_name, action, inline_js::varchar(30) inline_js_
+    FROM qz.table_action
+    WHERE form_name = $1 $TAJSGA$,
+'{form_name}', '{form_name,action}'),
+
+('inline_css', 'edit',
+$TAJSED$ SELECT form_name, action, inline_css
+    FROM qz.table_action
+    WHERE form_name = $1 and action = $2 $TAJSED$,
+'{form_name,action}', '{form_name,action}'),
+
+('inline_css', 'update', 
+$TAJSUP$ UPDATE qz.table_action
+    SET inline_css = $3
+    WHERE form_name = $1 and action = $2 $TAJSUP$,
+'{form_name,action,inline_css}', '{form_name,action}'),
+
+('inline_css', 'getall',
+$TAJSGA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
+    FROM qz.table_action
+    WHERE form_name = $1 $TAJSGA$,
+'{form_name}', '{form_name,action}');
+
+UPDATE qz.table_action
+SET helpful_text = $IJSGA$ Inline JavaScript is added to HTML head
+in a <script> tag $IJSGA$
+WHERE form_name = 'inline_js' 
+AND action = 'getall';
+
+UPDATE qz.table_action
+SET helpful_text = $ICSSGA$ Inline CSS is added to HTML head
+in a <style> tag $ICSSGA$
+WHERE form_name = 'inline_css'
+AND action = 'getall';
+
+---
+--- user menus
+---
+
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, pkey)
+VALUES
+('user_menus', 'getall',
+ $UMGA$ SELECT user_name, main_menu
+  FROM qz.user
+  ORDER BY user_name $UMGA$,
+  '{}', '{user_name}'),
+
+('user_menus', 'edit',
+ $UMED$ SELECT user_name, main_menu
+ FROM qz.user
+ WHERE user_name = $1 $UMED$,
+ '{user_name}', '{user_name}'),
+
+ ('user_menus', 'update',
+  $UMUP$ UPDATE qz.user
+  SET main_menu = $2
+  WHERE user_name = $1 $UMUP$,
+ '{user_name, main_menu}', '{user_name}'),
+
+('user_menus', 'create',
+  $UMCR$ SELECT ''::text user_name,
+  ''::text main_menu $UMCR$,
+  '{}', '{user_name}'),
+
+('user_menus', 'insert',
+ $UMIN$ INSERT INTO qz.user
+ (user_name, main_menu)
+ VALUES
+ ($1, $2) $UMIN$,
+ '{user_name, main_menu}', '{user_name}'),
+
+('user_menus', 'delete',
+ $UMDL$ DELETE FROM qz.user
+ WHERE user_name = $1 $UMDL$,
+ '{user_name}', '{user_name}');
+
 

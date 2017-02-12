@@ -91,7 +91,7 @@ INSERT INTO qz.form_set
 (set_name, context_parameters)
 VALUES
 ('form_mgt', '{form_name, handler_name}'),
-('menu_mgt', '{menu_name, menu_item_sequence}');
+('menu_mgt', '{menu_name}');
 
 UPDATE qz.form
 SET
@@ -105,4 +105,24 @@ INSERT INTO qz.form
 VALUES
 ('page_menus', 'grid', 'qz', 'menu_set', 'base.xml',
    'qz', 't', 'no_container', 'form_mgt');
+
+INSERT INTO qz.form
+(form_name, handler_name, schema_name, table_name, xml_template,
+target_div, add_description, prompt_container, form_set_name)
+VALUES
+('inline_js', 'onetable', 'qz', 'form', 'base.xml',
+'qz', 't', 'fieldset', 'form_mgt'),
+('inline_css', 'onetable', 'qz', 'form', 'base.xml',
+'qz', 't', 'fieldset', 'form_mgt');
+
+---
+---  user menus
+---
+INSERT INTO qz.form
+(form_name, handler_name, schema_name, table_name, xml_template,
+target_div, add_description, prompt_container)
+VALUES
+('user_menus', 'onetable', 'qz', 'user', 'base.xml',
+'qz', 't', 'fieldset');
+
 

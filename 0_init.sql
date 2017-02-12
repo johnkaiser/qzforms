@@ -69,7 +69,7 @@ CREATE TABLE qz.constants (
 --
 -- Set the Schema Version
 --
-INSERT INTO qz.constants (key, schema_version) VALUES ('t', '7');
+INSERT INTO qz.constants (key, schema_version) VALUES ('t', '8');
 
 CREATE TABLE qz.change_history (
     change_id serial primary key,
@@ -84,4 +84,13 @@ INSERT INTO qz.change_history
   VALUES 
   ('First install Schema Version '||
     (SELECT schema_version FROM qz.constants));
+
+---
+---  user menus
+---
+CREATE TABLE qz.user(
+  user_name qz.variable_name PRIMARY KEY,
+  main_menu qz.variable_name REFERENCES qz.menu(menu_name)
+);
+
 
