@@ -79,6 +79,37 @@
 
 #endif
 
+/**
+ **
+ **  getrandom
+ **
+ */
+#ifdef QZ_GETRANDOM
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <syscall.h>
+#include <errno.h>
+#include <linux/random.h>
+
+    void qzrandom64_init(void){ return; }
+
+    uint64_t qzrandom64(void){
+        uint64_t rnbr;
+        int gr;
+
+        gr = syscall(SYS_getrandom, &rnbr, sizeof(rnbr), 0);
+
+        if (gr == sizeof(rnbr)){
+            return rnbr;
+        }else{
+            // According to the man page, this can happen
+            // when a signal interrupts the call.
+            return qzrandom64();
+        }
+    }
+         
+#endif
 
 /**
  ** A named device file

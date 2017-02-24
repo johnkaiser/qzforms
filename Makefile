@@ -1,9 +1,24 @@
 
 ## One source of randomness must be selected.
-## QZRANDOM=-DQZ_ARC4RANDOM
-QZRANDOM=-DQZ_RAND_DEV=\"/dev/urandom\"
 
-LFLAGS=-L/usr/local/lib -lfcgi -lpthread -lcrypto -lxml2 
+## Use arc4random for BSD systems that support arc4random()
+## QZRANDOM=-DQZ_ARC4RANDOM
+
+## Use getrandom system call for Linux systems with kernel > 4.17
+## QZRANDOM=-DQZ_GETRANDOM
+
+## Use a device file (or perhaps a unix domain socket). 
+## QZRANDOM=-DQZ_RAND_DEV=\"/dev/urandom\"
+
+## Choose either gcc or clang for the compiler
+## CC=clang
+## CC=gcc
+
+## It has happened that "-L/usr/local/lib" is required here.
+#LFLAGS=-L/usr/local/lib -lfcgi -lpthread -lcrypto -lxml2 
+LFLAGS=-lfcgi -lpthread -lcrypto -lxml2 
+
+## End of common changes.
 
 PGINCLUDEDIR!=pg_config --includedir
 PGLIBDIR!=pg_config --libdir
@@ -13,9 +28,6 @@ XMLLIBDIR!=xml2-config --libs
 
 PCRECFLAGS!=pcre-config --cflags
 PCRELIBS!=pcre-config --libs
-
-CC=clang
-#CC=gcc
 
 CFLAGS=-Wall \
 	-I/usr/local/include \
