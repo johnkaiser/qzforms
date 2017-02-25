@@ -218,4 +218,7 @@ UPDATE qz.form_set
 SET context_parameters = '{menu_name}'
 WHERE set_name = 'menu_mgt';
 
+-- Don't need
+DELETE FROM qz.menu
+WHERE menu_name = 'not_a_menu';
 

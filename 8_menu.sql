@@ -51,9 +51,6 @@ INSERT INTO qz.menu (menu_name, target_div, description)
 VALUES ('main', 'qzmenu', 'main menu');
 
 INSERT INTO qz.menu (menu_name, target_div, description) 
-VALUES ('not_a_menu', 'qzsubmenu', 'Just Testing.');
-
-INSERT INTO qz.menu (menu_name, target_div, description) 
 VALUES ('form_dev', 'qzsubmenu', 'Form Development');
 
 INSERT INTO qz.menu (menu_name, target_div, description) 
