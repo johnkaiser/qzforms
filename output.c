@@ -297,6 +297,8 @@ void do_page( struct handler_args* hargs ){
         // was waiting, check again.
         if (hargs->session->is_logged_in){
 
+            hargs->session->last_activity_time = time(NULL);
+
             // Identify the handler
 
             int n;
