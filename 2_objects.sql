@@ -53,11 +53,6 @@ VALUES ('menu_set_edit', 'grid', 'qz', 'menu_set', 'base.xml', 'qz', false, 'no_
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
 VALUES ('menu', 'menupage', 'qz', 'menu', 'base.xml', 'qz', true, 'fieldset');
 
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('form_menu_edit', 'onetable', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
-
-
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
 VALUES ('js', 'fs', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
 
