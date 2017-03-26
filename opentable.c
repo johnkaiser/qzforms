@@ -86,7 +86,7 @@ void init_open_table(struct handler_args* h){
 
     char fetch_table_action[] =
         "SELECT fm.schema_name, fm.table_name, ta.sql, ta.fieldnames, "
-        "ta.pkey, ta.etag, ta.clear_context_parameters, fm.target_div, "
+        "fm.pkey, ta.etag, ta.clear_context_parameters, fm.target_div, "
         "fm.handler_name, fm.xml_template, fm.add_description, "
         "fm.prompt_container, fm.form_set_name, fs.context_parameters, "
         "ta.helpful_text, ta.inline_js, ta.inline_css, "

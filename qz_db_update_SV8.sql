@@ -34,7 +34,7 @@ $TAJSED$ SELECT form_name, action, inline_js
     WHERE form_name = $1 and action = $2 $TAJSED$,
 '{form_name,action}', '{form_name,action}'),
 
-('inline_js', 'update', 
+('inline_js', 'update',
 $TAJSUP$ UPDATE qz.table_action
     SET inline_js = $3
     WHERE form_name = $1 and action = $2 $TAJSUP$,
@@ -52,7 +52,7 @@ $TAJSED$ SELECT form_name, action, inline_css
     WHERE form_name = $1 and action = $2 $TAJSED$,
 '{form_name,action}', '{form_name,action}'),
 
-('inline_css', 'update', 
+('inline_css', 'update',
 $TAJSUP$ UPDATE qz.table_action
     SET inline_css = $3
     WHERE form_name = $1 and action = $2 $TAJSUP$,
@@ -67,7 +67,7 @@ $TAJSGA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
 UPDATE qz.table_action
 SET helpful_text = $IJSGA$ Inline JavaScript is added to HTML head
 in a <script> tag $IJSGA$
-WHERE form_name = 'inline_js' 
+WHERE form_name = 'inline_js'
 AND action = 'getall';
 
 UPDATE qz.table_action
@@ -85,12 +85,12 @@ VALUES
 ('inline_css_', 'inline_js', 'textarea', 2, 30, 't');
 
 INSERT INTO qz.menu_item
-(menu_name, menu_item_sequence, target_form_name, action, 
+(menu_name, menu_item_sequence, target_form_name, action,
 menu_text, context_parameters)
 VALUES
-('form_submenu', '70', 'inline_js', 'getall', 'inline_js', 
+('form_submenu', '70', 'inline_js', 'getall', 'inline_js',
 '{form_name, handler_name_ro}'),
-('form_submenu', '80', 'inline_css', 'getall', 'inline_css', 
+('form_submenu', '80', 'inline_css', 'getall', 'inline_css',
 '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_set
@@ -218,7 +218,193 @@ UPDATE qz.form_set
 SET context_parameters = '{menu_name}'
 WHERE set_name = 'menu_mgt';
 
+-- Fix
+-- Set arrays of type variable name, which isn't
+-- because pg won't do arrays of domains, to at
+-- least check the length.
+ALTER TABLE qz.table_action
+ALTER COLUMN fieldnames
+TYPE VARCHAR(63)[];
+
+-- Fix
 -- Don't need
 DELETE FROM qz.menu
 WHERE menu_name = 'not_a_menu';
 
+DELETE FROM qz.table_action
+WHERE form_name = 'form_menu_edit';
+
+DELETE FROM qz.form
+WHERE form_name = 'form_menu_edit';
+
+DELETE FROM qz.page_css
+WHERE form_name = 'form_menu_edit';
+
+
+-- Move pkey from table_action to form.
+
+ALTER TABLE qz.form
+ADD COLUMN pkey VARCHAR(63)[];
+
+UPDATE qz.form fm
+SET pkey =
+  (SELECT pkey
+   FROM qz.table_action ta
+   WHERE ta.form_name = fm.form_name
+   AND ACTION = 'getall')
+WHERE fm.handler_name = 'onetable';
+
+UPDATE qz.form fm
+SET pkey =
+  (SELECT pkey
+   FROM qz.table_action ta
+   WHERE ta.form_name = fm.form_name
+   AND ta.action = 'edit')
+WHERE fm.handler_name = 'grid';
+
+UPDATE qz.form fm
+SET pkey =
+  (SELECT pkey
+   FROM qz.table_action ta
+   WHERE ta.form_name = fm.form_name
+   AND ta.action = 'get')
+WHERE fm.handler_name = 'fs';
+
+UPDATE qz.form fm
+SET pkey =  '{none}'
+WHERE (handler_name) IN ('menupage', 'status', 'timestamp');
+
+UPDATE qz.table_action
+SET sql=$TAECR$ SELECT ta.form_name, ta.action new_action, fm.handler_name,
+    ''::text helpful_text, ta.sql, ta.fieldnames,
+    'f'::boolean clear_context_parameters
+     FROM qz.create_table_action($1,$2) ta
+    JOIN qz.form fm USING (form_name) $TAECR$
+WHERE form_name = 'table_action_edit'
+AND action = 'create';
+
+UPDATE qz.table_action
+SET sql=$TAEINS$ INSERT INTO qz.table_action
+      (form_name, action, helpful_text, sql, fieldnames,
+      clear_context_parameters)
+      VALUES
+      ($1,$2,$3,$4,$5,$6) $TAEINS$,
+    fieldnames = '{form_name,new_action,helpful_text,sql,fieldnames,clear_context_parameters}'
+WHERE form_name = 'table_action_edit'
+AND action = 'insert';
+
+UPDATE qz.table_action
+SET sql=$TAEED$ SELECT
+      form_name, action, helpful_text, sql, fieldnames, clear_context_parameters
+    FROM
+      qz.table_action
+    WHERE
+    form_name = $1 AND action = $2 $TAEED$
+WHERE form_name = 'table_action_edit'
+AND action = 'edit';
+
+UPDATE qz.table_action
+SET sql=$TAEUP$ UPDATE qz.table_action
+    SET helpful_text=$3,
+    sql=$4, fieldnames=$5, clear_context_parameters=$6
+    WHERE form_name = $1 AND action = $2 $TAEUP$,
+    fieldnames = '{form_name,action,helpful_text,sql,fieldnames,clear_context_parameters}'
+WHERE form_name = 'table_action_edit'
+AND action = 'update';
+
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, size, maxlength)
+VALUES
+('form', 'pkey', 'text_array', 50, 63);
+
+-------- not tested below here
+
+UPDATE qz.table_action
+SET sql = $FRMCR$ SELECT
+    $1::text form_name,
+    $2::text handler_name,
+    ''::text schema_name, ''::text table_name,
+    ''::text pkey,
+    'base.xml'::text xml_template,
+    'qz'::text target_div,
+    ''::text add_description,
+    ''::text prompt_container $FRMCR$
+WHERE form_name = 'form'
+AND action = 'create';
+
+UPDATE qz.table_action
+SET sql = $FRMINS$ INSERT INTO qz.form
+     (form_name, handler_name, schema_name, table_name, pkey,
+     xml_template, target_div,
+     add_description, prompt_container)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) $FRMINS$,
+     fieldnames = '{form_name,handler_name,schema_name,table_name,pkey,xml_template,target_div,add_description,prompt_container}'
+WHERE form_name = 'form'
+AND action = 'insert';
+
+UPDATE qz.table_action
+SET sql = $FRMED$  SELECT form_name, handler_name,
+     schema_name, table_name, pkey, xml_template, target_div,
+     add_description, prompt_container, form_set_name
+     FROM qz.form
+     WHERE form_name = $1 $FRMED$
+WHERE form_name = 'form'
+AND action = 'edit';
+
+UPDATE qz.table_action
+SET sql = $FRMUP$  UPDATE qz.form SET
+     schema_name = $2,
+     table_name = $3,
+     pkey = $4,
+     xml_template = $5,
+     target_div = $6,
+     add_description = $7,
+     prompt_container = $8,
+     form_set_name = $9
+     WHERE form_name = $1 $FRMUP$,
+     fieldnames = '{form_name,schema_name,table_name,pkey,xml_template,target_div,add_description,prompt_container,form_set_name}'
+WHERE form_name = 'form'
+AND action = 'update';
+
+UPDATE qz.table_action
+SET sql = $TAPRC$ SELECT
+    $1::text "form_name",
+    $2::text "fieldname",
+    'input_text'::qz.prompt_types "prompt_type",
+    ''::text "tabindex",
+    ''::text "el_class",
+    'f'::text "readonly",
+    ''::text "regex_pattern",
+    ''::text "rows",
+    ''::text "cols",
+    ''::text "size",
+    ''::text "maxlength",
+    ''::text "options",
+    ''::text "publish_pgtype",
+    CASE WHEN 'grid' = $3 then
+        't'::text
+    ELSE
+        'f'::text
+    END "expand_percent_n",
+    ''::text "onfocus",
+    ''::text "onblur",
+    CASE WHEN 'grid' = $3 then
+        $CS$ change_status(%n, 'U') $CS$::text
+    ELSE
+        ''::text
+    END "onchange",
+    ''::text "onselect",
+    ''::text "onclick",
+    ''::text "ondblclick",
+    ''::text "onmousedown",
+    ''::text "onmouseup",
+    ''::text "onmouseover",
+    ''::text "onmousemove",
+    ''::text "onmouseout",
+    ''::text "onkeypress",
+    ''::text "onkeydown",
+    ''::text "onkeyup" $TAPRC$,
+    fieldnames = '{form_name, fieldname, handler_name}'
+WHERE form_name = 'prompt_rule_edit'
+AND action = 'create';
