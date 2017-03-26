@@ -408,3 +408,104 @@ SET sql = $TAPRC$ SELECT
     fieldnames = '{form_name, fieldname, handler_name}'
 WHERE form_name = 'prompt_rule_edit'
 AND action = 'create';
+
+--- newest yet
+--- Rework the menu heirchy.
+
+INSERT INTO qz.form
+(form_name, handler_name, xml_template, target_div, pkey)
+VALUES
+('menu_menu_page', 'menupage', 'base.xml', 'qz', '{none}');
+
+INSERT INTO qz.table_action
+(form_name, action, sql, helpful_text)
+VALUES
+('menu_menu_page', 'view', 'SELECT 1',
+    $MMPV$You can use All Menus to create or modify a menu
+    or User Menus to assign a main menu to a user.$MMPV$);
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('menu_menu_page', '1', 'qzforms.js');
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('menu_menu_page', '1', 'qzforms.css');
+
+INSERT INTO qz.menu_set
+(host_form_name, menu_name, action)
+VALUES
+('menu_menu_page', 'main', 'any'),
+('menu_menu_page', 'form_dev', 'any'),
+('menu_menu_page', 'menu_submenu', 'any');
+
+UPDATE qz.prompt_rule
+SET options = '{fs,grid,menupage,onetable}'
+WHERE form_name = 'form'
+AND (fieldname = 'handler_name' OR fieldname = 'new_handler_name');
+
+UPDATE qz.menu_item
+SET target_form_name = 'menu_menu_page',
+    action = 'view',
+    menu_text = 'Menu Menu'
+WHERE menu_name = 'form_dev'
+AND   menu_item_sequence = '10';
+----
+DELETE FROM qz.menu_item
+WHERE menu_name = 'menu_submenu';
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action,
+ menu_text, context_parameters)
+VALUES
+('menu_submenu', '10', 'user_menus', 'getall',
+ 'User Menus', NULL),
+('menu_submenu', '20', 'menu_edit', 'getall',
+ 'All Menus', NULL);
+
+DELETE FROM qz.page_css
+WHERE filename = 'form_edit.css'
+AND (form_name) IN ('user_menus', 'menu_edit', 'menu_item_edit',
+'fixed_parameters');
+
+DELETE FROM qz.menu_set
+WHERE menu_name = 'user_menus'
+AND   host_form_name = 'menu_edit'
+AND   action = 'getall';
+
+DELETE FROM qz.menu_set
+WHERE menu_name = 'menu_submenu'
+AND   host_form_name = 'menu_edit'
+AND   action = 'edit';
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('menu_submenu', 'user_menus', 'any'),
+('menu_submenu', 'menu_edit', 'any');
+
+UPDATE qz.table_action
+SET helpful_text =
+'User menus allows you to assign a main menu to a user
+ to replace the default main menu.'
+ WHERE form_name = 'user_menus'
+ AND   action = 'getall';
+
+
+INSERT INTO qz.menu
+(menu_name, target_div, description, form_set_name)
+VALUES
+('menu_items', 'pagemenu', 'Edit the list of items on a menu', 'menu_mgt');
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, menu_text,
+ context_parameters)
+VALUES
+('menu_items', '30', 'menu_item_edit', 'getall', 'Menu Items', '{menu_name}');
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('menu_items', 'menu_edit', 'edit');
