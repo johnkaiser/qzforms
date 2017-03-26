@@ -59,9 +59,8 @@ void menupage( struct handler_args* h ){
         error_page(h, SC_EXPECTATION_FAILED,  "Element with id qz not found");
         return;
     }
-    xmlNewTextChild(divqz, NULL, "h1", "Menu");
 
-    //add_helpful_text(h, h->page_ta, cur);
+    add_helpful_text(h, h->page_ta, cur);
     add_all_menus(h, cur);
 
     return;
@@ -153,7 +152,8 @@ void init_menu(struct handler_args* hargs){
        "FROM qz.menu_set s "
        "JOIN qz.menu m ON ( m.menu_name = s.menu_name ) "
        "WHERE s.host_form_name = $1 "
-       "AND (s.action = 'any' OR s.action = $2) ";
+       "AND (s.action = 'any' OR s.action = $2) "
+       "ORDER BY s.menu_name ";
 
    rs = PQprepare(hargs->session->conn, "fetch_menu_set", menu_set,
        0, NULL);
