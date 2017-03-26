@@ -10,7 +10,8 @@ function set_action_options(){
     var allowed_options = { 
         "onetable": ["getall", "create", "insert", "edit", "update", "delete"], 
         "grid": ["edit", "save", "insert_row", "update_row", "delete_row"],
-        "fs": ["get", "etag_value" ]
+        "fs": ["get", "etag_value" ],
+        "menupage":["view"]
     };
 
    var handler_el = document.getElementById('handler_name');
