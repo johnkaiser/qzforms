@@ -12,7 +12,6 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_edit', 10,
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_host_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_item_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_set_edit', 10, 'qzforms.css');
-INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('form_menu_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('prompt_rule_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('prompt_rule', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('table_action_edit', 10, 'qzforms.css');
