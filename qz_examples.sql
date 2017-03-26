@@ -130,12 +130,6 @@ INSERT INTO qz.page_css (form_name, sequence, filename)
 VALUES ('gridle', 20, 'blue.css');
 
 INSERT INTO qz.page_js (form_name, sequence, filename) 
-VALUES ('gridle', 10, 'jquery-2.1.4.js');
-
-INSERT INTO qz.page_js (form_name, sequence, filename) 
-VALUES ('gridle', 20, 'jquery.tablesorter.js');
-
-INSERT INTO qz.page_js (form_name, sequence, filename) 
 VALUES ('gridle', 30, 'qzforms.js');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, readonly, regex_pattern, rows, 
@@ -386,12 +380,6 @@ VALUES ('main', 'stuff', 'any');
 
 INSERT INTO qz.page_css (form_name, sequence, filename) 
 VALUES ('stuff', 10, 'qzforms.css');
-
-INSERT INTO qz.page_js (form_name, sequence, filename) 
-VALUES ('stuff', 10, 'jquery-2.1.4.js');
-
-INSERT INTO qz.page_js (form_name, sequence, filename) 
-VALUES ('stuff', 20, 'jquery.tablesorter.js');
 
 INSERT INTO qz.page_js (form_name, sequence, filename) 
 VALUES ('stuff', 30, 'qzforms.js');
