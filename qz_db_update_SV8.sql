@@ -509,3 +509,9 @@ INSERT INTO qz.menu_set
 (menu_name, host_form_name, action)
 VALUES
 ('menu_items', 'menu_edit', 'edit');
+
+--- Rip out jquery.
+
+DELETE FROM qz.page_js
+WHERE (filename) IN ('jquery-2.1.4.js', 'jquery.tablesorter.js');
+
