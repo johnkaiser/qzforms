@@ -531,26 +531,6 @@ This allows a menu option to edit a
 specific row or set of rows.');
 
 --
--- form_menu_edit
---
-
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
-VALUES ('form_menu_edit', 'edit', 
-    'SELECT menu_name, action 
-    FROM qz.menu_set
-    WHERE host_form_name = $1', 
-'{form_name}', NULL, 'Add menus to this form here.');
-
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
-VALUES ('form_menu_edit', 'update_row', 
-    'UPDATE qz.menu_set
-    SET
-    "menu_name" = $1.
-    "action" = $2
-    WHERE host_form_name = $3', 
-'{menu_name,action,host_form_name}', '{host_form_name}', NULL);
-
---
 -- css
 --
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, helpful_text) 
