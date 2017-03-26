@@ -157,6 +157,7 @@ struct session{
 struct table_action{
     char* form_name;
     char* action;
+    char* handler_name;
     char* schema_name;
     char* table_name;
     char* prepare_name;
@@ -168,7 +169,6 @@ struct table_action{
     char** pkeys;
     char* target_div;
     char* xml_template;
-    char* handler_name;
     bool add_description;
     char* prompt_container;
     char* helpful_text;
