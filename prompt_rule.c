@@ -72,11 +72,24 @@ static xmlHashTablePtr prompt_type_hash = NULL;
 struct prompt_rule* default_prompt_rule(struct handler_args* h,
     char* form_name, char* fieldname){
 
+    static const char onchange_grid_default[] = "change_status(%n,'U')";
+
+    bool is_grid = false;
+    if ((h->page_ta != NULL) && (h->page_ta->handler_name != NULL)){
+        if (strcmp(h->page_ta->handler_name, "grid") == 0){
+            is_grid = true;
+        }
+    }
+
     unsigned int len = sizeof(struct prompt_rule) + 2;
     len += strlen(form_name) + 2;
     len += strlen(fieldname) + 2;
     char* prompt_type = "input_text";
     len += strlen(prompt_type) + 2;
+
+    if (is_grid){
+        len += strlen(onchange_grid_default) + 2;
+    }
 
     struct prompt_rule* new_rule = calloc(1, len);
 
@@ -92,7 +105,16 @@ struct prompt_rule* default_prompt_rule(struct handler_args* h,
 
     memcpy(marker, prompt_type, strlen(prompt_type)+1);
     new_rule->prompt_type = marker;
-    
+    marker += strlen(prompt_type)+2;
+
+    if (is_grid){
+        new_rule->expand_percent_n = true;
+
+        memcpy(marker, onchange_grid_default, strlen(onchange_grid_default)+1);
+        new_rule->onchange = marker;
+        marker += strlen(onchange_grid_default)+2;
+    }
+
     return new_rule;
 }
 
