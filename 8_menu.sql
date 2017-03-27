@@ -1,4 +1,3 @@
-
 CREATE TABLE qz.menu(
     menu_name qz.variable_name PRIMARY KEY,
     target_div qz.variable_name,
@@ -74,7 +73,7 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, actio
 VALUES ('fixed_parameters', 10, 'fixed_parameters', 'edit', 'Fixed_Parameters', '{menu_name,menu_item_sequence}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('form_dev', 10, 'menu_edit', 'getall', 'menu menu', NULL);
+VALUES ('form_dev', 10, 'menu_menu_page', 'view', 'Menu Menu', NULL);
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_dev', 20, 'form', 'getall', 'Forms', NULL);
@@ -98,9 +97,6 @@ INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, actio
 VALUES ('main', 999, 'logout', NULL, 'Logout', NULL);
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('menu_submenu', 1, 'menu_item_edit', 'getall', 'Menu Items', '{menu_name}');
-
-INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
 VALUES ('form_submenu', 1, 'form', 'edit', 'form', '{form_name, handler_name_ro}');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
@@ -121,6 +117,16 @@ INSERT INTO qz.menu_item
 VALUES
 ('form_submenu', '60', 'page_menus',
   'edit', 'page_menus', '{form_name, handler_name_ro}');
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action,
+ menu_text, context_parameters)
+VALUES
+('menu_submenu', '10', 'user_menus', 'getall',
+ 'User Menus', NULL),
+('menu_submenu', '20', 'menu_edit', 'getall',
+ 'All Menus', NULL);
+
 
 --
 -- Data for Name: menu_set; Type: TABLE DATA; Schema: qz; Owner: qz
@@ -215,9 +221,6 @@ VALUES ('form_dev', 'page_css', 'any');
 
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
 VALUES ('fixed_parameters', 'menu_item_edit', 'edit');
-
-INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
-VALUES ('menu_submenu', 'menu_edit', 'edit');
 
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
 VALUES ('menu_submenu', 'menu_set_edit', 'any');
@@ -315,6 +318,34 @@ VALUES
 ('form_dev', 'user_menus', 'any');
 
 
+INSERT INTO qz.menu_set
+(host_form_name, menu_name, action)
+VALUES
+('menu_menu_page', 'main', 'any'),
+('menu_menu_page', 'form_dev', 'any'),
+('menu_menu_page', 'menu_submenu', 'any');
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('menu_submenu', 'user_menus', 'any'),
+('menu_submenu', 'menu_edit', 'any');
+
+INSERT INTO qz.menu
+(menu_name, target_div, description, form_set_name)
+VALUES
+('menu_items', 'pagemenu', 'Edit the list of items on a menu', 'menu_mgt');
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, menu_text,
+ context_parameters)
+VALUES
+('menu_items', '30', 'menu_item_edit', 'getall', 'Menu Items', '{menu_name}');
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('menu_items', 'menu_edit', 'edit');
 
 
 

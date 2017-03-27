@@ -8,7 +8,8 @@ CREATE TABLE qz.form(
      hidden boolean default false, 
      add_description boolean,
      prompt_container qz.prompt_container_type,
-     form_set_name qz.variable_name
+     form_set_name qz.variable_name,
+     pkey varchar(63)[]
 );
 
 CREATE TABLE qz.form_set (
@@ -16,107 +17,107 @@ CREATE TABLE qz.form_set (
   context_parameters varchar(63)[]
 );
 
-INSERT INTO qz.form(form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('table_action_edit', 'onetable', 'qz', 'table_action', 'base.xml', 'qz', true, 'fieldset');
-
-INSERT INTO qz.form(form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('form', 'onetable', 'qz', 'form', 'base.xml', 'qz', true, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
-VALUES ('menu_item_edit', 'onetable', 'qz', 'menu_item', 'base.xml', 'qz', false, 'fieldset', 'menu_mgt');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
-VALUES ('fixed_parameters', 'grid', 'qz', 'menu_item_parameter', 'base.xml', 'qz', false, 'no_container', 'menu_mgt');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
-VALUES ('prompt_rule_edit', 'onetable', 'qz', 'prompt_rule', 'base.xml', 'qz', true, 'fieldset', 'form_mgt');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('menu_host_edit', 'grid', 'qz', 'menu_set', 'base.xml', 'qz', false, 'no_container');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
-VALUES ('menu_edit', 'onetable', 'qz', 'menu', 'base.xml', 'qz', true, 'fieldset', 'menu_mgt');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('form_dev', 'menupage', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('pg_stat_activity', 'status', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('status', 'status', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, form_set_name) 
-VALUES ('menu_set_edit', 'grid', 'qz', 'menu_set', 'base.xml', 'qz', false, 'no_container', 'menu_mgt');
-
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('menu', 'menupage', 'qz', 'menu', 'base.xml', 'qz', true, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('js', 'fs', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('js_edit', 'onetable', NULL, NULL, 'base.xml', 'qz', false, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('page_js', 'grid', 'qz', 'page_js', 'base.xml', 'qz', false, 'no_container');
-
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('css', 'fs', 'qz', 'css', 'base.xml', 'qz', true, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('css_edit', 'onetable', 'qz', 'css', 'base.xml', 'qz', false, 'fieldset');
-
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('page_css', 'grid', 'qz', 'page_css', 'base.xml', 'qz', true, 'no_container');
-
-
-INSERT INTO qz.form
-(form_name, handler_name, schema_name, table_name,
-xml_template, target_div, add_description, 
-prompt_container, form_set_name)
-VALUES
-('form_set', 'onetable', 'qz', 'form_set',
-'base.xml', 'qz', 't', 
-'fieldset', NULL);
-
 INSERT INTO qz.form_set
 (set_name, context_parameters)
 VALUES
 ('form_mgt', '{form_name, handler_name}'),
-('menu_mgt', '{menu_name}');
+('menu_mgt', '{menu_name, menu_item_sequence}');
+
+INSERT INTO qz.form(
+   form_name, handler_name, schema_name, table_name, xml_template, target_div,
+   add_description, prompt_container, pkey) 
+VALUES 
+('table_action_edit', 'onetable', 'qz', 'table_action', 'base.xml', 'qz', 
+true, 'fieldset', '{form_name,action}'),
+
+('form', 'onetable', 'qz', 'form', 'base.xml', 'qz', 
+true, 'fieldset', '{form_name}'),
+
+('menu_item_edit', 'onetable', 'qz', 'menu_item', 'base.xml', 'qz', 
+false, 'fieldset', '{menu_name, menu_item_sequence}'),
+
+('fixed_parameters', 'grid', 'qz', 'fixed_parameter', 'base.xml', 'qz', 
+false, 'no_container', '{menu_name, menu_item_sequence}'),
+
+('prompt_rule_edit', 'onetable', 'qz', 'prompt_rule', 'base.xml', 'qz',
+true, 'fieldset', '{form_name, fieldname}'),
+
+('menu_host_edit', 'grid', 'qz', 'menu_set', 'base.xml', 'qz', 
+false, 'no_container', '{menu_name, host_form_name, action}'),
+
+('menu_edit', 'onetable', 'qz', 'menu', 'base.xml', 'qz', 
+true, 'fieldset', '{menu_name}'),
+
+('form_dev', 'menupage', NULL, NULL, 'base.xml', 'qz', 
+false, 'fieldset', '{none}'),
+
+('pg_stat_activity', 'status', NULL, NULL, 'base.xml', 'qz', 
+false, 'fieldset', '{none}'),
+
+('status', 'status', NULL, NULL, 'base.xml', 'qz',
+false, 'fieldset','{none}'),
+
+('menu_set_edit', 'grid', 'qz', 'menu_set', 'base.xml', 'qz',
+false, 'no_container', '{menu_name, host_form_name, action}'),
+
+('menu', 'menupage', 'qz', 'menu', 'base.xml', 'qz',
+true, 'fieldset', '{none}'),
+
+('js', 'fs', 'qz', 'js', 'base.xml', 'qz',
+false, 'fieldset', '{filename}'),
+
+('js_edit', 'onetable', NULL, NULL, 'base.xml', 'qz',
+false, 'fieldset', '{filename}'),
+
+('page_js', 'grid', 'qz', 'page_js', 'base.xml', 'qz',
+false, 'no_container', '{form_name, sequence}'),
+
+('css', 'fs', 'qz', 'css', 'base.xml', 'qz',
+true, 'fieldset', '{filename}'),
+
+('css_edit', 'onetable', 'qz', 'css', 'base.xml', 'qz',
+false, 'fieldset', '{filename}'),
+
+('page_css', 'grid', 'qz', 'page_css', 'base.xml', 'qz',
+true, 'no_container', '{form_name, sequence}'),
+
+('form_set', 'onetable', 'qz', 'form_set', 'base.xml', 'qz',
+true, 'fieldset', '{set_name}'),
+
+('page_menus', 'grid', 'qz', 'menu_set', 'base.xml', 'qz',
+true, 'no_container', '{menu_name, host_form_name, action}' ),
+
+('inline_js', 'onetable', 'qz', 'form', 'base.xml', 'qz', 
+true, 'fieldset', '{form_name}'),
+
+('inline_css', 'onetable', 'qz', 'form', 'base.xml', 'qz',
+true, 'fieldset', '{form_name}');
+
+--- 
 
 UPDATE qz.form
-SET
-  form_set_name = 'form_mgt'
-WHERE form_name IN ( 'form', 'table_action_edit', 'prompt_rule', 
-  'page_js', 'page_css');
+SET form_set_name = 'form_mgt'
+WHERE (form_name) IN ( 'form', 'table_action_edit', 'prompt_rule_edit', 
+  'page_js', 'page_css', 'page_menus', 'inline_css', 'inline_js');
 
-INSERT INTO qz.form
-(form_name, handler_name, schema_name, table_name, xml_template,
-   target_div, add_description, prompt_container, form_set_name)
-VALUES
-('page_menus', 'grid', 'qz', 'menu_set', 'base.xml',
-   'qz', 't', 'no_container', 'form_mgt');
-
-INSERT INTO qz.form
-(form_name, handler_name, schema_name, table_name, xml_template,
-target_div, add_description, prompt_container, form_set_name)
-VALUES
-('inline_js', 'onetable', 'qz', 'form', 'base.xml',
-'qz', 't', 'fieldset', 'form_mgt'),
-('inline_css', 'onetable', 'qz', 'form', 'base.xml',
-'qz', 't', 'fieldset', 'form_mgt');
+UPDATE qz.form
+SET form_set_name = 'menu_mgt'
+WHERE (form_name) IN ('menu_edit', 'menu_item_edit', 'menu_set_edit', 'fixed_parameters' );
 
 ---
 ---  user menus
 ---
 INSERT INTO qz.form
 (form_name, handler_name, schema_name, table_name, xml_template,
-target_div, add_description, prompt_container)
+target_div, add_description, prompt_container, pkey)
 VALUES
 ('user_menus', 'onetable', 'qz', 'user', 'base.xml',
-'qz', 't', 'fieldset');
+'qz', 't', 'fieldset', '{user_name}');
+
+INSERT INTO qz.form
+(form_name, handler_name, xml_template, target_div, pkey)
+VALUES
+('menu_menu_page', 'menupage', 'base.xml', 'qz', '{none}');
+
+
 

@@ -26,7 +26,6 @@ COMMENT ON COLUMN qz.table_action.action IS 'Different objects will support diff
 COMMENT ON COLUMN qz.table_action.fieldnames IS 'The names of the fields to update.  The names come from the incoming form post data and may not match the names used in the table. The order must match the positional parameters in the prepared SQL statement.  An empty cell truncates the data and values after an empty field are lost.';
 COMMENT ON COLUMN qz.table_action.helpful_text IS 'A short paragraph of a hopefully helpful nature to be placed in a div with an id of "helpful_text", typically at the top of a form.';
 COMMENT ON COLUMN qz.table_action.form_name IS 'A common identity that binds together a set of actions.';
-COMMENT ON COLUMN qz.table_action.pkey IS 'The names of the fields that comprise the primary key.  Fields in the primary key are used to retrieve particular records and may not be edited. An empty cell truncates the data and values after an empty cell are lost.';
 COMMENT ON COLUMN qz.table_action.sql IS 'The actual command to be performed.  This is made into a prepared statement.  Use $n positional parameters, $1, $2, etc.  Map the positional parameters to names using fieldnames.';
 COMMENT ON COLUMN qz.form.form_set_name IS 'Typically left blank.  Used when data must be passed from one form to another.';
 

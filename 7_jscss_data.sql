@@ -26,13 +26,10 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('js_edit', 10, '
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('form', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('table_action_edit', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('prompt_rule_edit', 20, 'form_edit.css');
-INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_item_edit', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_host_edit', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('page_css', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('page_js', 20, 'form_edit.css');
-INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_edit', 20, 'form_edit.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_set_edit', 20, 'form_edit.css');
-INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('fixed_parameters', 20, 'form_edit.css');
 
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('form_set', 1, 'qzforms.css');
 
@@ -96,7 +93,16 @@ VALUES
 INSERT INTO qz.page_css
 (form_name, sequence, filename)
 VALUES
-('user_menus', '1', 'qzforms.css'),
-('user_menus', '2', 'form_edit.css');
+('user_menus', '1', 'qzforms.css');
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('menu_menu_page', '1', 'qzforms.js');
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('menu_menu_page', '1', 'qzforms.css');
 
 
