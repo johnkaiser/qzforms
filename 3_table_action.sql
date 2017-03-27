@@ -18,7 +18,7 @@ CREATE TABLE qz.table_action (
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('form', 'insert',
    $TAFI$INSERT INTO qz.form
-     (form_name, handler_name, schema_name, table_name, pkey
+     (form_name, handler_name, schema_name, table_name, pkey,
      xml_template, target_div, 
      add_description, prompt_container)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)$TAFI$, 
@@ -65,7 +65,7 @@ VALUES ('form', 'update',
    $FTAU$ UPDATE qz.form SET 
      schema_name = $2,
      table_name = $3,
-     pkey = $4
+     pkey = $4,
      xml_template = $5,
      target_div = $6,
      add_description = $7,
@@ -124,7 +124,7 @@ VALUES ('prompt_rule_edit', 'create',
     ''::text "onkeypress",
     ''::text "onkeydown",
     ''::text "onkeyup" $PRCTA$, 
-'{form_name,fieldname}', NULL);
+'{form_name,fieldname,handler_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('prompt_rule_edit', 'insert',

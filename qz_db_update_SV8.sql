@@ -318,8 +318,6 @@ VALUES
 ALTER TABLE qz.table_action
 DROP COLUMN pkey;
 
--------- not tested below here
-
 UPDATE qz.table_action
 SET sql = $FRMCR$ SELECT
     $1::text form_name,

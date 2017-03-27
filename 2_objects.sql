@@ -88,10 +88,10 @@ true, 'fieldset', '{set_name}'),
 true, 'no_container', '{menu_name, host_form_name, action}' ),
 
 ('inline_js', 'onetable', 'qz', 'form', 'base.xml', 'qz', 
-true, 'fieldset', '{form_name}'),
+true, 'fieldset', '{form_name, action}'),
 
 ('inline_css', 'onetable', 'qz', 'form', 'base.xml', 'qz',
-true, 'fieldset', '{form_name}');
+true, 'fieldset', '{form_name, action}');
 
 --- 
 
