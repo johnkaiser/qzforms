@@ -10,6 +10,7 @@ INSERT INTO qz.change_history
 
 
 --- Inline js and css
+
 ALTER TABLE qz.table_action
 ADD COLUMN inline_js text;
 
@@ -107,11 +108,7 @@ VALUES
 INSERT INTO qz.page_js
 (form_name, sequence, filename)
 VALUES
-('inline_js', '1', 'jquery-2.1.4.js'),
-('inline_js', '2', 'jquery.tablesorter.js'),
 ('inline_js', '3', 'qzforms.js'),
-('inline_css', '1', 'jquery-2.1.4.js'),
-('inline_css', '2', 'jquery.tablesorter.js'),
 ('inline_css', '3', 'qzforms.js');
 
 INSERT INTO qz.page_css
@@ -202,8 +199,6 @@ VALUES
 INSERT INTO qz.page_js
 (form_name, sequence, filename)
 VALUES
-('user_menus', '1', 'jquery-2.1.4.js'),
-('user_menus', '2', 'jquery.tablesorter.js'),
 ('user_menus', '3', 'qzforms.js');
 
 INSERT INTO qz.page_css
@@ -214,6 +209,7 @@ VALUES
 
 -- Fix
 -- Remove menu_item_sequence from form set menu_mgt.
+
 UPDATE qz.form_set
 SET context_parameters = '{menu_name}'
 WHERE set_name = 'menu_mgt';
@@ -222,12 +218,14 @@ WHERE set_name = 'menu_mgt';
 -- Set arrays of type variable name, which isn't
 -- because pg won't do arrays of domains, to at
 -- least check the length.
+
 ALTER TABLE qz.table_action
 ALTER COLUMN fieldnames
 TYPE VARCHAR(63)[];
 
 -- Fix
 -- Don't need
+
 DELETE FROM qz.menu
 WHERE menu_name = 'not_a_menu';
 
@@ -239,7 +237,6 @@ WHERE form_name = 'form_menu_edit';
 
 DELETE FROM qz.page_css
 WHERE form_name = 'form_menu_edit';
-
 
 -- Move pkey from table_action to form.
 
@@ -317,6 +314,9 @@ INSERT INTO qz.prompt_rule
 (form_name, fieldname, prompt_type, size, maxlength)
 VALUES
 ('form', 'pkey', 'text_array', 50, 63);
+
+ALTER TABLE qz.table_action
+DROP COLUMN pkey;
 
 -------- not tested below here
 
