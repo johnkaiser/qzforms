@@ -300,20 +300,19 @@ VALUES
 ---  user menus
 ---
 
-INSERT INTO qz.menu
-(menu_name, target_div, description)
-VALUES
-('user_menus', 'pagemenu', 'Assign menus to users');
+--- INSERT INTO qz.menu
+--- (menu_name, target_div, description)
+--- VALUES
+--- ('user_menus', 'pagemenu', 'Assign menus to users');
 
-INSERT INTO qz.menu_item
-(menu_name, menu_item_sequence, target_form_name, action, menu_text)
-VALUES
-('user_menus', '1', 'user_menus', 'getall', 'User Menus');
+--- INSERT INTO qz.menu_item
+--- (menu_name, menu_item_sequence, target_form_name, action, menu_text)
+--- VALUES
+--- ('user_menus', '1', 'user_menus', 'getall', 'User Menus');
 
 INSERT INTO qz.menu_set
 (menu_name, host_form_name, action)
 VALUES
-('user_menus', 'menu_edit', 'getall'),
 ('main', 'user_menus', 'any'),
 ('form_dev', 'user_menus', 'any');
 

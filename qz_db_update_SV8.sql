@@ -238,6 +238,9 @@ WHERE form_name = 'form_menu_edit';
 DELETE FROM qz.page_css
 WHERE form_name = 'form_menu_edit';
 
+DELETE FROM qz.css
+WHERE FILENAME = 'login_process.css';
+
 -- Move pkey from table_action to form.
 
 ALTER TABLE qz.form
@@ -513,3 +516,17 @@ VALUES
 DELETE FROM qz.page_js
 WHERE (filename) IN ('jquery-2.1.4.js', 'jquery.tablesorter.js');
 
+--
+--  Add a small dash of spiffyness to menus
+--
+
+UPDATE qz.prompt_rule
+SET size = '40', maxlength = '63'
+WHERE form_name = 'menu_edit'
+AND   (fieldname) IN ('menu_name', 'target_div');
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, size, maxlength)
+VALUES
+('menu_edit', 'description', 'input_text', '40', '63'),
+('menu_edit', 'form_set_name', 'select_fkey', NULL, NULL);

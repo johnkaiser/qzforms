@@ -39,34 +39,6 @@ CREATE TABLE qz.page_js (
 --
 
 INSERT INTO qz.css (filename, mimetype, modtime, data) 
-VALUES ('login_process.css', 'text/css', '2014-08-10 12:34:54',
-$LP$
-table {
-    border-collapse: collapse;
-    border: 2pt solid black;
-}
-
-th {
-    border: 1pt solid grey;
-    font-weight: bold;
-    padding: 2pt;
-}
-td {
-    border: 1pt dotted grey;
-    font-size: 85%;
-    text-align: center;
-    padding: 2pt;
-}
-i {
-    color: blue;
-}
-
-dd {
-   margin-bottom: 1.0ex;
-}
-$LP$);
-
-INSERT INTO qz.css (filename, mimetype, modtime, data) 
 VALUES ('qzforms.css', 'text/css', '2015-05-26 20:43:16',
 $QZF$
 .bold {font-weight:bold;}

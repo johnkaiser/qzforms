@@ -127,13 +127,25 @@ VALUES ('menu_host_edit', 'menu_name', NULL, false,
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$',
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_fkey', false, true, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
-VALUES ('menu_edit', 'menu_name', 'input_text',
-'^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
+--
+--  menu_edit
+--
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
-VALUES ('menu_edit', 'target_div', 'input_text',
-'^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, size, maxlength, regex_pattern)
+VALUES
+('menu_edit', 'menu_name', 'input_text', 40, 63,
+'^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$'),
+
+('menu_edit', 'target_div', 'input_text', 40, 63,
+'^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$'),
+
+('menu_edit', 'description', 'input_text', 40, 63, NULL),
+
+('menu_edit', 'form_set_name', 'select_fkey', NULL, NULL, NULL);
+
+--
+--  menu_item_edit
+--
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
 VALUES ('menu_item_edit', 'action', 'input_text',
@@ -144,7 +156,7 @@ VALUES ('menu_item_edit', 'menu_name', 'input_text',
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
-VALUES ('menu_item_edit', 'target_form_name', 'input_text',
+VALUES ('menu_item_edit', 'target_form_name', 'option_fkey',
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
@@ -160,6 +172,7 @@ INSERT INTO qz.prompt_rule
 (form_name, fieldname, prompt_type, expand_percent_n, onchange)
 VALUES
 ('menu_set_edit', 'set_id', 'input_hidden', 't', 'change_status(%n, "U")');
+
 
 --
 -- prompt_rule_edit

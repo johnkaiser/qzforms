@@ -388,6 +388,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     tr = xmlNewChild(thead, NULL, "tr", NULL);
 
     th = xmlNewTextChild(tr, NULL, "th", "Change Status");
+    append_class(th, "change_status");
 
     for(col=0; col<PQnfields(grid_edit_rs); col++){
         th = xmlNewTextChild(tr, NULL, "th", PQfname(grid_edit_rs, col));
