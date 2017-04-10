@@ -48,7 +48,7 @@ struct thread_launch_data {
  *
  *  Catch a sigterm signal and shut down the tagger process.
  */
-void cleanup(sig){
+void cleanup(int sig){
 
     // kill tagger
     kill(tagger_pid, SIGTERM);
@@ -355,9 +355,17 @@ void launch_connection_thread(void* data){
                                 location(hargs, login_uri);
                             }
                         }else{
+
+                            setup_session(hargs,thread_dat->sessions,
+                                    thread_dat->conf);
+
                             req_login(hargs);
                         }
                     }else{
+
+                        setup_session(hargs,thread_dat->sessions,
+                            thread_dat->conf);
+
                         req_login(hargs);
                     }
                     break;
