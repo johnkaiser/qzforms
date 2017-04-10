@@ -126,7 +126,7 @@ void validate_login( struct handler_args* h  ){
         return;
     }
 
-    fprintf(h->log, "%f %d %s:%d begin login\n",
+    fprintf(h->log, "%f %d %s:%d start login\n",
             gettime(), h->request_id, __func__, __LINE__);
 
     const char* kw[] = { "user", "password", NULL };

@@ -335,7 +335,7 @@ void init_table_entry(struct handler_args* hargs,
 
     fprintf(hargs->log, "%f %d %s:%d %s(%s,%s)\n",
         gettime(), hargs->request_id, __func__, __LINE__,
-        "begin init_table_entry", form_name, action);
+        "start init_table_entry", form_name, action);
 
     if (form_name == NULL){
         fprintf(hargs->log, "%f %d %s:%d fail, form_name is null\n",

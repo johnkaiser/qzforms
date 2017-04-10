@@ -37,7 +37,7 @@
  */  
 xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
 
-    fprintf(h->log, "%f %d %s:%d begin doc_from_file %s\n", 
+    fprintf(h->log, "%f %d %s:%d start doc_from_file %s\n", 
         gettime(), h->request_id, __func__, __LINE__,
         requested_docname); 
 
