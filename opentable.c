@@ -138,10 +138,11 @@ void init_open_table(struct handler_args* h){
 
     error_msg = nlfree_error_msg(rs);
     fprintf(h->log,
-        "%f %d %s:%d fetch_datum resStatus:%s cmdStatus:%s ErrorMessage:%s\n",
+        "%f %d %s:%d fetch_datum resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)),
         PQcmdStatus(rs),
+        (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
         error_msg);
 
     free(error_msg);
@@ -161,10 +162,11 @@ void init_open_table(struct handler_args* h){
     error_msg = nlfree_error_msg(rs);
 
     fprintf(h->log, "%f %d %s:%d fetch_table_action_etag "
-        "resStatus:%s cmdStatus:%s ErrorMessage:%s\n",
+        "resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)),
         PQcmdStatus(rs),
+        (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
         error_msg);
 
     free(error_msg);
@@ -190,11 +192,12 @@ void init_open_table(struct handler_args* h){
     error_msg = nlfree_error_msg(rs);
 
     fprintf(h->log, "%f %d %s:%d fetch_rule"
-        "resStatus:%s cmdStatus:%s ErrorMessage:%s\n",
+        "resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)),
         PQcmdStatus(rs),
-        PQresultErrorMessage(rs));
+        (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
+        error_msg);
 
     free(error_msg);
     error_msg = NULL;
