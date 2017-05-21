@@ -240,6 +240,8 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->form_duration = DEFAULT_FORM_DURATION;
     conf->housekeeper_nap_time = DEFAULT_HOUSEKEEPER_NAP_TIME;
     conf->audit_form_set_ref_count = DEFAULT_AUDIT_FORM_SET_REF_COUNT;
+    conf->max_log_file_size = DEFAULT_MAX_LOG_FILE_SIZE;
+    conf->max_log_file_count = DEFAULT_MAX_LOG_FILE_COUNT;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -306,10 +308,24 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
 
     setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_THREADS");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        unsigned int number_of_threads = (unsigned int) 
+        unsigned int number_of_threads = (unsigned int)
             strtol(setting, NULL, 10);
         conf->number_of_threads = number_of_threads;
-    } 
+    }
+
+    setting = xmlHashLookup(conf_hash, "MAX_LOG_FILE_SIZE");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        uint64_t max_log_file_size = (uint64_t)
+            strtoull(setting, NULL, 10);
+        conf->max_log_file_size = max_log_file_size;
+    }
+
+    setting = xmlHashLookup(conf_hash, "MAX_LOG_FILE_COUNT");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        uint8_t max_log_file_count = (uint8_t)
+            strtoull(setting, NULL, 10);
+            conf->max_log_file_count = max_log_file_count;
+    }
 
     // Put postgres vars into environment.
     setenv("PGAPPNAME", "qzforms", 0);
@@ -444,6 +460,9 @@ int main(int argc, char* argv[], char* env[]){
     printf("form_duration=%d\n", config->form_duration);
     printf("housekeeper_nap_time=%d\n", config->housekeeper_nap_time);
     printf("integrity_token=%llx\n", config->integrity_token);
+    printf("audit_form_set_ref_count=%c\n", (config->audit_form_set_ref_count) ? 't':'f');
+    printf("max_log_file_size=%llu\n", config->max_log_file_size);
+    printf("max_log_file_count=%d\n",  config->max_log_file_count);
     
     char* allowed_vars[] = {
         "PGAPPNAME",

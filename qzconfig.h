@@ -12,6 +12,8 @@
 #define DEFAULT_NUMBER_OF_THREADS 10
 #define DEFAULT_HOUSEKEEPER_NAP_TIME 120
 #define DEFAULT_AUDIT_FORM_SET_REF_COUNT false
+#define DEFAULT_MAX_LOG_FILE_SIZE 10000000
+#define DEFAULT_MAX_LOG_FILE_COUNT 9
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -33,6 +35,8 @@ struct qz_config {
     unsigned int housekeeper_nap_time;
     uint64_t integrity_token;
     bool audit_form_set_ref_count;
+    uint64_t max_log_file_size;
+    uint8_t  max_log_file_count;
 };
 
 

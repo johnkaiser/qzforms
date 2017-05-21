@@ -374,3 +374,100 @@ char* base64_encode(char* astr){
 
     return str_encoded;
 }
+
+/*
+ *  log_file_rotation
+ *
+ *  If the log file is too big, split it off.
+ *  If too many files have been split off, delete the oldest.
+ *
+ *  This uses dirname and readdir, which may not be thread safe
+ *  but it is OK because only housekeeper is using them.
+ */
+
+void log_file_rotation(struct qz_config* conf){
+
+    // The file is too big, but need to know
+    // how many numbered logs there, e.g qz.log.0
+    char* lognamecopy;
+    char* logdirname;
+    char* logbasename;
+    unsigned int baselen;
+    DIR*  logdp;
+    struct dirent* dent;
+
+    unsigned int filenbr;
+    unsigned int max_filenbr = 0;
+    unsigned int min_filenbr = UINT_MAX;
+    unsigned int nbrcount = 0;
+
+    asprintf(&lognamecopy, "%s", conf->logfile_name);
+    logdirname = dirname(lognamecopy);
+    free(lognamecopy);
+
+    asprintf(&lognamecopy, "%s", conf->logfile_name);
+    logbasename = basename(lognamecopy);
+    baselen = strlen(logbasename);
+
+    free(lognamecopy);
+    lognamecopy = NULL;
+
+    if ((logdirname != NULL) && (logbasename != NULL)) {
+        logdp = opendir(logdirname);
+        if (logdp != NULL){
+
+            while ((dent = readdir(logdp)) != NULL){
+                // the filename must  be the same as the base name...
+                if (strncmp(logbasename, dent->d_name, 
+                    baselen) == 0){
+                    
+                    // ... and be at least 2 chars longer for ".1"...
+                    if (strlen(dent->d_name) >= baselen + 2){
+                        
+                        // ...then if it's a number...
+                        char* nbr_start = dent->d_name + baselen + 1;
+                        filenbr = strtonum(nbr_start, 0, UINT_MAX, NULL);
+
+                        // ... keep track of min max and count
+                        if (filenbr > 0) nbrcount++;
+
+                        if ((filenbr > 0) && (filenbr < min_filenbr)){
+                            min_filenbr = filenbr;
+                        }    
+                        if ((filenbr > 0) && (filenbr > max_filenbr)){
+                            max_filenbr = filenbr;
+                        }    
+                    }
+                }    
+            } // while
+            // .. so move log file to new numbered name
+            char* newlogname;
+            asprintf(&newlogname, "%s.%d", conf->logfile_name,
+                max_filenbr + 1);
+            
+            link(conf->logfile_name, newlogname);
+            unlink(conf->logfile_name);
+            free(newlogname);
+            newlogname = NULL;
+
+            char* oldest;
+            if (nbrcount >= conf->max_log_file_count){
+               asprintf(&oldest, "%s.%d", conf->logfile_name,
+                   min_filenbr);
+               
+               unlink(oldest);
+               free(oldest);
+               oldest =  NULL;
+            }    
+        }
+    }else{
+        // This is an improbable error
+       FILE* log = fopen(conf->logfile_name, "a"); 
+       fprintf(log, "%f %d %s:%d %s\n", 
+          gettime(), 0, __func__, __LINE__,
+          "failed to parse log file name into directory and file name");
+
+       fclose(log);
+    }
+}
+

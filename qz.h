@@ -4,6 +4,7 @@
 #define _GNU_SOURCE
 
 #include <ctype.h>
+#include <dirent.h>
 #include <fcgi_config.h>
 #include <fcgiapp.h>
 #include <fcntl.h>
@@ -1004,3 +1005,10 @@ extern void save_pkey_values(struct handler_args* h,
     struct table_action* ta,
     PGresult* rs,
     int row);
+
+/*
+ *  log_file_rotation
+ *
+ *  keep numbered versions of log files.
+ */
+extern void log_file_rotation(struct qz_config* conf);

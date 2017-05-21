@@ -419,6 +419,7 @@ void session_housekeeping_scanner(void* val, void* data, xmlChar* name){
 
     return;
 } 
+
 /*
  *  do_housekeeping
  *
@@ -446,6 +447,20 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         gettime(), h->request_id, __func__, __LINE__);
      
     xmlHashScan(sessions, session_housekeeping_scanner, &data);
+
+    struct stat logsb;
+    if (stat(conf->logfile_name, &logsb) == 0){
+        if ((conf->max_log_file_size > 0) &&  
+            (S_ISREG(logsb.st_mode)) &&
+            (logsb.st_size > conf->max_log_file_size)){
+    
+            fprintf(h->log, "%f %d %s:%d rotating logs\n",
+                gettime(), h->request_id, __func__, __LINE__);
+
+            log_file_rotation(conf);
+
+        }
+    }
 
     fprintf(h->log, 
         "%f %d %s:%d housekeeping complete duration %f\n",

@@ -409,7 +409,7 @@ int main(int argc, char* argv[], char* envpmain[]){
     struct qz_config* conf = init_config();
 
     int next_id = 0;
-    truncate(conf->logfile_name,0);
+    log_file_rotation(conf);
     FILE* log = fopen(conf->logfile_name,"a+");
 
     if (log == NULL) {
