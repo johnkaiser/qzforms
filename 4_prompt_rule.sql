@@ -156,7 +156,7 @@ VALUES ('menu_item_edit', 'menu_name', 'input_text',
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
-VALUES ('menu_item_edit', 'target_form_name', 'option_fkey',
+VALUES ('menu_item_edit', 'target_form_name', 'select_fkey',
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
