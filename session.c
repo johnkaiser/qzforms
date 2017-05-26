@@ -291,7 +291,7 @@ session_from_hargs(struct handler_args* hargs,
  *  Requires session mutex before calling.
  */
 
-static void free_it_scanner(void* payload, void* data, xmlChar* name){
+static void free_table_scanner(void* payload, void* data, xmlChar* name){
     free(payload);
 }
 
@@ -309,17 +309,22 @@ void close_session(struct handler_args* hargs, struct session* this_session){
         this_session->user);
 
     if (this_session->pgtype_datum != NULL){
-        xmlHashFree(this_session->pgtype_datum, (xmlHashDeallocator)xmlFree);
+        close_all_pgtype_datums(this_session);
+        xmlHashFree(this_session->pgtype_datum, NULL);
         this_session->pgtype_datum = NULL;
     }
     
     if (this_session->form_tags != NULL){
         xmlHashFree(this_session->form_tags, (xmlHashDeallocator)xmlFree);
+        close_all_form_tags(hargs, this_session);
+        xmlHashFree(this_session->pgtype_datum, NULL);
         this_session->form_tags = NULL;
     }
 
     if (this_session->form_sets != NULL){
         close_all_form_sets(this_session);
+        xmlHashFree(this_session->form_sets, NULL);
+        this_session->form_sets = NULL;
     }    
 
     if (this_session->conn != NULL){
@@ -339,7 +344,7 @@ void close_session(struct handler_args* hargs, struct session* this_session){
             fflush(hargs->log); 
 
             xmlHashFree(this_session->opentables, 
-                (xmlHashDeallocator) free_it_scanner);
+                (xmlHashDeallocator) free_table_scanner);
 
             this_session->opentables = NULL;
         }
@@ -406,6 +411,8 @@ void session_housekeeping_scanner(void* val, void* data, xmlChar* name){
             if (time(NULL) > (this_session->logged_out_time + 
                 2*shk_data->session_inactivity_timeout)){
  
+                close_session(shk_data->hargs, this_session);
+
                 deleted = true;    
                 pthread_mutex_unlock(&(this_session->session_lock));
                 pthread_mutex_destroy(&(this_session->session_lock));

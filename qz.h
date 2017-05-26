@@ -831,7 +831,7 @@ extern void free_prompt_rule(struct handler_args* h,
  *  close_all_pgtype_datums
  *  pgtools.c
  */
-extern void close_all_pgtype_datums(struct handler_args*);
+extern void close_all_pgtype_datums(struct session*);
 
 /*
  *  refresh_form_tag

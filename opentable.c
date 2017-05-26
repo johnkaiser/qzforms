@@ -1160,8 +1160,6 @@ void close_table(struct handler_args* h, char* form_name, char* action){
 void table_close_scanner(void* payload, void* data, xmlChar* form_name,
     xmlChar* action, xmlChar* not_used){
 
-    //xmlHashTablePtr hash_table = data;
-
     struct handler_args* h = data;
 
     close_table(h, form_name, action);

@@ -463,10 +463,10 @@ void datum_hash_scanner(void * payload, void* hash_table, xmlChar * form_name,
  *  leaving the empty table in place.
  *  Called when pg sends a notify pg_db_change.
  */
-void close_all_pgtype_datums(struct handler_args* h){
+void close_all_pgtype_datums(struct session* this_session){
 
-    xmlHashScanFull(h->session->pgtype_datum, (void*)datum_hash_scanner, 
-        h->session->pgtype_datum);
+    xmlHashScanFull(this_session->pgtype_datum, (void*)datum_hash_scanner,
+        this_session->pgtype_datum);
 
 }
 
