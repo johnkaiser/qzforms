@@ -395,6 +395,7 @@ void log_file_rotation(struct qz_config* conf){
     unsigned int baselen;
     DIR*  logdp;
     struct dirent* dent;
+    char* smallest = NULL;
 
     unsigned int filenbr;
     unsigned int max_filenbr = 0;
@@ -433,6 +434,8 @@ void log_file_rotation(struct qz_config* conf){
 
                         if ((filenbr > 0) && (filenbr < min_filenbr)){
                             min_filenbr = filenbr;
+                            if (smallest  != NULL) free(smallest);
+                            asprintf(&smallest, "%s/%s", logdirname, dent->d_name);
                         }    
                         if ((filenbr > 0) && (filenbr > max_filenbr)){
                             max_filenbr = filenbr;
@@ -450,15 +453,20 @@ void log_file_rotation(struct qz_config* conf){
             free(newlogname);
             newlogname = NULL;
 
-            char* oldest;
-            if (nbrcount >= conf->max_log_file_count){
-               asprintf(&oldest, "%s.%d", conf->logfile_name,
-                   min_filenbr);
+            if ((nbrcount >= conf->max_log_file_count) &&
+                (smallest != NULL)){
                
-               unlink(oldest);
-               free(oldest);
-               oldest =  NULL;
-            }    
+                if (unlink(smallest) != 0){
+                    FILE* log = fopen(conf->logfile_name, "a");
+                    fprintf(log, "%f %d %s:%d fail on unlink %s errno=%d\n",
+                        gettime(), 0, __func__, __LINE__,
+                        smallest, errno);
+
+                    fclose(log);
+                }
+            }
+            closedir(logdp);
+            free(smallest);
         }
     }else{
         // This is an improbable error
