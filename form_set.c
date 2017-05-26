@@ -312,13 +312,13 @@ void clear_context_parameters(struct handler_args* h, char* form_set_name){
 }
 
 /*
- *  clear_form_sets
- *  clear_form_set_scanner
+ *  close_all_form_sets
+ *  close_form_set_scanner
  *
  *  Remove all form sets from the current session.
  */
 
-void clear_form_set_scanner(void* payload, void* data, xmlChar* name){
+void close_form_set_scanner(void* payload, void* data, xmlChar* name){
     struct form_set* fs = payload;
     struct session* session = (struct session*)data;
     char* id = name;
@@ -329,8 +329,8 @@ void clear_form_set_scanner(void* payload, void* data, xmlChar* name){
     xmlHashRemoveEntry(session->form_sets, id, (xmlHashDeallocator)xmlFree);
 }
 
-void clear_form_sets(struct session* session){
-    xmlHashScan(session->form_sets, clear_form_set_scanner, (void*)session);
+void close_all_form_sets(struct session* session){
+    xmlHashScan(session->form_sets, close_form_set_scanner, (void*)session);
 }
 
 

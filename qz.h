@@ -151,6 +151,7 @@ struct session{
     xmlHashTablePtr pgtype_datum;
     xmlHashTablePtr form_tags;
     xmlHashTablePtr form_sets;
+    // XXXXXXX duplicated in config, eliminate?
     char tagger_socket_path[MAXPATHLEN+1]; 
     uint64_t integrity_token;
 };
@@ -958,7 +959,7 @@ extern void decrement_form_set(struct form_record* form_rec);
 
 extern void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name);
 
-extern void clear_form_sets(struct session*);
+extern void close_all_form_sets(struct session*);
 
 extern void save_context_parameters(struct handler_args* h, 
     struct form_record* new_form_rec,

@@ -319,7 +319,7 @@ void close_session(struct handler_args* hargs, struct session* this_session){
     }
 
     if (this_session->form_sets != NULL){
-        clear_form_sets(this_session);
+        close_all_form_sets(this_session);
     }    
 
     if (this_session->conn != NULL){
