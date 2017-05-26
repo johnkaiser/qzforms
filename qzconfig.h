@@ -33,10 +33,10 @@ struct qz_config {
     int number_of_threads;
     unsigned int form_duration;
     unsigned int housekeeper_nap_time;
-    uint64_t integrity_token;
     bool audit_form_set_ref_count;
     uint64_t max_log_file_size;
     uint8_t  max_log_file_count;
+    uint64_t integrity_token;
 };
 
 
