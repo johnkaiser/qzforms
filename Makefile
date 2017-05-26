@@ -65,9 +65,9 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 7_jscss_data.sql 8_menu.sql \
 	9_functions.sql  pgtype_datum.sql comment.sql 
 
-SQLUTIL= qz_examples.sql qz_db_update_SV3.sql \
-	qz_db_update_SV4.sql qz_db_update_SV5.sql qz_db_update_SV6.sql \
-	qz_db_update_SV7.sql qz_db_install_SV8.sql
+SQLUTIL= qz_examples.sql qz_db_update_SV3.sql qz_db_update_SV4.sql \
+	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
+	qz_db_update_SV8.sql qz_db_update_SV9.sql
  
 
 JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
