@@ -324,11 +324,36 @@ void refresh_form_tag(struct handler_args* h){
     }
 }
 
-
 void pkey_values_deallocator(void* pkey_value, xmlChar* pkey){
     free(pkey_value);
 }
 
+/*
+ *  delete_form_record
+ *
+ *  Remove the given form record and clean it up.
+ */
+void delete_form_record(void* payload, void* data, xmlChar* name){
+
+    struct form_record* form_rec = payload;
+    struct form_tag_housekeeping_data * ft_hk_data = data;
+
+     /*
+      * fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %s\n", 
+      *    gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
+      *    form_rec->form_action); 
+      */
+
+    decrement_form_set(form_rec);
+
+    // A hash table scanner calling another hash table scanner.
+    // This one will free primary key value records.
+    if (form_rec->pkey_values != NULL){
+        xmlHashFree(form_rec->pkey_values, pkey_values_deallocator);
+    }
+    xmlHashRemoveEntry(ft_hk_data->this_session->form_tags, name, NULL);
+    free(form_rec);
+}
 /*
  *  form_tag_scanner
  * 
@@ -345,20 +370,10 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
     // of not found messages for recently expired forms.
     if ( time(NULL) >  (form_rec->expires + 2*form_rec->duration)){
 
-        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %s\n", 
-           gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
-           form_rec->form_action); 
+        delete_form_record(form_rec, ft_hk_data, name);
 
-        decrement_form_set(form_rec);
-
-        // A hash table scanner calling another hash table scanner.
-        // This one will free primary key value records.
-        if (form_rec->pkey_values != NULL){
-            xmlHashFree(form_rec->pkey_values, pkey_values_deallocator);
-        }
-        xmlHashRemoveEntry(ft_hk_data->this_session->form_tags, name, NULL);
-        free(form_rec);
     }else if (time(NULL) > form_rec->expires){
+
         form_rec->is_valid = false;
     }    
 }
@@ -384,6 +399,22 @@ void form_tag_housekeeping(struct handler_args* hargs,
 
     xmlHashScan(this_session->form_sets, form_set_housekeeping_scanner, 
        &ft_hk_data);
+}
+
+/*
+ *  close_all_form_tags
+ *
+ *  What it says on the tin.
+ */
+void close_all_form_tags(struct handler_args* hargs, struct session* this_session){
+
+    struct form_tag_housekeeping_data ft_hk_data = 
+        (struct form_tag_housekeeping_data) {
+            .this_session = this_session,
+            .hargs = hargs
+     };
+
+    xmlHashScan(this_session->form_tags, delete_form_record, &ft_hk_data);
 }
 
 /*

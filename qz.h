@@ -58,8 +58,6 @@
 #define MAX_PRIMARY_KEYS (15)
 #define MAX_USER_NAME_LENGTH (62)
 #define MAX_NBR_SEGMENTS (32)
-// #define MAX_PROMPT_ATTRIBUTE_COUNT (8)
-//#define MAX_VALUE_BUF_LENGTH (128)
 #define PATH_SEPARATOR "/"
 
 // This length includes the ending null.
@@ -778,7 +776,7 @@ extern struct form_record* register_form(struct handler_args* h,
 
 /*
  *  post_contains_valid_form_tag
- *  form_tab.c
+ *  form_tag.c
  *
  *  Check that the form_tag is present and valid.
  *  If the form is marked use only once then set
@@ -788,6 +786,7 @@ extern bool post_contains_valid_form_tag(struct handler_args* h);
 
 /*
  *  get_posted_form_record
+ *  form_tag.c
  *
  *  Return the form record that invokes the current request.
  *  The returned form may or may not be flagged as valid.
@@ -807,6 +806,12 @@ extern void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
  */
 extern void form_tag_housekeeping(struct handler_args* hargs, 
     struct session* this_session);
+
+/*
+ *  close_all_form_tags
+ *  form_tag.c
+ */
+extern void close_all_form_tags(struct handler_args*, struct session*);
 
 /*
  *  fetch_prompt_rule
@@ -941,30 +946,41 @@ extern bool form_name_is_menu(struct handler_args*);
 /*
  *  add_helpful_text
  *  utility.c
- *
  */
 extern void add_helpful_text(struct handler_args* h, struct table_action* ta,
     xmlNodePtr root_node); 
 
 /*
- *  char* base64_encode
- *
- *  Return a base64 encoded copy of a string.
- *
- *  The result must be freed.
+ *  base64_encode
+ *  utility.c
  */
 extern char* base64_encode(char*);
 
+/*
+ *  decrement_form_set
+ *  form_set.c
+ */
 extern void decrement_form_set(struct form_record* form_rec);
 
+/*
+ *  form_set_housekeeping_scanner
+ *  form_set.c
+ */
 extern void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name);
 
+/*
+ *  close_all_form_sets
+ *  form_set.c
+ */
 extern void close_all_form_sets(struct session*);
 
+/*
+ *  save_context_parameters
+ *  form_set.c
+ */
 extern void save_context_parameters(struct handler_args* h, 
     struct form_record* new_form_rec,
     PGresult* values_rs, int row);
-
 
 /*
  *  get_form_set
@@ -973,33 +989,26 @@ extern void save_context_parameters(struct handler_args* h,
 extern struct form_set* get_form_set(struct handler_args*, char* form_set_id);
 
 /*
- *  
- *
+ *  clear_context_parameters 
+ *  form_set.c
  */
 extern void clear_context_parameters(struct handler_args* h, char* form_set_name);
 
 /*
  *  form_set_is_valid
  *  form_set.c
- *
- *  Return t/f for a form set's validity.
  */
 extern bool form_set_is_valid(struct handler_args* h, struct form_set* fs); 
 
 /*
  *  check_postdata
  *  input.c
- *
- *  Run a series of checks on the postdata keys and values
- *  returning false if any data does not conform.
  */
 extern bool check_postdata(struct handler_args* h);
 
 /*
  *  save_pkey_values
- *
- *  Record the primary key and value in the form record hash table
- *  pkey_values from the PostgreSQL result set rs for the row.
+ *  input.c
  */
 extern void save_pkey_values(struct handler_args* h,
     struct form_record* form_rec,
@@ -1009,7 +1018,6 @@ extern void save_pkey_values(struct handler_args* h,
 
 /*
  *  log_file_rotation
- *
- *  keep numbered versions of log files.
+ *  utility.c
  */
 extern void log_file_rotation(struct qz_config* conf);
