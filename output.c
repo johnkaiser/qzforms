@@ -214,7 +214,7 @@ void catch_notifies(struct handler_args* h){
                 // Just notified the database definition has been updated.
                 // Drop the pgtype_datum's and reload them on each new 
                 // request.
-                empty_pgtype_datum_hash(h);
+                close_all_pgtype_datums(h);
 
                 fprintf(h->log,"%f %d %s:%d datum hash emptied\n", 
                     gettime(), h->request_id, __func__, __LINE__);

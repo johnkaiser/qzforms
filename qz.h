@@ -823,10 +823,10 @@ extern void free_prompt_rule(struct handler_args* h,
     struct prompt_rule* rule);
 
 /*
- *  empty_pgtype_datum_hash
+ *  close_all_pgtype_datums
  *  pgtools.c
  */
-extern void empty_pgtype_datum_hash(struct handler_args*);
+extern void close_all_pgtype_datums(struct handler_args*);
 
 /*
  *  refresh_form_tag

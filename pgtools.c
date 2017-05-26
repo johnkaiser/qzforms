@@ -457,13 +457,13 @@ void datum_hash_scanner(void * payload, void* hash_table, xmlChar * form_name,
 }
 
 /* 
- *  empty_pgtype_datum_hash
+ *  close_all_pgtype_datums
  *
  *  Remove the contents of the pgtype_datum hash table 
  *  leaving the empty table in place.
  *  Called when pg sends a notify pg_db_change.
  */
-void empty_pgtype_datum_hash(struct handler_args* h){
+void close_all_pgtype_datums(struct handler_args* h){
 
     xmlHashScanFull(h->session->pgtype_datum, (void*)datum_hash_scanner, 
         h->session->pgtype_datum);
