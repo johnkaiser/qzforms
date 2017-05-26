@@ -1180,7 +1180,7 @@ void close_all_tables(struct handler_args* h, struct session* this_session){
     if (this_session->opentables!=NULL){
 
         xmlHashScanFull(this_session->opentables,(void*)table_close_scanner,h);
-
+        xmlHashFree(this_session->opentables, NULL);
         this_session->opentables= NULL;
     }
     h->session = saved_session;
