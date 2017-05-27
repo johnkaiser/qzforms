@@ -261,7 +261,7 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
                     // Success
                     return pid;
                 }
-                usleep(200);
+                usleep(1000);
             }
             // time out waiting for tagger
             fprintf(stderr, "time out waiting for tagger\n");
