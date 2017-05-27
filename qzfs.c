@@ -114,6 +114,7 @@ void qzfs(struct handler_args* h){
                         which_name);
 
                     error_page(h, SC_NOT_MODIFIED, NULL);
+                    PQclear(etag_rs);
                     return;
                 }
             }else{
@@ -129,6 +130,7 @@ void qzfs(struct handler_args* h){
                 
                 free(error_msg);
             }
+            PQclear(etag_rs);
         }
     }
     // So the cache thing didn't work out.
@@ -142,6 +144,7 @@ void qzfs(struct handler_args* h){
     PGresult* rs = perform_action(h, ta, paramdata);
     if ((PQresultStatus(rs) != PGRES_TUPLES_OK) || (PQntuples(rs) != 1)){
        error_page(h, 404, "Not on file"); 
+       PQclear(rs);
        return;
     }
 

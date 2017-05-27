@@ -60,7 +60,8 @@ struct form_record* register_form(struct handler_args* h,
     form_rec->expires = form_rec->created + valid_duration;
     form_rec->submit_only_once = submit_only_once;
     // XXXXXX Another size to add to config
-    form_rec->pkey_values = xmlHashCreate(23);
+    //form_rec->pkey_values = xmlHashCreate(23);
+    form_rec->pkey_values = NULL;
     form_rec->session_integrity_token = h->session->integrity_token;
   
     snprintf(form_rec->form_action, action_url_len+1, "%s", form_action);
@@ -349,7 +350,8 @@ void delete_form_record(void* payload, void* data, xmlChar* name){
     // A hash table scanner calling another hash table scanner.
     // This one will free primary key value records.
     if (form_rec->pkey_values != NULL){
-        xmlHashFree(form_rec->pkey_values, pkey_values_deallocator);
+        //xmlHashFree(form_rec->pkey_values, pkey_values_deallocator);
+        xmlHashFree(form_rec->pkey_values, (xmlHashDeallocator)xmlFree);
     }
     xmlHashRemoveEntry(ft_hk_data->this_session->form_tags, name, NULL);
     free(form_rec);

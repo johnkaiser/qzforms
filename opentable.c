@@ -767,9 +767,11 @@ struct table_action*  open_table(struct handler_args* h,
                          logout(h);
 
                          error_page(h, SC_INTERNAL_SERVER_ERROR, "Internal Error");
+                         PQclear(etag_check_rs);
                          return NULL;
 
                      }else{
+                         PQclear(etag_check_rs);
                          return table_action_ptr;
                      }
                 }else{
@@ -1008,6 +1010,7 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
                          element);
                   }
              }
+             free_prompt_rule(h, this_rule);
 
          }
 

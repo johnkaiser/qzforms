@@ -458,6 +458,7 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
             error_msg);
 
         free(error_msg);
+        PQclear(menu_set_rs);
         return;
     }
 
@@ -510,7 +511,7 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
 
         PQclear(menu_item_rs);
     }
-
+    PQclear(menu_set_rs);
     fprintf(hargs->log, "%f %d %s:%d completed in %f\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         gettime() - start_time);

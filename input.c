@@ -100,17 +100,20 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
 void validate_regex(void* val, void* data, xmlChar* key){
     struct handler_args* h = data;
 
+    // is there data there to check?
+    int subject_length = strlen(val);
+    if (subject_length == 0) return;
+
     // fetch the prompt rule
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     struct prompt_rule* rule = fetch_prompt_rule(h, form_name, key);
     if (rule == NULL) return;
 
     // does it have a pattern?
-    if (rule->comp_regex == NULL) return;
-    
-    // is there data there to check?
-    int subject_length = strlen(val);
-    if (subject_length == 0) return;
+    if (rule->comp_regex == NULL){
+        free_prompt_rule(h, rule);
+        return;
+    }
 
     // does the value fit the pattern?
     const int   ovectcount = 30;
@@ -150,6 +153,7 @@ void validate_regex(void* val, void* data, xmlChar* key){
         
         free(error_msg);
     }
+    free_prompt_rule(h, rule);
 }
 
 /*
@@ -194,7 +198,7 @@ bool check_postdata(struct handler_args* h){
     }
 
     struct form_record* form_rec = get_posted_form_record(h);
-    if (form_rec != NULL){
+    if ((form_rec != NULL) && (form_rec->pkey_values != NULL)){
         xmlHashScan(form_rec->pkey_values, valid_pkey_value_scanner, h);
 
         if (h->pkey_check == failed){
@@ -228,6 +232,10 @@ void save_pkey_values(struct handler_args* h,
     char* pkey_value_record;
     char* this_key;
 
+    if (form_rec->pkey_values == NULL){
+        // XXXXXX Another size to add to config
+        form_rec->pkey_values = xmlHashCreate(23);
+    }
     for(n=0; n < ta->nbr_pkeys; n++){
         value = get_value(rs, row, ta->pkeys[n]);
         if (has_data(value)){

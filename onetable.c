@@ -318,6 +318,8 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
 
         add_prompt(h, create_ta, rule, pgtype, options, NO_ROW_INDEX, form,
             fname, fvalue);
+
+        free_prompt_rule(h, rule);
     }
 
     xmlNewProp(form, "method", "post");
