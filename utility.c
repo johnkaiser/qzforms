@@ -427,7 +427,7 @@ void log_file_rotation(struct qz_config* conf){
                         
                         // ...then if it's a number...
                         char* nbr_start = dent->d_name + baselen + 1;
-                        filenbr = strtonum(nbr_start, 0, UINT_MAX, NULL);
+                        filenbr = strtol(nbr_start, NULL, 10);
 
                         // ... keep track of min max and count
                         if (filenbr > 0) nbrcount++;
