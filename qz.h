@@ -5,6 +5,7 @@
 
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcgi_config.h>
 #include <fcgiapp.h>
 #include <fcntl.h>
