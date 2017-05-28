@@ -42,14 +42,18 @@ xmlNodePtr qzGetElementByID(struct handler_args* h,
  
     xmlNodePtr isit;
     xmlNodePtr child;
+    xmlChar* prop;
    
     if( cur == NULL) return NULL;
 
+    prop = xmlGetProp(cur,"id");
     // found it here.
-    if ( xmlStrcmp( xmlGetProp(cur,"id"), id ) == 0){ 
+    if ( xmlStrcmp(prop, id ) == 0){ 
 
+        xmlFree(prop);
         return cur; 
     }
+    xmlFree(prop);
 
     child = cur->xmlChildrenNode;
     while (child != NULL){
