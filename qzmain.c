@@ -243,16 +243,16 @@ void launch_connection_thread(void* data){
 
     struct thread_launch_data* thread_dat = data;
     FCGX_Request request;
-    // XXXXXXXXX This is a long lived open file
-    // XXXXXXXXX Log to fcgi err instead.
-    FILE* log = fopen(thread_dat->conf->logfile_name, "a");
 
     if (FCGX_InitRequest(&request, 0, 0) != 0){
+        FILE* log = fopen(thread_dat->conf->logfile_name, "a");
         fprintf(log,"%f %d %s:%d FCGX_InitRequest failed in thread %d\n",
             gettime(), 0, __func__, __LINE__, thread_dat->thread_id );
 
+        fclose(log);
         return;
     }
+
 
     for(;;){
 
@@ -263,18 +263,25 @@ void launch_connection_thread(void* data){
         pthread_mutex_unlock(&(thread_dat->accept_mutex));
 
         if (rc < 0){
+
+            FILE* log = fopen(thread_dat->conf->logfile_name, "a");
             fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d\n",
                 gettime(), next_id, __func__, __LINE__,
                 thread_dat->thread_id, rc);
+
+            fclose(log);
 
         }else{
             struct handler_args* hargs;
             enum session_state this_session_state;
 
             if (request.out == NULL){
+
+                FILE* log = fopen(thread_dat->conf->logfile_name, "a");
                 fprintf(log, "%f %d %s:%d request with null output\n",
                     gettime(), next_id, __func__, __LINE__);
 
+                fclose(log);
                 continue;
             }
 
