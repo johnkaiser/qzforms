@@ -389,7 +389,8 @@ void log_file_rotation(struct qz_config* conf){
 
     // The file is too big, but need to know
     // how many numbered logs there, e.g qz.log.0
-    char* lognamecopy;
+    char* lognamecopy1;
+    char* lognamecopy2;
     char* logdirname;
     char* logbasename;
     unsigned int baselen;
@@ -402,16 +403,13 @@ void log_file_rotation(struct qz_config* conf){
     unsigned int min_filenbr = UINT_MAX;
     unsigned int nbrcount = 0;
 
-    asprintf(&lognamecopy, "%s", conf->logfile_name);
-    logdirname = dirname(lognamecopy);
-    free(lognamecopy);
+    asprintf(&lognamecopy1, "%s", conf->logfile_name);
+    logdirname = dirname(lognamecopy1);
 
-    asprintf(&lognamecopy, "%s", conf->logfile_name);
-    logbasename = basename(lognamecopy);
+
+    asprintf(&lognamecopy2, "%s", conf->logfile_name);
+    logbasename = basename(lognamecopy2);
     baselen = strlen(logbasename);
-
-    free(lognamecopy);
-    lognamecopy = NULL;
 
     if ((logdirname != NULL) && (logbasename != NULL)) {
         logdp = opendir(logdirname);
@@ -477,5 +475,8 @@ void log_file_rotation(struct qz_config* conf){
 
        fclose(log);
     }
+
+    free(lognamecopy1);
+    free(lognamecopy2);
 }
 
