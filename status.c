@@ -172,7 +172,17 @@ void qz_status(struct handler_args* h){
         get_value(schema_ver_rs, 0, "schema_version"));
 
     xmlNewTextChild(divqz, NULL, "p", version);
+    PQclear(schema_ver_rs);
     free(version);
+
+    // PostgreSQL Version
+    struct table_action* pg_version_ta = open_table(h, "status",
+        "pg_version");
+
+    PGresult* pg_version_rs = perform_post_action(h, pg_version_ta);
+
+    xmlNewTextChild(divqz, NULL, "p", get_value(pg_version_rs, 0, "version"));
+    PQclear(pg_version_rs);
 
     // button menu
     xmlNodePtr menu = xmlNewChild(divqz, NULL, "div", NULL);
@@ -210,6 +220,7 @@ void qz_status(struct handler_args* h){
     struct table_action* stat_ta = open_table(h, "status", "pg_stat_activity");
     PGresult* stat_rs = perform_post_action(h, stat_ta);
     rs_to_table(divqz, stat_rs, "pg_stat_activity");
+    PQclear(stat_rs);
 
 /*
  *  This needs to be changed from accessing a handlers array
@@ -290,7 +301,5 @@ void qz_status(struct handler_args* h){
     xmlNodePtr fs_tbody = xmlNewChild(fs_table, NULL, "tbody", NULL);
     xmlHashScan(h->session->form_sets, form_set_scanner, fs_tbody);
     
-    PQclear(stat_rs);
-
     return;
 }
