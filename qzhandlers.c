@@ -41,7 +41,7 @@ xmlHashTablePtr handler_hash = NULL;
 
 void init_handler_hash(void){
 
-    static struct handler const static_handlers[] = 
+    static struct handler static_handlers[] = 
     {
         {
             .count = 0,
