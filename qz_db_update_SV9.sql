@@ -50,3 +50,19 @@ $TAINLJS$
 WHERE form_name = 'status'
 AND action = 'view';
 
+--
+-- waiting is not present in PG 9.6
+--
+UPDATE qz.table_action
+SET sql = $TAPGSA$ SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,query FROM pg_stat_activity $TAPGSA$
+WHERE form_name = 'status'
+AND action = 'pg_stat_activity';
+
+--
+-- Since changing the Postgresql version can break things,
+-- show in on the status page.
+--
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'pg_version', 'SELECT version()');

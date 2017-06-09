@@ -780,7 +780,7 @@ VALUES ('status', 'view', 'SELECT 1', NULL, NULL);
 INSERT INTO qz.table_action
 (form_name, action, sql)
 VALUES
-('status', 'pg_stat_activity',  'SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,waiting,query FROM pg_stat_activity');
+('status', 'pg_stat_activity',  'SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,query FROM pg_stat_activity');
 
 INSERT INTO qz.table_action
 (form_name, action, sql)
