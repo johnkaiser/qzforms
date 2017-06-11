@@ -59,7 +59,6 @@ INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('prompt_rule_edit
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('form_dev', 3, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('status', 40, 'document_ready.js');
 
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('form_set', 1, 'qzforms.js');
 

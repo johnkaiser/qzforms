@@ -167,38 +167,6 @@ $FE$);
 INSERT INTO qz.js (filename, mimetype) 
 VALUES ('qzforms.js', 'text/javascript; charset=utf-8');
 
-INSERT INTO qz.js (filename, mimetype, modtime, data) 
-VALUES ('document_ready.js', 'text/javascript', '2015-06-01 20:48:14',
-$DR$
-  $(document).ready(function() 
-    { 
-        $("#pg_stat_activity").tablesorter(); 
-        $("#table_action").tablesorter();
-        $("#counters").tablesorter();
-        $("#open_tables").tablesorter();
-        $("#getall").tablesorter();
-        $("#listmgr").tablesorter();
-        $("#form_tags").tablesorter();
-        $(".qztable").hide();
-        console.log('document ready executed');
-    } 
-
-  );
-
-  function menu_click(on_item){
-      var this_one = "#"+on_item;
-      $(".qztable").hide();
-	  $(this_one).show();
-  }
-  function show_pgtype(id){
-      var el, attrib;
-	  el = document.getElementById(id);
-	  attrib = el.getAttribute("pgtype");
-	  alert("pgtype_datum="+decodeURIComponent(attrib));
-  }
-$DR$);
-
-
 INSERT INTO qz.page_js
 (form_name, sequence, filename)
 VALUES

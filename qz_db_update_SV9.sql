@@ -10,6 +10,7 @@ INSERT INTO qz.change_history
 
 -- Cleanup from ripping out jquery.
 DELETE FROM qz.page_js WHERE filename = 'document_ready.js';
+DELETE FROM qz.js WHERE filename = 'document_ready.js';
 
 -- Adding action to form_mgt context parameters caused the inline_(js|css)
 -- edit functions to barf an error making them unusable for the 2nd click.

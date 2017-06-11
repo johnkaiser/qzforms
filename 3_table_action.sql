@@ -771,16 +771,46 @@ VALUES ('menu', 'view', 'SELECT 1', NULL, NULL);
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('pg_stat_activity', 'fetch', 
     'SELECT datname,pid,usename,application_name,client_addr,backend_start,
-    query_start,waiting,query FROM pg_stat_activity', 
+    query_start,query FROM pg_stat_activity',
 NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('status', 'view', 'SELECT 1', NULL, NULL);
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text, inline_js)
+VALUES ( 'status', 'view', 'SELECT 1', NULL, NULL,
+$TAINLJS$ function menu_click(on_item){
+
+      var table_list = document.getElementsByClassName("qztable");
+      var i;
+      for (i = 0; i < table_list.length; i++){
+          if (table_list[i].id == on_item){
+              table_list[i].style.display = "block";
+          }else{
+              table_list[i].style.display = "none";
+          }
+      }
+}
+function hide_sections(){
+    // $(".qztable").hide();
+
+    var table_list = document.getElementsByClassName("qztable");
+    var i;
+    for (i = 0; i < table_list.length; i++){
+        table_list[i].style.display = "none";
+    }
+
+}
+document.addEventListener("DOMContentLoaded", hide_sections, false);
+$TAINLJS$
+);
 
 INSERT INTO qz.table_action
 (form_name, action, sql)
 VALUES
 ('status', 'pg_stat_activity',  'SELECT datname,pid,usename,application_name,client_addr,backend_start, query_start,query FROM pg_stat_activity');
+
+INSERT INTO qz.table_action
+(form_name, action, sql)
+VALUES
+('status', 'pg_version', 'SELECT version()');
 
 INSERT INTO qz.table_action
 (form_name, action, sql)
