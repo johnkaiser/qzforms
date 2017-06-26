@@ -67,3 +67,13 @@ INSERT INTO qz.table_action
 (form_name, action, sql)
 VALUES
 ('status', 'pg_version', 'SELECT version()');
+
+--
+-- Left this off
+--
+UPDATE qz.form
+SET
+  schema_name = 'qz',
+  table_name = 'js'
+WHERE form_name = 'js_edit'
+AND   action = 'update';

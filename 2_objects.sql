@@ -66,7 +66,7 @@ true, 'fieldset', '{none}'),
 ('js', 'fs', 'qz', 'js', 'base.xml', 'qz',
 false, 'fieldset', '{filename}'),
 
-('js_edit', 'onetable', NULL, NULL, 'base.xml', 'qz',
+('js_edit', 'onetable', 'qz', 'js', 'base.xml', 'qz',
 false, 'fieldset', '{filename}'),
 
 ('page_js', 'grid', 'qz', 'page_js', 'base.xml', 'qz',
