@@ -245,8 +245,10 @@ struct pgtype_datum* get_pgtype_datum(
         // because they mess up the log file.
         char* error_msg = nlfree_error_msg(datum_rs);
 
-        fprintf(h->log, "%f %d %s:%d fail expected 1 row, got %d error=%s\n", 
+        fprintf(h->log, "%f %d %s:%d fail (%s,%s) expected 1 row, got %d "
+                "error=%s\n",
                 gettime(), h->request_id, __func__, __LINE__,
+                table_name, column_name,
                 PQntuples(datum_rs), error_msg);
         
         free(error_msg);
