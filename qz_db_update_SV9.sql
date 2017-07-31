@@ -75,5 +75,4 @@ UPDATE qz.form
 SET
   schema_name = 'qz',
   table_name = 'js'
-WHERE form_name = 'js_edit'
-AND   action = 'update';
+WHERE form_name = 'js_edit';
