@@ -1,4 +1,23 @@
 #!/bin/sh
+##
+##  The user and group that will be running the qzforms application. 
+##
+RUNUSER=qzforms
+RUNGROUP=qzforms
+
+##
+##  The form developer group will have access to log files and templates.
+##
+FORMDEVGROUP=formdev
+
+##
+##  The admintrative account is commonly root, the group is wheel or root,
+##  but these can be any accounts that are not the run user and group.
+##
+ADMINUSER=root
+ADMINGROUP=$(if (id root | grep -q wheel); then echo wheel; else echo root; fi)
+
+###########################################################################
 
 ##
 ##  The INSTALLDIR must be specified, /var/qzforms is suggested.
@@ -20,26 +39,6 @@ else
 fi
 
 
-##
-##  The user and group that will be running the qzforms application. 
-##
-RUNUSER=qzforms
-RUNGROUP=qzforms
-
-##
-##  The form developer group will have access to log files and templates.
-##
-FORMDEVGROUP=formdev
-
-##
-##  The admintrative account is commonly root, the group is wheel or root,
-##  but this can be any user account that is other than the run user.
-##
-ADMINUSER=root
-ADMINGROUP=wheel
-
-
-###########################################################################
 echo "user and group check"
 
 idcheck=""
@@ -138,6 +137,14 @@ install -d -m 750 -o ${RUNUSER} -g ${FORMDEVGROUP} ${INSTALLDIR}/logs
 ##
 install -d -m 770 -o ${RUNUSER} -g ${ADMINGROUP} ${INSTALLDIR}/run
 
+##
+##  Create a place for the various sql scripts
+install -d -m 770 -o ${ADMINUSER} -g  ${ADMINGROUP} ${INSTALLDIR}/sql
+
+install  -m 660 -o ${ADMINUSER} -g ${ADMINGROUP} \
+    ${INSTALL_FROM}/qz_db_install_SV*.sql  \
+    ${INSTALL_FROM}/qz_db_update_SV*.sql \
+    ${INSTALLDIR}/sql
 
 ##
 ##  Final Instructions
