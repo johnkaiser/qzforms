@@ -223,7 +223,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     PGresult* grid_edit_rs = perform_post_action(h, grid_edit_ta);
 
     if (grid_edit_rs == NULL) {
-        fprintf(h->log, "%f %d %s:%d perform action from %s getall produced NULL\n",
+        fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
         error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
@@ -540,7 +540,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     PGresult* grid_save_rs = perform_post_action(h, grid_save_ta);
 
     if (grid_save_rs == NULL) {
-        fprintf(h->log, "%f %d %s:%d perform action from %s getall produced NULL\n",
+        fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
         error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.

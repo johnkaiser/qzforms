@@ -288,7 +288,7 @@ VALUES
 INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern, options, onfocus)
 VALUES ('table_action_edit', 'action', 'select_options',
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$',
-'{create,delete,delete_row,edit,etag_value,get,getall,
+'{create,delete,delete_row,edit,etag_value,get,list,
   insert,insert_row,save,update,update_row,view}',
   'set_action_options()');
 

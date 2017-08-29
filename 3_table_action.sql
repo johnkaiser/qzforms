@@ -9,7 +9,7 @@ CREATE TABLE qz.table_action (
     inline_css text,
     clear_context_parameters boolean NOT NULL DEFAULT 'f',
     PRIMARY KEY (form_name, action)
-);    
+);
 
 --
 -- Form
@@ -19,50 +19,50 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('form', 'insert',
    $TAFI$INSERT INTO qz.form
      (form_name, handler_name, schema_name, table_name, pkey,
-     xml_template, target_div, 
+     xml_template, target_div,
      add_description, prompt_container)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)$TAFI$, 
-'{form_name,handler_name,schema_name,table_name,pkey,xml_template,target_div,add_description,prompt_container}', 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)$TAFI$,
+'{form_name,handler_name,schema_name,table_name,pkey,xml_template,target_div,add_description,prompt_container}',
 NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('form', 'create', 
-   $TAFC$SELECT  
-    $1::text form_name, 
-    $2::text handler_name, 
-    ''::text schema_name, ''::text table_name, 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('form', 'create',
+   $TAFC$SELECT
+    $1::text form_name,
+    $2::text handler_name,
+    ''::text schema_name, ''::text table_name,
     ''::text pkey,
-    'base.xml'::text xml_template, 
+    'base.xml'::text xml_template,
     'qz'::text target_div,
-    ''::text add_description, 
-    ''::text prompt_container$TAFC$, 
+    ''::text add_description,
+    ''::text prompt_container$TAFC$,
 '{form_name,new_handler_name}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames,
-    helpful_text, clear_context_parameters) 
-VALUES ('form', 'getall', 
-    'SELECT form_name, handler_name 
+    helpful_text, clear_context_parameters)
+VALUES ('form', 'list',
+    'SELECT form_name, handler_name
      FROM qz.form
      WHERE NOT hidden
-     ORDER BY form_name', 
-NULL, 
-'A form on this list will match incoming data to a particular set of table 
+     ORDER BY form_name',
+NULL,
+'A form on this list will match incoming data to a particular set of table
  actions.  The form_name is the 2nd segment of the URL.', 't');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('form', 'edit', 
-  $FTAE$ SELECT form_name, handler_name, 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('form', 'edit',
+  $FTAE$ SELECT form_name, handler_name,
      schema_name, table_name, pkey, xml_template, target_div,
      add_description, prompt_container, form_set_name
   FROM qz.form
-  WHERE form_name = $1 $FTAE$, 
+  WHERE form_name = $1 $FTAE$,
 '{form_name}',
-'The handler_name will provide a specific set of actions, such as edit, update, 
+'The handler_name will provide a specific set of actions, such as edit, update,
  delete.  The xml_template will be used as the starting document.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('form', 'update', 
-   $FTAU$ UPDATE qz.form SET 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('form', 'update',
+   $FTAU$ UPDATE qz.form SET
      schema_name = $2,
      table_name = $3,
      pkey = $4,
@@ -71,22 +71,22 @@ VALUES ('form', 'update',
      add_description = $7,
      prompt_container = $8,
      form_set_name = $9
-   WHERE form_name = $1 $FTAU$, 
-'{form_name,schema_name,table_name,pkey,xml_template,target_div,add_description,prompt_container, form_set_name}', 
+   WHERE form_name = $1 $FTAU$,
+'{form_name,schema_name,table_name,pkey,xml_template,target_div,add_description,prompt_container, form_set_name}',
 NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('form', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('form', 'delete',
    'DELETE FROM qz.form
-    WHERE form_name = $1', 
+    WHERE form_name = $1',
 '{form_name}', NULL);
 
 --
 -- prompt_rule_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('prompt_rule_edit', 'create', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('prompt_rule_edit', 'create',
    $PRCTA$ SELECT
     $1::text "form_name",
     $2::text "fieldname",
@@ -123,55 +123,55 @@ VALUES ('prompt_rule_edit', 'create',
     ''::text "onmouseout",
     ''::text "onkeypress",
     ''::text "onkeydown",
-    ''::text "onkeyup" $PRCTA$, 
+    ''::text "onkeyup" $PRCTA$,
 '{form_name,fieldname,handler_name}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('prompt_rule_edit', 'insert',
   $PRITA$INSERT INTO qz.prompt_rule
   ("form_name", "fieldname", "prompt_type", "tabindex",
   "el_class", "readonly", "regex_pattern",
   "rows", "cols", "size",
-  "maxlength", "options", "publish_pgtype", 
+  "maxlength", "options", "publish_pgtype",
  "expand_percent_n", onfocus, onblur, onchange, onselect,
- onclick, ondblclick, onmousedown, onmouseup, 
+ onclick, ondblclick, onmousedown, onmouseup,
  onmouseover, onmousemove, onmouseout,
  onkeypress, onkeydown, onkeyup )
   VALUES
   ($1,$2,$3,$4,$5,$6,$7,$8,$9,
   $10,$11,$12,$13,$14,$15,$16,$17,$18,
-  $19,$20,$21,$22,$23,$24,$25,$26,$27,$28)$PRITA$, 
-'{form_name,fieldname,prompt_type,tabindex,el_class,readonly,regex_pattern,rows,cols,size,maxlength,options,publish_pgtype,expand_percent_n,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup}', 
+  $19,$20,$21,$22,$23,$24,$25,$26,$27,$28)$PRITA$,
+'{form_name,fieldname,prompt_type,tabindex,el_class,readonly,regex_pattern,rows,cols,size,maxlength,options,publish_pgtype,expand_percent_n,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup}',
 NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('prompt_rule_edit', 'getall', 
-   'SELECT fieldname, prompt_type, el_class, 
-    readonly, rows, cols, size, options, etag 
-    FROM qz.prompt_rule 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('prompt_rule_edit', 'list',
+   'SELECT fieldname, prompt_type, el_class,
+    readonly, rows, cols, size, options, etag
+    FROM qz.prompt_rule
     WHERE form_name = $1
-    ORDER BY form_name, fieldname', 
+    ORDER BY form_name, fieldname',
 '{form_name}',
 'These rules determine how an attribute
 from PostgreSQL is converted into a
 data entry prompt.  A lookup name and
 a fieldname identify a prompt rule.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('prompt_rule_edit', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('prompt_rule_edit', 'edit',
     'SELECT "form_name", "fieldname", "prompt_type", "tabindex",
-    "el_class", "readonly", "regex_pattern", "rows", "cols", "size", 
+    "el_class", "readonly", "regex_pattern", "rows", "cols", "size",
     "maxlength", "options", "publish_pgtype", "expand_percent_n",
      "onfocus", "onblur", "onchange", "onselect",
     "onclick", "ondblclick", "onmousedown", "onmouseup",
     "onmouseover", "onmousemove", "onmouseout",
     "onkeypress", "onkeydown", "onkeyup"
     FROM qz.prompt_rule
-    WHERE form_name = $1 AND fieldname = $2', 
+    WHERE form_name = $1 AND fieldname = $2',
 '{form_name,fieldname}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('prompt_rule_edit', 'update', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('prompt_rule_edit', 'update',
     'UPDATE qz.prompt_rule
     SET
     "prompt_type" = $1,
@@ -182,134 +182,134 @@ VALUES ('prompt_rule_edit', 'update',
     "cols" = $6,
     "size" = $7,
     "tabindex" = $8,
-    "options" = $9, 
+    "options" = $9,
     "maxlength" = $10,
-    "onfocus" = $11, 
-    "onblur" = $12, 
-    "onchange" = $13, 
-    "onselect" = $14, 
-    "onclick" = $15, 
+    "onfocus" = $11,
+    "onblur" = $12,
+    "onchange" = $13,
+    "onselect" = $14,
+    "onclick" = $15,
     "ondblclick" = $16,
-    "onmousedown" = $17, 
-    "onmouseup" = $18, 
-    "onmouseover" = $19, 
-    "onmousemove" = $20, 
+    "onmousedown" = $17,
+    "onmouseup" = $18,
+    "onmouseover" = $19,
+    "onmousemove" = $20,
     "onmouseout" = $21,
-    "onkeypress" = $22, 
-    "onkeydown" = $23, 
+    "onkeypress" = $22,
+    "onkeydown" = $23,
     "onkeyup" = $24,
     "publish_pgtype" = $25,
     "expand_percent_n" = $26
     WHERE form_name = $27
-    AND fieldname = $28', 
+    AND fieldname = $28',
 '{prompt_type,el_class,readonly,regex_pattern,rows,cols,size,tabindex,options,maxlength,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,publish_pgtype,expand_percent_n,form_name,fieldname}',
 NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('prompt_rule_edit', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('prompt_rule_edit', 'delete',
     'DELETE FROM qz.prompt_rule
-     WHERE form_name = $1 AND fieldname = $2', 
+     WHERE form_name = $1 AND fieldname = $2',
 '{form_name,fieldname}', NULL);
 
 --
 -- table_action_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('table_action_edit', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('table_action_edit', 'edit',
     $TAE$SELECT
       form_name, action, helpful_text, sql, fieldnames, clear_context_parameters
     FROM
       qz.table_action
     WHERE
-    form_name = $1 AND action = $2 $TAE$, 
+    form_name = $1 AND action = $2 $TAE$,
 '{form_name,action}',
   'A table action binds a URL and HTTP post data to an SQL statement.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('table_action_edit', 'insert', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('table_action_edit', 'insert',
    $TAI$INSERT INTO qz.table_action
-      (form_name, action, helpful_text, sql, fieldnames, 
+      (form_name, action, helpful_text, sql, fieldnames,
       clear_context_parameters)
       VALUES
-      ($1,$2,$3,$4,$5,$6)$TAI$, 
+      ($1,$2,$3,$4,$5,$6)$TAI$,
 '{form_name,new_action,helpful_text,sql,fieldnames,clear_context_parameters}',
 NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('table_action_edit', 'update', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('table_action_edit', 'update',
     $TAU$UPDATE qz.table_action
     SET helpful_text=$3,
     sql=$4, fieldnames=$5, clear_context_parameters=$6
-    WHERE form_name = $1 AND action = $2 $TAU$, 
-'{form_name,action,helpful_text,sql,fieldnames,clear_context_parameters}', 
+    WHERE form_name = $1 AND action = $2 $TAU$,
+'{form_name,action,helpful_text,sql,fieldnames,clear_context_parameters}',
 NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('table_action_edit', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('table_action_edit', 'delete',
 'DELETE FROM qz.table_action
-WHERE form_name = $1 AND action = $2', 
+WHERE form_name = $1 AND action = $2',
 '{form_name,action}', 'NULL');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('table_action_edit', 'create', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('table_action_edit', 'create',
     $TAC$SELECT ta.form_name, ta.action new_action, fm.handler_name,
     ''::text helpful_text, ta.sql, ta.fieldnames,
-    'f'::boolean clear_context_parameters 
+    'f'::boolean clear_context_parameters
      FROM qz.create_table_action($1,$2) ta
-    JOIN qz.form fm USING (form_name)$TAC$, 
+    JOIN qz.form fm USING (form_name)$TAC$,
 '{form_name, action}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('table_action_edit', 'getall', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('table_action_edit', 'list',
     $TAG$SELECT ta.action, ta.helpful_text,
-    fm.handler_name 
+    fm.handler_name
     FROM qz.table_action ta
     JOIN qz.form fm USING (form_name)
     WHERE form_name = $1
-    ORDER BY form_name, action$TAG$, 
+    ORDER BY form_name, action$TAG$,
 '{form_name}', 'Edit the table actions for a given form_name.');
 
 --
 -- menu_set_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_set_edit', 'insert_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_set_edit', 'insert_row',
     'INSERT INTO qz.menu_set
     ("menu_name", "host_form_name", "action" )
-    VALUES ($1,$2,$3)', 
+    VALUES ($1,$2,$3)',
 '{menu_name,host_form_name,action}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_set_edit', 'save', 
-'SELECT 1', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_set_edit', 'save',
+'SELECT 1',
 NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_set_edit', 'delete_row', 
-    'DELETE FROM 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_set_edit', 'delete_row',
+    'DELETE FROM
      qz.menu_set
-    WHERE  set_id = $1', 
+    WHERE  set_id = $1',
 '{set_id}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_set_edit', 'update_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_set_edit', 'update_row',
     'UPDATE qz.menu_set
-    SET 
+    SET
     menu_name = $1,
     "host_form_name" = $2,
     "action" = $3
-    WHERE set_id = $4', 
+    WHERE set_id = $4',
 '{menu_name,host_form_name,action,set_id}', NULL);
 
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_set_edit', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_set_edit', 'edit',
     'SELECT set_id, host_form_name, action
     FROM qz.menu_set
     WHERE menu_name = $1
-    ORDER BY host_form_name, action', 
+    ORDER BY host_form_name, action',
 '{menu_name}',
 'This is a table interface that ties a particular menu_name  to a particular table action.
 "host_form_name" is the page hosting the given menu name.  A action of any implies all actions
@@ -320,73 +320,73 @@ for the given host_form_name.');
 --
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames,
-    helpful_text, clear_context_parameters) 
-VALUES ('menu_edit', 'getall', 
+    helpful_text, clear_context_parameters)
+VALUES ('menu_edit', 'list',
     'SELECT menu_name, target_div, description
     FROM qz.menu
     ORDER BY menu_name, target_div',
 NULL,
 'This is a list of menus that have been created.  Press Insert to add a new menu.  Press Edit on a menu for more details.', 't');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_edit', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_edit', 'edit',
     $MED$SELECT menu_name, target_div, description, form_set_name
     FROM qz.menu
-    WHERE menu_name = $1 $MED$, 
+    WHERE menu_name = $1 $MED$,
 '{menu_name}',
 'Press Menu_Item to add, change, or delete the items on a menu.
 Press Menu_Set to manage which page gets a particular menu.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_edit', 'update', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_edit', 'update',
     $MUPD$UPDATE qz.menu
     SET
     target_div = $2,
     description = $3,
     form_set_name = $4
-    WHERE menu_name = $1 $MUPD$, 
+    WHERE menu_name = $1 $MUPD$,
 '{menu_name,target_div,description,form_set_name}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_edit', 'insert', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_edit', 'insert',
     $MINS$INSERT INTO qz.menu
     (menu_name, target_div, description, form_set_name)
     VALUES
-    ($1,$2,$3,$4)$MINS$, 
+    ($1,$2,$3,$4)$MINS$,
 '{menu_name,target_div,description,form_set_name}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_edit', 'create',  
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_edit', 'create',
     $MCR$SELECT ''::text menu_name,
     ''::text target_div,
     ''::text description,
-    ''::text form_set_name$MCR$, 
+    ''::text form_set_name$MCR$,
 NULL,
 'Create a new menu  name.  The target_div is the html id of a <div> tag in the xml template that the menu will be placed into.  ');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_edit', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_edit', 'delete',
     'DELETE FROM qz.menu
-    WHERE menu_name = $1', 
+    WHERE menu_name = $1',
 '{menu_name}', NULL);
 
 --
 -- menu_host_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_host_edit', 'edit',  
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_host_edit', 'edit',
     'SELECT set_id, host_form_name, menu_name, action
     FROM qz.menu_set
     WHERE host_form_name = $1
-    ORDER BY host_form_name, menu_name, action', 
+    ORDER BY host_form_name, menu_name, action',
 '{form_name}',
-'This is a table interface that ties a 
+'This is a table interface that ties a
 particular menu_name to a particular
 table action.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_host_edit', 'update_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_host_edit', 'update_row',
     'UPDATE qz.menu_set
     SET
     menu_name = $1,
@@ -394,86 +394,86 @@ VALUES ('menu_host_edit', 'update_row',
     WHERE
     host_form_name = $3
     AND
-    set_id = $4', 
+    set_id = $4',
 '{menu_name,action,host_form_name,set_id}', NULL);
 
-INSERT INTO qz.table_action (form_name, action,  sql, fieldnames, helpful_text) 
-VALUES ('menu_host_edit', 'insert_row', 
+INSERT INTO qz.table_action (form_name, action,  sql, fieldnames, helpful_text)
+VALUES ('menu_host_edit', 'insert_row',
     'INSERT INTO qz.menu_set
     ("menu_name", "host_form_name", "action" )
-    VALUES ($1,$2,$3)', 
+    VALUES ($1,$2,$3)',
 '{menu_name,form_name,action}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_host_edit', 'delete_row',  
-    'DELETE FROM 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_host_edit', 'delete_row',
+    'DELETE FROM
       qz.menu_set
-    WHERE 
+    WHERE
       set_id = $1
     AND
-      host_form_name = $2', 
+      host_form_name = $2',
 '{set_id,host_form_name}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_host_edit', 'save', 
-    'SELECT 1', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_host_edit', 'save',
+    'SELECT 1',
 NULL, NULL);
 
 --
 -- menu_item_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_item_edit', 'getall',  
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_item_edit', 'list',
     'SELECT  menu_item_sequence, target_form_name, action,
     menu_text, context_parameters
     FROM qz.menu_item
     WHERE menu_name = $1
-    ORDER BY menu_item_sequence', 
-'{menu_name}', 
+    ORDER BY menu_item_sequence',
+'{menu_name}',
 'Maintain the list of choices on a menu.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_item_edit', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_item_edit', 'delete',
     'DELETE FROM qz.menu_item
     WHERE menu_name = $1
-    AND menu_item_sequence = $2', 
+    AND menu_item_sequence = $2',
 '{menu_name,menu_item_sequence}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_item_edit', 'create', 
-   'SELECT $1::text menu_name, 
-    $2::text menu_item_sequence, 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_item_edit', 'create',
+   'SELECT $1::text menu_name,
+    $2::text menu_item_sequence,
     ''''::text target_form_name,
-    ''''::text "action", 
+    ''''::text "action",
     ''''::text menu_text,
-    ''''::text context_parameters', 
+    ''''::text context_parameters',
 '{menu_name,menu_item_sequence}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_item_edit', 'edit', 
-    'SELECT menu_name, menu_item_sequence, target_form_name, action, 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_item_edit', 'edit',
+    'SELECT menu_name, menu_item_sequence, target_form_name, action,
     menu_text, context_parameters
     FROM qz.menu_item
     WHERE menu_name = $1
-    AND menu_item_sequence = $2', 
+    AND menu_item_sequence = $2',
 '{menu_name,menu_item_sequence}',
-'For one menu choice, identify the form_name and optionally the action (not all 
+'For one menu choice, identify the form_name and optionally the action (not all
 handlers have an action, but most do) that is offered for selection.
-The context parameters are fields in the current page to be passed to the named 
-target lookup.  Fixed parameters are set keys and values allowing for example a 
+The context parameters are fields in the current page to be passed to the named
+target lookup.  Fixed parameters are set keys and values allowing for example a
 button to edit a particular row.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_item_edit', 'insert', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_item_edit', 'insert',
     'INSERT INTO qz.menu_item
     (menu_name, menu_item_sequence, target_form_name, action, menu_text)
     VALUES
-    ($1,$2,$3,$4,$5)', 
+    ($1,$2,$3,$4,$5)',
 '{menu_name,menu_item_sequence,target_form_name,action,menu_text}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('menu_item_edit', 'update', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('menu_item_edit', 'update',
     'UPDATE qz.menu_item
     SET
       target_form_name = $3,
@@ -482,262 +482,262 @@ VALUES ('menu_item_edit', 'update',
       context_parameters = $6
     WHERE
       menu_name = $1
-    AND 
-      menu_item_sequence = $2', 
-'{menu_name,menu_item_sequence,target_form_name,action,menu_text,context_parameters}', 
+    AND
+      menu_item_sequence = $2',
+'{menu_name,menu_item_sequence,target_form_name,action,menu_text,context_parameters}',
 NULL);
 
 --
 -- fixed_parameters
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('fixed_parameters', 'save',  'SELECT 1', NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('fixed_parameters', 'delete_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('fixed_parameters', 'delete_row',
     'DELETE FROM qz.fixed_parameter
-    WHERE menu_name = $1 
+    WHERE menu_name = $1
     AND menu_item_sequence = $2
-    AND parameter_key = $3', 
+    AND parameter_key = $3',
 '{menu_name,menu_item_sequence,parameter_key}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
-VALUES ('fixed_parameters', 'insert_row', 
+VALUES ('fixed_parameters', 'insert_row',
     'INSERT INTO qz.fixed_parameter
     (menu_name, menu_item_sequence, parameter_key, parameter_value)
     VALUES
-    ($1,$2,$3,$4)', 
+    ($1,$2,$3,$4)',
 '{menu_name,menu_item_sequence,parameter_key,parameter_value}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('fixed_parameters', 'update_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('fixed_parameters', 'update_row',
     'UPDATE qz.fixed_parameter
     SET parameter_value = $4
     WHERE menu_name = $1
     AND menu_item_sequence = $2
-    AND parameter_key = $3', 
+    AND parameter_key = $3',
 '{menu_name,menu_item_sequence,parameter_key,parameter_value}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('fixed_parameters', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('fixed_parameters', 'edit',
     $TAFPED$SELECT
     parameter_key, parameter_value
     FROM
     qz.fixed_parameter
     WHERE
     menu_name = $1
-    AND 
-    menu_item_sequence = $2 $TAFPED$, 
-'{menu_name,menu_item_sequence}', 
+    AND
+    menu_item_sequence = $2 $TAFPED$,
+'{menu_name,menu_item_sequence}',
 'Fixed parameters are key value pairs
 that are set to a specific key and value.
-This allows a menu option to edit a 
+This allows a menu option to edit a
 specific row or set of rows.');
 
 --
 -- css
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css', 'etag_value', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css', 'etag_value',
     'SELECT etag
-    FROM qz.css 
-    WHERE filename = $1', 
+    FROM qz.css
+    WHERE filename = $1',
 '{filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css', 'get', 
-    'SELECT filename,mimetype,modtime,etag,data 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css', 'get',
+    'SELECT filename,mimetype,modtime,etag,data
     FROM qz.css
-    WHERE filename = $1', 
+    WHERE filename = $1',
 '{filename}', NULL);
 
 --
 -- js
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js', 'etag_value', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js', 'etag_value',
     'SELECT etag
-    FROM qz.js 
-    WHERE filename = $1', 
+    FROM qz.js
+    WHERE filename = $1',
 '{filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js', 'get', 
-    'SELECT filename,mimetype,modtime,etag,data 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js', 'get',
+    'SELECT filename,mimetype,modtime,etag,data
     FROM qz.js
-    WHERE filename = $1', 
+    WHERE filename = $1',
 '{filename}', NULL);
 
 --
 -- css_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css_edit', 'create', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css_edit', 'create',
     'SELECT
-     $1::text filename, 
-    ''text/css'' mimetype, 
+     $1::text filename,
+    ''text/css'' mimetype,
     now() modtime,
-    '''' "data"', 
+    '''' "data"',
 '{filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action,  sql, fieldnames, helpful_text) 
-VALUES ('css_edit', 'insert', 
+INSERT INTO qz.table_action (form_name, action,  sql, fieldnames, helpful_text)
+VALUES ('css_edit', 'insert',
     'INSERT INTO qz.css (filename, mimetype, modtime, "data")
-    VALUES ($1,$2, $3, $4);', 
+    VALUES ($1,$2, $3, $4);',
 '{filename,mimetype,modtime,data}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css_edit', 'getall',  
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css_edit', 'list',
     'SELECT filename, modtime, mimetype, length(data) length
     FROM qz.css
-    ORDER BY filename', 
+    ORDER BY filename',
 NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css_edit', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css_edit', 'edit',
     'SELECT filename, modtime, etag, mimetype, "data"
     FROM qz.css
-    WHERE filename = $1', 
+    WHERE filename = $1',
 '{filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css_edit', 'update', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css_edit', 'update',
     'UPDATE qz.css
-    SET mimetype = $1, 
+    SET mimetype = $1,
     data = $2
-    WHERE filename = $3', 
+    WHERE filename = $3',
 '{mimetype,data,filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('css_edit', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('css_edit', 'delete',
     'DELETE FROM qz.css
-    WHERE filename = $1', 
+    WHERE filename = $1',
 '{filename}', NULL);
 
 --
 -- js_edit
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js_edit', 'create', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js_edit', 'create',
     'SELECT
-    $1::text filename, 
-    ''text/javascript'' mimetype, 
+    $1::text filename,
+    ''text/javascript'' mimetype,
     now() modtime,
     '''' "data"', '{filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js_edit', 'insert', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js_edit', 'insert',
     'INSERT INTO qz.js (filename, mimetype, modtime, "data")
-    VALUES ($1,$2, $3, $4);', 
+    VALUES ($1,$2, $3, $4);',
 '{filename,mimetype,modtime,data}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js_edit', 'getall', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js_edit', 'list',
    'SELECT filename, modtime, mimetype, length(data) length
     FROM qz.js
-    ORDER BY filename', 
+    ORDER BY filename',
 NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js_edit', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js_edit', 'edit',
     'SELECT filename, modtime, etag, mimetype, "data"
     FROM qz.js
-    WHERE filename = $1', 
+    WHERE filename = $1',
 '{filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js_edit', 'update', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js_edit', 'update',
     'UPDATE qz.js
-    SET mimetype = $1, 
+    SET mimetype = $1,
     data = $2
-    WHERE filename = $3', 
+    WHERE filename = $3',
 '{mimetype,data,filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('js_edit', 'delete', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('js_edit', 'delete',
     'DELETE FROM qz.js
-    WHERE filename = $1', 
+    WHERE filename = $1',
 '{filename}', NULL);
 
 --
 -- page_css
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_css', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_css', 'edit',
     'SELECT
     "sequence", filename
-    FROM 
+    FROM
     qz.page_css
     WHERE
-    form_name = $1', 
+    form_name = $1',
 '{form_name}',
 'Select cascading style sheet files that are to be loaded in the html header as a link attribute.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('page_css', 'save', 'SELECT 1', NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_css', 'insert_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_css', 'insert_row',
     'INSERT INTO qz.page_css
     (form_name, "sequence", filename)
     VALUES
-    ($1,$2,$3)', 
+    ($1,$2,$3)',
 '{form_name,sequence,filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_css', 'update_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_css', 'update_row',
     'UPDATE qz.page_css
     SET
     "sequence" = $1
     WHERE
     form_name = $2
     AND
-    filename =  $3', 
+    filename =  $3',
 '{sequence,form_name,filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_css', 'delete_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_css', 'delete_row',
     'DELETE FROM qz.page_css
     WHERE
     form_name = $1
     AND
-    filename = $2', 
+    filename = $2',
 '{form_name,filename}', NULL);
 
 --
 -- page_js
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_js', 'edit', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_js', 'edit',
     'SELECT
     "sequence", filename
-    FROM 
+    FROM
     qz.page_js
-    WHERE form_name = $1 
-    ORDER BY "sequence"', 
+    WHERE form_name = $1
+    ORDER BY "sequence"',
 '{form_name}',
 'Select the javascript files that are to be loaded in the html header as a script element, src attribute.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('page_js', 'save', 'SELECT 1', NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_js', 'insert_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_js', 'insert_row',
     'INSERT INTO qz.page_js
     (form_name, "sequence", filename)
     VALUES
-    ($1,$2,$3)', 
+    ($1,$2,$3)',
 '{form_name,sequence,filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_js', 'update_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_js', 'update_row',
     'UPDATE qz.page_js
     SET
     "sequence" = $1
@@ -747,13 +747,13 @@ VALUES ('page_js', 'update_row',
     filename =  $3',
 '{sequence,form_name,filename}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('page_js', 'delete_row', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('page_js', 'delete_row',
     'DELETE FROM qz.page_js
     WHERE
     form_name = $1
     AND
-    filename = $2', 
+    filename = $2',
 '{form_name,filename}', NULL);
 
 
@@ -761,15 +761,15 @@ VALUES ('page_js', 'delete_row',
 -- misc
 --
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('form_dev', 'view', 'SELECT 1', NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('menu', 'view', 'SELECT 1', NULL, NULL);
 
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
-VALUES ('pg_stat_activity', 'fetch', 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+VALUES ('pg_stat_activity', 'fetch',
     'SELECT datname,pid,usename,application_name,client_addr,backend_start,
     query_start,query FROM pg_stat_activity',
 NULL, NULL);
@@ -815,10 +815,10 @@ VALUES
 INSERT INTO qz.table_action
 (form_name, action, sql)
 VALUES
-('status', 'change_history', 
-  'SELECT change_id, changed, changed_by, 
-    change_description, note 
-  FROM qz.change_history 
+('status', 'change_history',
+  'SELECT change_id, changed, changed_by,
+    change_description, note
+  FROM qz.change_history
   ORDER BY change_id');
 
 INSERT INTO qz.table_action
@@ -834,21 +834,21 @@ VALUES
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, helpful_text)
 VALUES
-('form_set', 'getall', 
-'SELECT set_name FROM qz.form_set ORDER BY set_name', 
+('form_set', 'list',
+'SELECT set_name FROM qz.form_set ORDER BY set_name',
 NULL,
-'A form set allows menu items to share context parameters, 
-    attributes returned from a table action and named in a form set are 
+'A form set allows menu items to share context parameters,
+    attributes returned from a table action and named in a form set are
     added to menu items as hidden fields.');
 
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, helpful_text)
 VALUES
-('form_set', 'create', 
+('form_set', 'create',
 $FSC$SELECT ''::text set_name, ''::text context_parameters$FSC$,
 NULL,
-'A form set allows menu items to share context parameters, 
-    attributes returned from a table action and named in a form set are 
+'A form set allows menu items to share context parameters,
+    attributes returned from a table action and named in a form set are
     added to menu items as hidden fields.');
 
 INSERT INTO qz.table_action
@@ -862,12 +862,12 @@ INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, helpful_text)
 VALUES
 ('form_set', 'edit',
-$FSE$SELECT set_name, context_parameters 
+$FSE$SELECT set_name, context_parameters
      FROM qz.form_set
      WHERE set_name = $1$FSE$,
 '{set_name}',
-'A form set allows menu items to share context parameters, 
-    attributes returned from a table action and named in a form set are 
+'A form set allows menu items to share context parameters,
+    attributes returned from a table action and named in a form set are
     added to menu items as hidden fields.');
 
 INSERT INTO qz.table_action
@@ -894,8 +894,8 @@ $FSD$DELETE FROM qz.form_set
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, helpful_text)
 VALUES
-('page_menus', 'edit', 
-$PMED$SELECT set_id, menu_name, action 
+('page_menus', 'edit',
+$PMED$SELECT set_id, menu_name, action
 FROM qz.menu_set
 WHERE host_form_name = $1
 ORDER BY menu_name, action$PMED$,
@@ -910,17 +910,17 @@ VALUES
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames)
 VALUES
-('page_menus', 'insert_row', 
+('page_menus', 'insert_row',
     $PMIR$INSERT INTO qz.menu_set
     (menu_name, host_form_name, action)
     VALUES
-    ($1,$2,$3)$PMIR$, 
+    ($1,$2,$3)$PMIR$,
  '{menu_name, form_name, action}');
 
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames)
 VALUES
-('page_menus', 'update_row', 
+('page_menus', 'update_row',
     $PMUR$UPDATE qz.menu_set
     SET "menu_name" = $2,
         "host_form_name" = $3,
@@ -946,13 +946,13 @@ $TAJSED$ SELECT form_name, action, inline_js
     WHERE form_name = $1 and action = $2 $TAJSED$,
 '{form_name,action}'),
 
-('inline_js', 'update', 
+('inline_js', 'update',
 $TAJSUP$ UPDATE qz.table_action
     SET inline_js = $3
     WHERE form_name = $1 and action = $2 $TAJSUP$,
 '{form_name,action,inline_js}'),
 
-('inline_js', 'getall',
+('inline_js', 'list',
 $TAJSGA$ SELECT form_name, action, inline_js::varchar(30) inline_js_
     FROM qz.table_action
     WHERE form_name = $1 $TAJSGA$,
@@ -964,13 +964,13 @@ $TAJSED$ SELECT form_name, action, inline_css
     WHERE form_name = $1 and action = $2 $TAJSED$,
 '{form_name,action}'),
 
-('inline_css', 'update', 
+('inline_css', 'update',
 $TAJSUP$ UPDATE qz.table_action
     SET inline_css = $3
     WHERE form_name = $1 and action = $2 $TAJSUP$,
 '{form_name,action,inline_css}'),
 
-('inline_css', 'getall',
+('inline_css', 'list',
 $TAJSGA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
     FROM qz.table_action
     WHERE form_name = $1 $TAJSGA$,
@@ -979,14 +979,14 @@ $TAJSGA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
 UPDATE qz.table_action
 SET helpful_text = $IJSGA$ Inline JavaScript is added to HTML head
 in a <script> tag $IJSGA$
-WHERE form_name = 'inline_js' 
-AND action = 'getall';
+WHERE form_name = 'inline_js'
+AND action = 'list';
 
 UPDATE qz.table_action
 SET helpful_text = $ICSSGA$ Inline CSS is added to HTML head
 in a <style> tag $ICSSGA$
 WHERE form_name = 'inline_css'
-AND action = 'getall';
+AND action = 'list';
 
 ---
 --- user menus
@@ -995,7 +995,7 @@ AND action = 'getall';
 INSERT INTO qz.table_action
 (form_name, action, sql, fieldnames, helpful_text)
 VALUES
-('user_menus', 'getall',
+('user_menus', 'list',
  $UMGA$ SELECT user_name, main_menu
   FROM qz.user
   ORDER BY user_name $UMGA$,

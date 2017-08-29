@@ -240,7 +240,7 @@ void do_page( struct handler_args* hargs ){
     // Check the post data for being legal
     // It must contain a name 'form_tag' with value
     // that passes the test for being a valid etag.
-    // Requests without postdata such as qzfs requests or getall requests
+    // Requests without postdata such as qzfs requests or list requests
     // do not post anything, so skip this.
 
     if (hargs->postdata != NULL){

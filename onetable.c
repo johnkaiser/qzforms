@@ -337,13 +337,13 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
 }
 
 /*
- *  onetable_getall
+ *  onetable_list
  * 
  *  Turn a table_action into a select list
  *  and turn that into an edit with an edit button
  *  for each line.
  */
-void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
+void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     int col;
     int row;
@@ -351,9 +351,9 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     content_type(h, "text/html");
 
-    struct table_action* getall_ta = open_table(h, form_name, "getall");
-    if (getall_ta==NULL){
-        fprintf(h->log, "%f %d %s:%d fail table_action %s getall not found\n",
+    struct table_action* list_ta = open_table(h, form_name, "list");
+    if (list_ta==NULL){
+        fprintf(h->log, "%f %d %s:%d fail table_action %s list not found\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
         error_page(h, SC_BAD_REQUEST, "Not Found");
@@ -362,11 +362,11 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
-        form_name, "getall");
+        form_name, "list");
 
-    PGresult* getall_rs = perform_post_action(h, getall_ta);
-    if (getall_rs == NULL) {
-        fprintf(h->log, "%f %d %s:%d perform action from %s getall produced NULL\n",
+    PGresult* list_rs = perform_post_action(h, list_ta);
+    if (list_rs == NULL) {
+        fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
         error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
@@ -375,25 +375,25 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     fprintf(h->log, "%f %d %s:%d perform_action  result %s returned %d cols %d rows\n",
         gettime(), h->request_id, __func__, __LINE__,
-        PQresStatus(PQresultStatus(getall_rs)),
-        PQnfields(getall_rs), PQntuples(getall_rs));
+        PQresStatus(PQresultStatus(list_rs)),
+        PQnfields(list_rs), PQntuples(list_rs));
 
     xmlNewTextChild(divqz, NULL, "h2", form_name);
 
     // Add helpful_text
     xmlNodePtr root_el = xmlDocGetRootElement(h->doc);
-    add_helpful_text(h, getall_ta, root_el);
+    add_helpful_text(h, list_ta, root_el);
 
     // Show passed in parameters.
-    if (getall_ta->nbr_params > 0){
+    if (list_ta->nbr_params > 0){
         xmlNodePtr dl = xmlNewChild(divqz, NULL, "dl", NULL);
         xmlNewProp(dl, "class", "parameters");
         int p;
         // for each parameter
-        for (p=0; p<getall_ta->nbr_params; p++){
+        for (p=0; p<list_ta->nbr_params; p++){
 
              // add prompt name in a dt
-             char* fname = getall_ta->fieldnames[p];
+             char* fname = list_ta->fieldnames[p];
              if (fname == NULL) break;  // should not happen
 
              xmlNewTextChild(dl, NULL, "dt", fname);
@@ -415,8 +415,8 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     xmlNodePtr table = xmlNewChild(divqz, NULL, "table", NULL);
     xmlNewProp(table, "class", "tablesorter");
-    xmlNewProp(table, "named", "getall");
-    xmlNewProp(table, "id", "getall");
+    xmlNewProp(table, "named", "list");
+    xmlNewProp(table, "id", "list");
     xmlNodePtr tr;
 
     // Header Row
@@ -428,8 +428,8 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         xmlNewTextChild(tr, NULL, "th", "Edit");
     }
 
-    for(col=0; col<PQnfields(getall_rs); col++){
-        xmlNewTextChild(tr, NULL, "th", PQfname(getall_rs,col));
+    for(col=0; col<PQnfields(list_rs); col++){
+        xmlNewTextChild(tr, NULL, "th", PQfname(list_rs,col));
     }
 
     // Table Body
@@ -451,7 +451,7 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     struct form_record* form_tag = NULL;
 
     tbody = xmlNewChild(table, NULL, "tbody", NULL);
-    for(row=0; row<PQntuples(getall_rs); row++){
+    for(row=0; row<PQntuples(list_rs); row++){
         tr = xmlNewChild(tbody, NULL, "tr", NULL);
 
         // The edit button
@@ -471,38 +471,38 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             form_tag = register_form(h, form, SUBMIT_MULTIPLE, action_target);
 
             if (h->current_form_set == NULL){
-                save_context_parameters(h, form_tag, getall_rs, -1);
+                save_context_parameters(h, form_tag, list_rs, -1);
             }
 
             // add a hidden field for each part of the primary key
-            for(k=0; k<getall_ta->nbr_pkeys; k++){
+            for(k=0; k<list_ta->nbr_pkeys; k++){
                 input = xmlNewChild(form, NULL, "input", NULL);
                 xmlNewProp(input, "type", "hidden");
-                int f_nbr = PQfnumber(getall_rs, getall_ta->pkeys[k]);
+                int f_nbr = PQfnumber(list_rs, list_ta->pkeys[k]);
 
-                if (PQfname(getall_rs, f_nbr) != NULL){
-                    xmlNewProp(input, "name", getall_ta->pkeys[k]);
+                if (PQfname(list_rs, f_nbr) != NULL){
+                    xmlNewProp(input, "name", list_ta->pkeys[k]);
 
                     char* key_name_nbr;
-                    asprintf(&key_name_nbr, "%s[%d]",getall_ta->pkeys[k], row);
+                    asprintf(&key_name_nbr, "%s[%d]",list_ta->pkeys[k], row);
                     xmlNewProp(input, "id", key_name_nbr);
                     free(key_name_nbr);
 
                     xmlNewProp(input, "value",
-                        PQgetvalue(getall_rs,row, f_nbr));
+                        PQgetvalue(list_rs,row, f_nbr));
 
                 }else{
                     // The primary key was not in the returned data, but
                     // it was requested.  Perhaps it's in the passed in data.
                     char* passed_in = xmlHashLookup(h->postdata,
-                        getall_ta->pkeys[k]);
+                        list_ta->pkeys[k]);
 
                     if (passed_in != NULL){
-                        xmlNewProp(input, "name", getall_ta->pkeys[k]);
+                        xmlNewProp(input, "name", list_ta->pkeys[k]);
 
                         char* key_name_nbr;
                         asprintf(&key_name_nbr, "%s[%d]",
-                            getall_ta->pkeys[k], row);
+                            list_ta->pkeys[k], row);
 
                         xmlNewProp(input, "id", key_name_nbr);
                         free(key_name_nbr);
@@ -519,9 +519,9 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         }
 
         // The rest of the columns
-        for(col=0; col<PQnfields(getall_rs); col++){
-            char* col_val = PQgetvalue(getall_rs,row,col);
-            char* fname = PQfname(getall_rs,col);
+        for(col=0; col<PQnfields(list_rs); col++){
+            char* col_val = PQgetvalue(list_rs,row,col);
+            char* fname = PQfname(list_rs,col);
 
             if (col_val != NULL){
                 td = xmlNewTextChild(tr, NULL, "td", col_val);
@@ -530,8 +530,8 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             }
 
             int pk;
-            for (pk=0; pk<getall_ta->nbr_pkeys; pk++){
-                if (strncmp(fname, getall_ta->pkeys[pk], PG_NAMEDATALEN) == 0){
+            for (pk=0; pk<list_ta->nbr_pkeys; pk++){
+                if (strncmp(fname, list_ta->pkeys[pk], PG_NAMEDATALEN) == 0){
                     append_class(td, "pkey");
                 }
             }
@@ -543,13 +543,13 @@ void onetable_getall(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     // is encountered. For the empty set, the context variables still need
     // to be copied.
     if (h->current_form_set == NULL){
-        save_context_parameters(h, NULL, getall_rs, -1);
+        save_context_parameters(h, NULL, list_rs, -1);
     }
 
     add_insert_button(h, table);
 
     free(action_target);
-    PQclear(getall_rs);
+    PQclear(list_rs);
     return;
 }
 
@@ -696,7 +696,7 @@ void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         save_context_parameters(h, NULL, insert_rs, 0);
 
         // Redisplay the first screen.
-        onetable_getall(h, form_name, divqz);
+        onetable_list(h, form_name, divqz);
 
     }else{
 
@@ -744,7 +744,7 @@ void onetable_update(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         // Yeah, it worked.
 
         // Redisplay the first screen.
-        onetable_getall(h, form_name, divqz);
+        onetable_list(h, form_name, divqz);
 
     }else{
 
@@ -800,7 +800,7 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         append_class(delete_error, "err_msg");
     }
     // Redisplay the first screen.
-    onetable_getall(h, form_name, divqz);
+    onetable_list(h, form_name, divqz);
 
     PQclear(delete_rs);
 }
@@ -857,8 +857,8 @@ void onetable(struct handler_args* h){
     }
 
     // branch to the named action
-    if (strcmp("getall", action)==0){
-        onetable_getall(h, form_name, divqz);
+    if (strcmp("list", action)==0){
+        onetable_list(h, form_name, divqz);
 
     }else if (strcmp("edit", action)==0){
         onetable_edit(h, form_name, divqz);

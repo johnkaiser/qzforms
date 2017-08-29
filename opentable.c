@@ -1280,11 +1280,11 @@ int main(int argc, char* argv[]){
     }
     PQclear(rs);
 
-    printf("\ntesting wint getall\n\n");
+    printf("\ntesting wint list\n\n");
 
-    struct table_action* wint_getall = open_table(h, "wint", "getall");
-    print_table_action(h, "wint getall", wint_getall);
-    rs = perform_action(h, wint_getall, NULL);
+    struct table_action* wint_list = open_table(h, "wint", "list");
+    print_table_action(h, "wint list", wint_list);
+    rs = perform_action(h, wint_list, NULL);
     int row, col;
 
     for(row=0; row<PQntuples(rs); row++){
@@ -1312,7 +1312,7 @@ int main(int argc, char* argv[]){
 
     printf("\nclose table\n\n");
     close_table(h, "wint", "insert");
-    close_table(h, "wint", "getall");
+    close_table(h, "wint", "list");
     close_table(h, "wint", "delete");
 
     printf("\ntesting fs get\n\n");

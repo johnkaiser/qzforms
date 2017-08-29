@@ -439,7 +439,7 @@ VALUES ('stuff', 'create', 'SELECT n, words, trouble, ar, pos, current_mood, add
 FROM create_stuff()', NULL, NULL, 1894, NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
-VALUES ('stuff', 'getall', 'SELECT "n", "words", "trouble", "ar", "nbr", "current_mood",
+VALUES ('stuff', 'list', 'SELECT "n", "words", "trouble", "ar", "nbr", "current_mood",
 CASE WHEN "yesno" THEN ''yes'' WHEN not "yesno" THEN ''no'' 
 END "yesno", 
 "fixed"
@@ -448,7 +448,7 @@ ORDER BY "n"', NULL, '{n}', 1950, 'Stuff is a test table with lots of
 different kinds of data.');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
-VALUES ('main', 1, 'stuff', 'getall', 'Stuff', NULL);
+VALUES ('main', 1, 'stuff', 'list', 'Stuff', NULL);
 
 
 

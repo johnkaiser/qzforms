@@ -35,7 +35,7 @@ INSERT INTO qz.handler (handler_name) VALUES ('menupage');
 
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'create');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'insert');
-INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'getall');
+INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'list');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'edit');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'update');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'delete');
