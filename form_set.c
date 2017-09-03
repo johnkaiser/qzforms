@@ -476,10 +476,9 @@ int main(int argc, char* argv[]){
     struct session s;
     hargs.session = &s;
     
-    h->doc = doc_from_file(h, "base.xml");
-    xmlNodePtr cur = xmlDocGetRootElement(h->doc);
+    doc_from_file(h, "base.xml");
 
-    xmlNodePtr qzdiv = qzGetElementByID(h, cur, "qz");
+    xmlNodePtr qzdiv = qzGetElementByID(h, "qz");
     
     const char* kw[] = { "host", "dbname", "user", "password",
         "application_name", NULL };

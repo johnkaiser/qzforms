@@ -37,7 +37,6 @@
  */
 void req_login( struct handler_args* h ){
 
-    xmlNodePtr cur;
     xmlNodePtr divqz;
     xmlNodePtr form;
     xmlNodePtr list;
@@ -47,15 +46,10 @@ void req_login( struct handler_args* h ){
         gettime(), h->request_id, __func__, __LINE__);
 
     // XXXXX login.xml should be documented somewhere 
-    h->doc = doc_from_file(h, "login.xml");
-    cur = xmlDocGetRootElement(h->doc);
+    doc_from_file(h, "login.xml");
+    if (h->error_exists) return;
 
-    if (cur == NULL){
-        error_page(h, 500, "xmlDocGetRootElement not found");
-        return;
-    }     
-
-    divqz = qzGetElementByID(h, cur, "qz");
+    divqz = qzGetElementByID(h, "qz");
     if (divqz != NULL){
         char* action_target;
         char* uri_parts[] = {h->uri_parts[0], "login", "validate", NULL};
@@ -246,15 +240,11 @@ void logout(struct handler_args* hargs){
 
     // Build the logout page with a link to login.
     xmlNodePtr divqz;
-    xmlNodePtr doc_root;
 
-    hargs->doc = doc_from_file(hargs, "login.xml");
-    doc_root = xmlDocGetRootElement(hargs->doc);
-    if (doc_root == NULL){
-        error_page(hargs, 500, "xmlDocGetRootElement not found");
-        return;
-    }    
-    divqz = qzGetElementByID(hargs, doc_root, "qz");
+    doc_from_file(hargs, "login.xml");
+    if (hargs->error_exists) return;
+
+    divqz = qzGetElementByID(hargs, "qz");
     if (divqz != NULL){
 
         char* login_parts[] = {hargs->uri_parts[0], "login", NULL};

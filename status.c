@@ -93,7 +93,7 @@ void cntx_param_scanner(void* value, void* data, xmlChar* name){
     xmlNodePtr ul = data;
 
     char* keqv;
-    asprintf(&keqv, "%s=%s%c", name, value, '\0');
+    asprintf(&keqv, "%s=%s%c", name, (char*)value, '\0');
     xmlNewTextChild(ul, NULL, "li", keqv);
     free(keqv);
 }
@@ -137,16 +137,17 @@ void qz_status(struct handler_args* h){
 
     h->page_ta = open_table(h, "status", "view");
  
-    h->doc = doc_from_file(h, "base.xml");
+    doc_from_file(h, "base.xml");
+    if (h->error_exists) return;
 
     if ((cur = xmlDocGetRootElement(h->doc)) == NULL){
         error_page(h, 500,  "Root element not found");
         return;
     }
 
-    add_all_menus(h, cur);
+    add_all_menus(h);
 
-    if ((divqz = qzGetElementByID(h, cur, "qz")) == NULL){
+    if ((divqz = qzGetElementByID(h, "qz")) == NULL){
         error_page(h, 500,  "Element with id qz not found");
         return;
     }

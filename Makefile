@@ -38,10 +38,10 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=9
+SCHEMA_VERSION=10
 
 OBJ=qzhandlers.o timestamp.o  onetable.o \
-	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o\
+	str_to_array.o session.o login.o  cookie.o\
 	input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
@@ -53,7 +53,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	qzforms.init README.txt strbuf.c strbuf.h \
 	http_codes.h qzrandom64.h crypto_etag.h \
 	qzmain.c qzhandlers.c timestamp.c  onetable.c \
-	str_to_array.c qzGetElementByID.c session.c login.c cookie.c \
+	str_to_array.c session.c login.c cookie.c \
 	input.c output.c menu.c utility.c strbufs.c \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom64.c crypto_etag.c tagger.h tagger.c \
@@ -112,12 +112,9 @@ session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom64.o \
 		session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom64.o \
 		hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
 		opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
-		str_to_array.o qzGetElementByID.o login.o prompt_rule.o output.o \
+		str_to_array.o login.o prompt_rule.o output.o \
 		input.o menu.o qzhandlers.o timestamp.o status.o qzfs.o onetable.o grid.o \
 		-lpq -o session_test
-
-qzGetElementByID.o: qzGetElementByID.c
-	$(CC) $(CFLAGS) -c qzGetElementByID.c
 
 timestamp.o: timestamp.c qz.h
 	$(CC) $(CFLAGS) -c timestamp.c
@@ -169,7 +166,7 @@ opentable_test: opentable.c parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools
 	-DOPENTABLE_TEST -g \
 	gettime.o pgtools.o strbuf.o parse_pg_array.o output.o qzrandom64.o \
 	prompt_rule.o tagger.o crypto_etag.o utility.o str_to_array.o hex_to_uchar.o \
-	form_tag.o qzGetElementByID.o qzhandlers.o  timestamp.o status.o qzfs.o \
+	form_tag.o qzhandlers.o  timestamp.o status.o qzfs.o \
 	onetable.o menu.o login.o input.o cookie.o session.o parse_key_eq_val.o \
 	opentable.c \
 	-o opentable_test
@@ -243,7 +240,7 @@ prompt_rule.o: prompt_rule.c qz.h
 test_prompt_rule: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DPROMPT_RULE_MAIN  prompt_rule.c \
 	qzhandlers.o timestamp.o  onetable.o \
-	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o \
+	str_to_array.o session.o login.o  cookie.o \
 	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
@@ -268,7 +265,7 @@ form_set.o: form_set.c
 test_form_set: form_set.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DFORM_SET_MAIN form_set.c \
 	qzhandlers.o timestamp.o  onetable.o \
-	str_to_array.o qzGetElementByID.o session.o login.o  cookie.o \
+	str_to_array.o session.o login.o  cookie.o \
 	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
@@ -278,7 +275,18 @@ test_form_set: form_set.c
 		-lpq \
 		-o test_form_set
 
-
+id_index_test: input.c
+	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
+	qzhandlers.o timestamp.o  onetable.o \
+	str_to_array.o session.o login.o  cookie.o \
+	 output.o strbuf.o menu.o utility.o strbufs.o form_set.o \
+	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
+	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
+	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
+		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+		-L$(XMLLIBDIR) -L$(PCRELIBS) \
+		-lpq \
+		-o id_index_test
 inc:
 	echo $(VERSION)"+0.001"|bc > Version.new
 	printf "%.3f\n" `cat Version.new` > Version

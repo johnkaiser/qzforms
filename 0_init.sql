@@ -69,7 +69,7 @@ CREATE TABLE qz.constants (
 --
 -- Set the Schema Version
 --
-INSERT INTO qz.constants (key, schema_version) VALUES ('t', '9');
+INSERT INTO qz.constants (key, schema_version) VALUES ('t', '10');
 
 CREATE TABLE qz.change_history (
     change_id serial primary key,

@@ -1462,9 +1462,8 @@ int main(int argc, char* argv[]){
     hargs.conf = init_config();
 
     h->doc = doc_from_file(h, "base.xml");
-    xmlNodePtr cur = xmlDocGetRootElement(h->doc);
 
-    xmlNodePtr qzdiv = qzGetElementByID(h, cur, "qz");
+    xmlNodePtr qzdiv = qzGetElementByID(h, "qz");
     
     const char* kw[] = { "host", "dbname", "user", "password", 
         "application_name", NULL };

@@ -204,6 +204,7 @@ void free_handler(struct handler_args* handler){
         double start = handler->starttime;
 
         if (handler->doc != NULL) xmlFreeDoc(handler->doc);
+        if (handler->id_index != NULL) xmlHashFree(handler->id_index,(xmlHashDeallocator) xmlFree);
         if (handler->uri_parts != NULL) free(handler->uri_parts);
         if (handler->headers   != NULL) strbuf_free_chain(handler->headers);
 

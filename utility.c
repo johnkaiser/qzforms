@@ -205,121 +205,90 @@ void append_class(xmlNodePtr the_node, xmlChar* new_class){
  *  then do nothing.
  */
 
-void add_jscss_links(struct handler_args* h, xmlDocPtr doc){
+void add_jscss_links(struct handler_args* h){
 
-    if (doc == NULL) return;
+    if (h->doc == NULL) return;
     if (h->page_ta  == NULL){
+
         fprintf(h->log, "%f %d %s:%d page_ta is null\n", 
             gettime(), h->request_id, __func__, __LINE__);
     
         return;
     }
 
-    xmlNodePtr root_el;
-    if ((root_el = xmlDocGetRootElement(doc)) == NULL) return; 
+    xmlNodePtr head = qzGetElementByID(h, "__HEAD__");
+    if (head == NULL){
 
-    fprintf(h->log, "%f %d %s:%d root_el->name=%s\n", 
-        gettime(), h->request_id, __func__, __LINE__, 
-        root_el->name);
-
-    if (xmlStrcmp(root_el->name, "html") != 0) return;
-
-    xmlNodePtr child = root_el->xmlChildrenNode;
-
-    // If there is a text node under html skip over it.
-    if (xmlStrEqual(child->name, "text") && 
-        (child->xmlChildrenNode != NULL)) {
-
-          child = child->xmlChildrenNode->next;
-    }
-
-    bool found_head = false;
-
-    while (child != NULL){
-        fprintf(h->log, "%f %d %s:%d child->name=%s\n", 
-            gettime(), h->request_id, __func__, __LINE__, 
-            child->name);
-
-        if (xmlStrEqual(child->name, "head")){
-            xmlNodePtr head = child;
-            
-            found_head = true;
-
-            if (h->page_ta->js_filenames != NULL){
-
-                char** js_f = h->page_ta->js_filenames;
-                int k;
-                xmlNodePtr script_el; 
-
-                for (k=0; js_f[k] != NULL; k++){
-
-                    char* script;
-                    asprintf(&script, "/%s/%s", 
-                        get_uri_part(h, QZ_URI_BASE_SEGMENT),
-                        js_f[k]);
-
-                    // html script tags in xml are empty text. 
-                    script_el = xmlNewTextChild(head, NULL, "script", "\n");
-                    xmlNewProp(script_el, "src", script);
-
-                    fprintf(h->log, "%f %d %s:%d add script %s\n",
-                        gettime(), h->request_id, __func__, __LINE__,
-                        script);
-
-                    free(script);
-                    script = NULL;
-                }
-            }else{
-                fprintf(h->log, "%f %d %s:%d  js_filenames is null\n",
-                    gettime(), h->request_id, __func__, __LINE__);
-            }            
-
-            if (h->page_ta->css_filenames != NULL){
-
-                char** css_f = h->page_ta->css_filenames;
-                int j;
-                xmlNodePtr link_el;
-
-                    for (j=0; css_f[j] != NULL; j++){
-                        char* link;
-                        asprintf(&link, "/%s/%s",
-                            get_uri_part(h, QZ_URI_BASE_SEGMENT),
-                            css_f[j]);
-
-                        link_el = xmlNewChild(head, NULL, "link", NULL);
-                    xmlNewProp(link_el, "rel", "stylesheet");
-                    xmlNewProp(link_el, "href", link);
-
-                    fprintf(h->log, "%f %d %s:%d add stylesheet %s\n",
-                        gettime(), h->request_id, __func__, __LINE__,
-                        link);
-
-                    free(link);
-                    link = NULL;
-                }
-            }else{
-                fprintf(h->log, "%f %d %s:%d  css_filenames is null\n",
-                    gettime(), h->request_id, __func__, __LINE__);
-            }
-
-            if (has_data(h->page_ta->inline_js)){
-                xmlNewTextChild(head, NULL, "script", h->page_ta->inline_js);
-            }
-            if (has_data(h->page_ta->inline_css)){
-                xmlNewTextChild(head, NULL, "style", h->page_ta->inline_css);
-            }
-
-            // stop here 
-            child = NULL;
-        }else{
-           child = child->next; 
-        }   
-    }
-
-    if (! found_head){
         fprintf(h->log, "%f %d %s:%d failed to find head for script\n", 
             gettime(), h->request_id, __func__, __LINE__);
+
+        return;
     }
+
+    if (h->page_ta->js_filenames != NULL){
+
+        char** js_f = h->page_ta->js_filenames;
+        int k;
+        xmlNodePtr script_el;
+
+        for (k=0; js_f[k] != NULL; k++){
+
+            char* script;
+            asprintf(&script, "/%s/%s",
+                get_uri_part(h, QZ_URI_BASE_SEGMENT),
+                js_f[k]);
+
+            // html script tags in xml are empty text.
+            script_el = xmlNewTextChild(head, NULL, "script", "\n");
+            xmlNewProp(script_el, "src", script);
+
+            fprintf(h->log, "%f %d %s:%d add script %s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                script);
+
+            free(script);
+            script = NULL;
+        }
+    }else{
+        fprintf(h->log, "%f %d %s:%d  js_filenames is null\n",
+            gettime(), h->request_id, __func__, __LINE__);
+    }
+
+    if (h->page_ta->css_filenames != NULL){
+
+        char** css_f = h->page_ta->css_filenames;
+        int j;
+        xmlNodePtr link_el;
+
+            for (j=0; css_f[j] != NULL; j++){
+                char* link;
+                asprintf(&link, "/%s/%s",
+                    get_uri_part(h, QZ_URI_BASE_SEGMENT),
+                    css_f[j]);
+
+                link_el = xmlNewChild(head, NULL, "link", NULL);
+            xmlNewProp(link_el, "rel", "stylesheet");
+            xmlNewProp(link_el, "href", link);
+
+            fprintf(h->log, "%f %d %s:%d add stylesheet %s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                link);
+
+            free(link);
+            link = NULL;
+        }
+    }else{
+        fprintf(h->log, "%f %d %s:%d  css_filenames is null\n",
+            gettime(), h->request_id, __func__, __LINE__);
+    }
+
+    if (has_data(h->page_ta->inline_js)){
+        xmlNewTextChild(head, NULL, "script", h->page_ta->inline_js);
+    }
+    if (has_data(h->page_ta->inline_css)){
+        xmlNewTextChild(head, NULL, "style", h->page_ta->inline_css);
+    }
+
     return;
 }
 
@@ -331,8 +300,7 @@ void add_jscss_links(struct handler_args* h, xmlDocPtr doc){
  *  add it to the element with the id of "helpful_text" 
  */
  
-void add_helpful_text(struct handler_args* h, struct table_action* ta,
-    xmlNodePtr root_node){
+void add_helpful_text(struct handler_args* h, struct table_action* ta){
 
     if ((ta == NULL) || (ta->helpful_text == NULL) || 
         (ta->helpful_text[0] == '\0')){
@@ -340,7 +308,7 @@ void add_helpful_text(struct handler_args* h, struct table_action* ta,
         return;
     }
 
-    xmlNodePtr add_here = qzGetElementByID(h, root_node, "helpful_text");
+    xmlNodePtr add_here = qzGetElementByID(h, "helpful_text");
     xmlNodePtr helpful_text;
     if (add_here != NULL){
         helpful_text = xmlNewTextChild(add_here, NULL, "p", ta->helpful_text);
@@ -478,5 +446,23 @@ void log_file_rotation(struct qz_config* conf){
 
     free(lognamecopy1);
     free(lognamecopy2);
+}
+
+/*
+ *  qzGetElementByID
+ *
+ *  Use the index built under doc_from_file to return
+ *  the node for the id, or the magic ids
+ *  __HEAD__ or __BODY__
+ */
+xmlNodePtr qzGetElementByID(struct handler_args* h, xmlChar* id){
+
+    struct id_node* a_node;
+
+    a_node = xmlHashLookup(h->id_index, id);
+    if (a_node == NULL){
+        return NULL;
+    }
+    return a_node->node;
 }
 

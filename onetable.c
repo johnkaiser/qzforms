@@ -122,8 +122,7 @@ void edit_form(struct handler_args* h, char* next_action,
 
     xmlNewTextChild(divqz, NULL, "h2", form_name);
 
-    xmlNodePtr root_el = xmlDocGetRootElement(h->doc);
-    add_helpful_text(h, edit_ta, root_el);
+    add_helpful_text(h, edit_ta);
 
     struct delete_details* deldet = add_delete(h, divqz, edit_rs);
 
@@ -381,8 +380,7 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     xmlNewTextChild(divqz, NULL, "h2", form_name);
 
     // Add helpful_text
-    xmlNodePtr root_el = xmlDocGetRootElement(h->doc);
-    add_helpful_text(h, list_ta, root_el);
+    add_helpful_text(h, list_ta);
 
     // Show passed in parameters.
     if (list_ta->nbr_params > 0){
@@ -830,24 +828,13 @@ void onetable(struct handler_args* h){
         return;
     }
 
-    h->doc = doc_from_file(h, this_ta->xml_template);
-    if (h->doc == NULL){
-        // logged by doc_from_file
-        error_page(h, 500,  "xml conversion failure");
-        return;
-    }
-    xmlNodePtr root_el;
-    if ((root_el = xmlDocGetRootElement(h->doc)) == NULL){
-        fprintf(h->log, "%f %d %s:%d fail xml root element not found\n",
-            gettime(), h->request_id, __func__, __LINE__);
+    doc_from_file(h, this_ta->xml_template);
+    if (h->error_exists) return;
 
-        error_page(h, SC_EXPECTATION_FAILED,  "xml document open failure");
-        return;
-    }
     content_type(h, "text/html");
 
     xmlNodePtr divqz;
-    if ((divqz = qzGetElementByID(h, root_el, this_ta->target_div)) == NULL){
+    if ((divqz = qzGetElementByID(h, this_ta->target_div)) == NULL){
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
             gettime(), h->request_id, __func__, __LINE__,
             this_ta->target_div);
@@ -883,7 +870,7 @@ void onetable(struct handler_args* h){
     }
 
     if (! h->error_exists){
-        add_all_menus(h, root_el);
+        add_all_menus(h);
     }
     return;
 }

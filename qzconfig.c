@@ -204,8 +204,8 @@ bool is_true(char* str){
         if (strncasecmp("yes", str, 4) == 0) return true;
         if (strncasecmp("on", str, 4) == 0) return true;
         if (strlen(str) == 1){
-            if (str[0] == 't') return true;
-            if (str[0] == 'y') return true;
+            if ((str[0] == 't') || (str[0] == 'T')) return true;
+            if ((str[0] == 'y') || (str[0] == 'Y')) return true;
             if (str[0] == '1') return true;
         }
 
@@ -242,6 +242,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->audit_form_set_ref_count = DEFAULT_AUDIT_FORM_SET_REF_COUNT;
     conf->max_log_file_size = DEFAULT_MAX_LOG_FILE_SIZE;
     conf->max_log_file_count = DEFAULT_MAX_LOG_FILE_COUNT;
+    conf->audit_id_index = DEFAULT_AUDIT_ID_INDEX;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -325,6 +326,11 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         uint8_t max_log_file_count = (uint8_t)
             strtoull(setting, NULL, 10);
             conf->max_log_file_count = max_log_file_count;
+    }
+
+    setting = xmlHashLookup(conf_hash, "AUDIT_ID_INDEX");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->audit_id_index = is_true(setting);
     }
 
     // Put postgres vars into environment.

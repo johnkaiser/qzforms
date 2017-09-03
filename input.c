@@ -31,11 +31,115 @@
 #include "qz.h"
 
 /*
+ *  build_index
+ *
+ *  Build a hash table of all the id's plus head and body
+ *  as __HEAD__ and __BODY__
+ */
+struct stack_node {
+    xmlNodePtr node;
+    struct stack_node* next;
+};
+
+
+void build_index(struct handler_args* h){
+
+    fprintf(h->log, "%f %d %s:%d start build_index\n",
+        gettime(), h->request_id, __func__, __LINE__);
+
+    if (h->doc == NULL) return;
+
+    if (h->id_index != NULL){
+        error_page(h, 500, "Attempt to build index when index already exists");
+        return;
+    }
+    xmlNodePtr cur;
+    cur = xmlDocGetRootElement(h->doc);
+    if (cur == NULL){
+         error_page(h, 500, "xmlDocGetRootElement not found");
+         return;
+    }
+
+    struct stack_node* stack = calloc(1, sizeof(struct stack_node));
+    struct stack_node* last = NULL;
+    struct stack_node* this_node;
+    xmlNodePtr child;
+    xmlNodePtr check;
+    xmlChar* this_id;
+
+    bool head_found = false;
+    bool body_found = false;
+
+    h->id_index = xmlHashCreate(197);
+
+    while (cur != NULL){
+        this_id = xmlGetProp(cur, "id");
+
+        if (h->conf->audit_id_index){
+            fprintf(h->log,  "%f %d %s:%d on node %s id %s\n",
+                 gettime(), h->request_id, __func__, __LINE__,
+                 cur->name, this_id);
+        }
+        if (this_id != NULL){
+            check = xmlHashLookup(h->id_index, this_id);
+            if (check != NULL){
+                error_page(h, 500, "Duplicate ID");
+            }
+
+            struct id_node* new_id = calloc(1, sizeof(struct id_node));
+            new_id->node = cur;
+            snprintf(new_id->id, QZ_MAX_ID_LENGTH, "%s", this_id);
+
+            xmlHashAddEntry(h->id_index, new_id->id, new_id);
+        }
+
+        // Check for head, body nodes
+
+        if ( ! head_found && (xmlStrcasecmp(cur->name, "head") == 0)){
+
+            struct id_node* new_id = calloc(1, sizeof(struct id_node));
+            new_id->node = cur;
+            snprintf(new_id->id, QZ_MAX_ID_LENGTH, "%s", "__HEAD__");
+
+            xmlHashAddEntry(h->id_index, new_id->id, new_id);
+            head_found = true;
+        }
+
+        if ( ! body_found && (xmlStrcasecmp(cur->name, "body") == 0)){
+
+            struct id_node* new_id = calloc(1, sizeof(struct id_node));
+            new_id->node = cur;
+            snprintf(new_id->id, QZ_MAX_ID_LENGTH, "%s", "__BODY__");
+
+            xmlHashAddEntry(h->id_index, new_id->id, new_id);
+            body_found = true;
+        }
+
+        child = cur->xmlChildrenNode;
+        while (child != NULL){
+
+            this_node = malloc(sizeof(struct stack_node));
+            this_node->node = child;
+            this_node->next = stack;
+            stack = this_node;
+            child = child->next;
+        }
+        xmlFree(this_id);
+
+        last = stack;
+        stack = stack->next;
+        cur = last->node;
+        free(last);
+    }
+
+}
+
+/*
  *  doc_from_file
  *
  *  Turn a file name into an xml node tree,
  */  
-xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
+void doc_from_file( struct handler_args* h, char* requested_docname ){
 
     fprintf(h->log, "%f %d %s:%d start doc_from_file %s\n", 
         gettime(), h->request_id, __func__, __LINE__,
@@ -44,17 +148,8 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
     if (h->doc != NULL){
         fprintf(h->log, "%f %d %s:%d danger %s\n", 
             gettime(), h->request_id, __func__, __LINE__,
-            "doc_from_file called with h->doc undefined");
+            "doc_from_file called with h->doc defined");
     }
-
-    if (h->conf == NULL){
-        fprintf(h->log, "%f %d %s:%d fail h->conf is null\n",
-            gettime(), h->request_id, __func__, __LINE__);
-
-        return NULL;
-    }
-
-    xmlDocPtr doc;
 
     char* docname; 
     static char default_docname[] = "base.xml";
@@ -69,27 +164,26 @@ xmlDocPtr doc_from_file( struct handler_args* h, char* requested_docname ){
     asprintf(&full_path, "%s%s%s", 
         h->conf->template_path, PATH_SEPARATOR, docname);
 
-    doc = xmlParseFile(full_path);
+    h->doc = xmlParseFile(full_path);
 
-    if (doc == NULL){
-        fprintf(h->log, "%f %d %s:%d xmlParseFile failed %s\n", 
-            gettime(), h->request_id, __func__, __LINE__, full_path);
-       
+    if (h->doc == NULL){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "xmlParseFile failed");
         free(full_path);
         full_path = NULL;
-        return NULL;
+        return;
     }
 
     free(full_path);
     full_path = NULL;
 
-    add_jscss_links(h, doc);
+    build_index(h);
+
+    add_jscss_links(h);
 
     fprintf(h->log, "%f %d %s:%d doc_from_file complete\n", 
         gettime(), h->request_id, __func__, __LINE__); 
-    
-    return doc;
 }
+
 
 /*
  *  validate_regex
@@ -252,3 +346,59 @@ void save_pkey_values(struct handler_args* h,
     }
 }
 
+#ifdef ID_INDEX_TEST
+
+
+int main(void){
+
+    // setup a fake environment
+    qzrandom64_init();
+    struct qz_config* conf = init_config();
+
+    struct FCGX_Request freq = (struct FCGX_Request){
+       .requestId = 1,
+    };
+    struct handler_args hargs = (struct handler_args){
+       .request_id = 1,
+       .request = &freq,
+       .conf = conf,
+       .log = stdout
+    };
+    struct handler_args* h = &hargs;
+    char* id_list[] = {"stuff_zero", "qz", "helpful_text", "qzsubmenu", "qzmenu", "borkelsnot", NULL};
+
+    int loop;
+    for(loop=0; loop<100000; loop++){
+
+        doc_from_file(h, "base.xml");
+
+        struct id_node* id_item;
+        int item;
+        for(item=0; id_list[item] != NULL; item++){
+
+            id_item = xmlHashLookup(h->id_index, id_list[item]);
+
+            if (id_item != NULL){
+
+                fprintf(h->log, "%f %d %s:%d id=%s name=%s\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    id_item->id, id_item->node->name);
+            }else{
+                fprintf(h->log, "%f %d %s:%d id=%s not found\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    id_list[item]);
+
+            }
+        }
+
+        xmlFreeDoc(h->doc);
+        h->doc = NULL;
+        xmlHashFree(h->id_index, xmlFree);
+        h->id_index = NULL;
+        h->request_id++;
+    }
+    return 0;
+}
+
+
+#endif

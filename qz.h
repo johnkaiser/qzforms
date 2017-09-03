@@ -78,6 +78,7 @@
 #define QZ_URI_REQUEST_DATA 3
 
 #define QZ_MAX_CONTENT_TYPE_LENGTH 64
+#define QZ_MAX_ID_LENGTH 64
 
 #define IN_ONE_YEAR (time(NULL)+(86400*365))
 
@@ -123,6 +124,7 @@ struct handler_args {
     struct form_set* current_form_set;
     struct strbuf* headers;
     xmlDocPtr doc;
+    xmlHashTablePtr id_index;
     struct strbuf* data; 
     enum precheck_status regex_check;
     enum precheck_status pkey_check;
@@ -308,6 +310,11 @@ struct form_set{
     uint64_t integrity_token;
 };
 
+struct id_node {
+    xmlNodePtr node;
+    char id[QZ_MAX_ID_LENGTH+2];
+};
+
 // Used by housekeeper for xmlHashScan data passing
 struct form_tag_housekeeping_data {
     struct session* this_session;  // the session being cleaned
@@ -353,7 +360,7 @@ extern void do_page( struct handler_args* hargs );
  *
  *  Turn a file on disk into an xml document tree.
  */ 
-extern xmlDocPtr doc_from_file( struct handler_args*, char*);
+extern void doc_from_file( struct handler_args*, char*);
 
 /*
  *  regex_patters_are_valid
@@ -362,7 +369,7 @@ extern xmlDocPtr doc_from_file( struct handler_args*, char*);
  *  Search the postdata for prompt_rules with a compiled regex pattern,
  *  and validate data values for any patterns found.
  */
-bool regex_patterns_are_valid(struct handler_args* h);
+extern bool regex_patterns_are_valid(struct handler_args* h);
 
 /*
  *  req_login
@@ -414,7 +421,7 @@ extern char** str_to_array(char* str, char split);
  *  Like it says on the tin.
  *
  */
-extern xmlNodePtr qzGetElementByID(struct handler_args*, xmlNodePtr, xmlChar*); 
+extern xmlNodePtr qzGetElementByID(struct handler_args*, xmlChar*); 
 
 
 /*
@@ -902,7 +909,7 @@ extern void grid(struct handler_args* h);
  *  add_jscss_links
  *  utility.c
  */
-extern void add_jscss_links(struct handler_args* h, xmlDocPtr doc);
+extern void add_jscss_links(struct handler_args* h);
 
 /*
  *  json_add_element_args
@@ -936,7 +943,7 @@ extern void init_menu(struct handler_args *);
  *  add_all_menus
  *  menu.c
  */
-extern void add_all_menus(struct handler_args *, xmlNodePtr);
+extern void add_all_menus(struct handler_args *);
 
 /*
  * form_name_is_menu
@@ -948,8 +955,7 @@ extern bool form_name_is_menu(struct handler_args*);
  *  add_helpful_text
  *  utility.c
  */
-extern void add_helpful_text(struct handler_args* h, struct table_action* ta,
-    xmlNodePtr root_node); 
+extern void add_helpful_text(struct handler_args* h, struct table_action* ta);
 
 /*
  *  base64_encode

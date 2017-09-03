@@ -38,21 +38,14 @@
 
 void menupage( struct handler_args* h ){
 
-    xmlNodePtr cur;
     xmlNodePtr divqz;
 
-    h->doc = doc_from_file(h, "base.xml");
+    doc_from_file(h, "base.xml");
+    if (h->error_exists) return;
+
     content_type(h, "text/html");
 
-    if ((cur = xmlDocGetRootElement(h->doc)) == NULL){
-        fprintf(h->log, "%f %d %s:%d xml root element not found\n",
-            gettime(), h->request_id, __func__, __LINE__);
-
-        error_page(h, SC_EXPECTATION_FAILED,  "xml root element not found");
-        return;
-    }
-
-    if ((divqz = qzGetElementByID(h, cur, "qz")) == NULL){
+    if ((divqz = qzGetElementByID(h, "qz")) == NULL){
         fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",
             gettime(), h->request_id, __func__, __LINE__);
 
@@ -60,8 +53,8 @@ void menupage( struct handler_args* h ){
         return;
     }
 
-    add_helpful_text(h, h->page_ta, cur);
-    add_all_menus(h, cur);
+    add_helpful_text(h, h->page_ta);
+    add_all_menus(h);
 
     return;
 }
@@ -426,7 +419,7 @@ void log_context_variables(struct handler_args* hargs){
  *  but return as though everything is fine.
  *
  */
-void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
+void add_all_menus(struct handler_args* hargs){
 
     double start_time = gettime();
 
@@ -469,7 +462,7 @@ void add_all_menus(struct handler_args* hargs, xmlNodePtr root_node){
         char* menu_name = get_value(menu_set_rs, row, "menu_name");
         char* target_div = get_value(menu_set_rs, row, "target_div");
 
-        xmlNodePtr add_here = qzGetElementByID(hargs, root_node, target_div);
+        xmlNodePtr add_here = qzGetElementByID(hargs, target_div);
 
         if (add_here == NULL){
 

@@ -34,7 +34,7 @@
 void timestamp( struct handler_args *h ){
 
     xmlNodePtr divqz;
-    xmlNodePtr cur;
+    xmlNodePtr cur = NULL;
     xmlNodePtr timelist;
 
     PGresult* rs;
@@ -61,12 +61,12 @@ void timestamp( struct handler_args *h ){
 
 
 
-    h->doc = doc_from_file(h, "base.xml");
+    doc_from_file(h, "base.xml");
+    if (h->error_exists) return;
+
     content_type(h, "text/html");
 
-    cur = xmlDocGetRootElement(h->doc);
-
-    divqz = qzGetElementByID(h,cur,"qz");
+    divqz = qzGetElementByID(h, "qz");
     if (divqz != NULL){
         xmlNewTextChild(divqz, NULL, "p", PQgetvalue(rs,0,0));
         cur = xmlNewTextChild(divqz, NULL, "p", text);

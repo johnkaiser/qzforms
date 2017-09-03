@@ -204,7 +204,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     struct table_action* grid_edit_ta = h->page_ta;
 
     xmlNodePtr divqz;
-    if ((divqz = qzGetElementByID(h, root_el, grid_edit_ta->target_div)) == NULL){
+    if ((divqz = qzGetElementByID(h, grid_edit_ta->target_div)) == NULL){
 
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
             gettime(), h->request_id, __func__, __LINE__,
@@ -214,7 +214,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         return;
     }
 
-    add_helpful_text(h, grid_edit_ta, root_el);
+    add_helpful_text(h, grid_edit_ta);
 
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -524,7 +524,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     content_type(h, "text/html");
 
     xmlNodePtr divqz;
-    if ((divqz = qzGetElementByID(h, root_el, grid_save_ta->target_div)) == NULL){
+    if ((divqz = qzGetElementByID(h, grid_save_ta->target_div)) == NULL){
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
             gettime(), h->request_id, __func__, __LINE__,
             grid_save_ta->target_div);
@@ -649,14 +649,13 @@ void grid(struct handler_args* h){
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     char* action = get_uri_part(h, QZ_URI_ACTION);
 
-    if (h->page_ta->xml_template != NULL){
-        h->doc = doc_from_file(h, h->page_ta->xml_template);
-    }
-    if (h->doc == NULL){
-        // logged by doc_from_file
-        error_page(h, 500,  "xml conversion failure");
+    if (h->page_ta->xml_template == NULL){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "no template");
         return;
     }
+    doc_from_file(h, h->page_ta->xml_template);
+    if (h->error_exists) return;
+
     content_type(h, "text/html");
 
 
@@ -685,7 +684,7 @@ void grid(struct handler_args* h){
         error_page(h,400, "unknown action");
     }
     if (! h->error_exists){
-        add_all_menus(h, root_el);
+        add_all_menus(h);
     }
 }
 
