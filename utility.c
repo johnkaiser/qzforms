@@ -466,3 +466,34 @@ xmlNodePtr qzGetElementByID(struct handler_args* h, xmlChar* id){
     return a_node->node;
 }
 
+/*
+ *  add_listenr
+ *
+ *  Add an addEventListener js call to <src id=__EVENTS__...
+ */
+void add_listener(struct handler_args* h, char* id, char* event, char* action){
+
+    xmlNodePtr events_node = qzGetElementByID(h, "__EVENTS__");
+    if (events_node == NULL){
+        xmlNodePtr head = qzGetElementByID(h, "__HEAD__");
+        if (head == NULL){
+            // log it and give up.
+            return;
+        }
+        events_node = xmlNewChild(head, NULL, "script", "\n");
+    }
+    char* content;
+
+    if (id == NULL){
+        asprintf(&content, "document.addEventListener(\"%s\",%s);\n",
+            event, action);
+
+    }else{
+        asprintf(&content,
+            "document.getElementById(\"%s\").addEventListener(\"%s\",%s);\n",
+            id, event, action);
+    }
+    xmlNodeAddContent(events_node, content);
+    free(content);
+    return;
+}

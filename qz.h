@@ -1028,3 +1028,10 @@ extern void save_pkey_values(struct handler_args* h,
  *  utility.c
  */
 extern void log_file_rotation(struct qz_config* conf);
+
+/*
+ * add_listener
+ * utility.c
+ */
+extern void add_listener(struct handler_args* h, char* id, char* event, char* action);
+

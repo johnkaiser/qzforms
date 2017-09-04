@@ -180,6 +180,16 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
 
     add_jscss_links(h);
 
+    char* form_refresh;
+    // The form refresh rate should be a bit less than one third
+    // of the form duration so that 3 refresh requests have a chance
+    // before the inactivity timer kills things. d*95/300 for a
+    // 60 second duration would refresh at 19,38, and 57 seconds.
+    asprintf(&form_refresh, "form_refresh_init(%d*1000)",
+        h->conf->form_duration*95/300);
+
+    add_listener(h, NULL, "onLoad", form_refresh);
+    free(form_refresh);
     fprintf(h->log, "%f %d %s:%d doc_from_file complete\n", 
         gettime(), h->request_id, __func__, __LINE__); 
 }
