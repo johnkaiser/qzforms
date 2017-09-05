@@ -5,7 +5,7 @@
   <meta name="viewport" content="initial-scale = 1.0, maximum-scale = 1.0, user-scalable = no, width = device-width" />
   <title> QZ Forms </title>
 </head>
-<body onload='form_refresh_init(30*1000);'>
+<body>
 
 <h1> QZ Forms &#x2713; </h1>
 
