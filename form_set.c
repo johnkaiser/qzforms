@@ -150,9 +150,7 @@ void save_context_parameters(struct handler_args* h,
         return;
     }    
     if (h->page_ta->context_parameters == NULL){
-        fprintf(h->log, "%f %d %s:%d page_ta->context_paremters is null\n",
-            gettime(), h->request_id, __func__, __LINE__);
-    
+        // Nothing to do.
         return;
     }
     // This will happen when save_contest_parameters is called

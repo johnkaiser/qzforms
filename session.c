@@ -304,7 +304,7 @@ void close_session(struct handler_args* hargs, struct session* this_session){
         this_session->logged_out_time = time(NULL);
     }    
 
-    fprintf(hargs->log, "%f %d %s:%d Closing sesssion for %s\n",
+    fprintf(hargs->log, "%f %d %s:%d Closing session for %s\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         this_session->user);
 
@@ -315,9 +315,8 @@ void close_session(struct handler_args* hargs, struct session* this_session){
     }
     
     if (this_session->form_tags != NULL){
-        xmlHashFree(this_session->form_tags, (xmlHashDeallocator)xmlFree);
         close_all_form_tags(hargs, this_session);
-        xmlHashFree(this_session->pgtype_datum, NULL);
+        xmlHashFree(this_session->form_tags, (xmlHashDeallocator)xmlFree);
         this_session->form_tags = NULL;
     }
 

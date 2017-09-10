@@ -481,6 +481,7 @@ void add_listener(struct handler_args* h, char* id, char* event, char* action){
             return;
         }
         events_node = xmlNewChild(head, NULL, "script", "\n");
+        xmlNewProp(events_node, "id", "__EVENTS__");
     }
     char* content;
 

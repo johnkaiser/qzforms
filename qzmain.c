@@ -431,6 +431,9 @@ int main(int argc, char* argv[], char* envpmain[]){
     fprintf(log, "%f %d %s:%d server startup version=%.3f\n",
         gettime(), next_id, __func__, __LINE__, QZVER);
 
+    fprintf(log, "%f %d %s:%d expected schema version=%s\n",
+        gettime(), next_id, __func__, __LINE__, SCHEMA_VER);
+
     fprintf(log, "%f %d %s:%d tagger_socket_path=%s\n",
         gettime(), next_id, __func__, __LINE__, conf->tagger_socket_path);
 

@@ -95,6 +95,10 @@ struct form_record* register_form(struct handler_args* h,
         form_rec->form_set = NULL;
     }    
 
+    fprintf(h->log, "%f %d %s:%d form_id = %llx\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        form_id);
+
     return form_rec;
 }
 
@@ -339,11 +343,18 @@ void delete_form_record(void* payload, void* data, xmlChar* name){
     struct form_record* form_rec = payload;
     struct form_tag_housekeeping_data * ft_hk_data = data;
 
-     /*
-      * fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %s\n", 
-      *    gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
-      *    form_rec->form_action); 
-      */
+    if (form_rec == NULL){
+        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d form_rec is null\n", 
+            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__);
+
+        return;
+    }
+    uint64_t form_id;
+    memcpy(&form_id, form_rec->form_id, 8);
+
+    fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %llx\n", 
+        gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
+        form_id);
 
     decrement_form_set(form_rec);
 
@@ -366,6 +377,18 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
 
     struct form_record* form_rec = payload;
     struct form_tag_housekeeping_data * ft_hk_data = data;
+
+    if (form_rec == NULL){
+        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d unexpected null form_tag name=%s\n",
+            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
+            name);
+    }else{
+        uint64_t form_id;
+        memcpy(&form_id, form_rec->form_id, 8);
+        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d checking form_id=%llx %s %d\n",
+            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
+            form_id, "expires in", (time(NULL) - form_rec->expires) );
+    }
 
     // Allow twice the duration before removing 
     // This makes it possible to display expired messages instead

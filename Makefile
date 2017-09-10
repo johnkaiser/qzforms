@@ -67,7 +67,7 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 
 SQLUTIL= qz_examples.sql qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
-	qz_db_update_SV8.sql qz_db_update_SV9.sql
+	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql
  
 
 JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
