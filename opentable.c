@@ -397,12 +397,14 @@ void init_table_entry(struct handler_args* hargs,
     rs_table_action = PQexecPrepared(hargs->session->conn, "fetch_table_action",
                          2, (const char * const *) &paramValues, NULL, NULL, 0);
 
-    fprintf(hargs->log, "%f %d %s:%d rs_table_action(%s, %s) = %s,%s\n",
-        gettime(), hargs->request_id, __func__, __LINE__,
-        paramValues[0],
-        paramValues[1],
-        PQresStatus( PQresultStatus(rs_table_action) ),
-        PQresultErrorMessage(rs_table_action));
+    if (hargs->conf->log_table_action_details){
+        fprintf(hargs->log, "%f %d %s:%d rs_table_action(%s, %s) = %s,%s\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            paramValues[0],
+            paramValues[1],
+            PQresStatus( PQresultStatus(rs_table_action) ),
+            PQresultErrorMessage(rs_table_action));
+    }
 
     if (PQntuples(rs_table_action) == 0){
         fprintf(hargs->log, "%f %d %s:%d %s (%s, %s) %s\n",
@@ -514,9 +516,12 @@ void init_table_entry(struct handler_args* hargs,
     // Send the sql right back to create a prepared statement
     PGresult* rs_prep;
     rs_prep = PQprepare(hargs->session->conn, prepared_name, sql, 0, NULL);
-    fprintf(hargs->log, "%f %d %s:%d rs_prep = %s\n",
-        gettime(), hargs->request_id, __func__, __LINE__,
-        PQresStatus( PQresultStatus(rs_prep)));
+
+    if (hargs->conf->log_table_action_details){
+        fprintf(hargs->log, "%f %d %s:%d rs_prep = %s\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            PQresStatus( PQresultStatus(rs_prep)));
+    }
 
     if ( !(PQresultStatus(rs_prep) == PGRES_TUPLES_OK)
          &&
@@ -685,11 +690,15 @@ void init_table_entry(struct handler_args* hargs,
     PQclear(rs_table_action);
     PQclear(rs_prep);
 
-    fprintf(hargs->log,
-        "%f %d %s:%d init_table_entry complete\n",
-        gettime(), hargs->request_id, __func__, __LINE__);
+    if (hargs->conf->log_table_action_details){
 
-    if (true) log_table_action_details(hargs, new_table_action);
+       log_table_action_details(hargs, new_table_action);
+
+        fprintf(hargs->log,
+            "%f %d %s:%d init_table_entry complete\n",
+            gettime(), hargs->request_id, __func__, __LINE__);
+
+    }
     return;
 }
 

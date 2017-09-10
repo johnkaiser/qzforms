@@ -3,6 +3,19 @@
 #include <sys/param.h>
 #include <stdbool.h>
 
+/*
+ *  To add a new config option:
+ *
+ *  1. define a default value in qzconfig.h
+ *  2. add a field to struct qzconfig before integrity_token in qzconfig.h
+ *  3. set the field to its default at the top of set_config in qzconfig.c
+ *  3. add a setting block to function set_config in qzconfig.c
+ *  4. add a test under QZCONFIG_MAIN near the end of qzconfig.c
+ *  5. make test_qzconfig
+ *  6. export QZ_CONFIG_FILENAME=some/path/x.conf
+ *  7. ./test_qzconfig
+ */
+ 
 #define DEFAULT_CONFIG_FILE  "config/qzforms.conf"
 #define DEFAULT_TAGGER_SOCKET_PATH  "run/qzfcgi.sock"
 #define DEFAULT_LOGFILE_NAME "logs/qzfcgi.log"
@@ -15,6 +28,9 @@
 #define DEFAULT_MAX_LOG_FILE_SIZE 10000000
 #define DEFAULT_MAX_LOG_FILE_COUNT 9
 #define DEFAULT_AUDIT_ID_INDEX false
+#define DEFAULT_LOG_TABLE_ACTION_DETAILS false
+#define DEFAULT_LOG_FORM_TAG_DETAILS false
+#define DEFAULT_LOG_FORM_SET_DETAILS false
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -38,6 +54,9 @@ struct qz_config {
     uint64_t max_log_file_size;
     uint8_t  max_log_file_count;
     bool audit_id_index;
+    bool log_table_action_details;
+    bool log_form_tag_details;
+    bool log_form_set_details;
     uint64_t integrity_token;
 };
 

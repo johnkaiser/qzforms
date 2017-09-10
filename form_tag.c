@@ -95,10 +95,11 @@ struct form_record* register_form(struct handler_args* h,
         form_rec->form_set = NULL;
     }    
 
-    fprintf(h->log, "%f %d %s:%d form_id = %llx\n",
-        gettime(), h->request_id, __func__, __LINE__,
-        form_id);
-
+    if (h->conf->log_form_tag_details){
+        fprintf(h->log, "%f %d %s:%d form_id = %llx\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            form_id);
+    }
     return form_rec;
 }
 
@@ -206,7 +207,8 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     }
 
     if (this_form->expires < time(NULL)){
-        fprintf(h->log, "%f %d %s:%d fail form expired at %lld form_action=%s\n", 
+        fprintf(h->log, "%f %d %s:%d fail form expired at %lld "
+           "form_action=%s\n",
            gettime(), h->request_id, __func__, __LINE__,
            this_form->expires, this_form->form_action);
 
@@ -219,7 +221,8 @@ bool post_contains_valid_form_tag(struct handler_args* h){
         struct form_set* fs = h->posted_form->form_set;
         fprintf(h->log, "%f %d %s:%d form_set->name=%s sec_token_ok=%c\n",
            gettime(), h->request_id, __func__, __LINE__,
-           fs->name,  (fs->integrity_token == h->session->integrity_token)? 't':'f' );
+           fs->name,  (fs->integrity_token == h->session->integrity_token) ?
+               't':'f' );
     }
 
     // Verify the posted values match the form set for any context parameters.
@@ -352,10 +355,11 @@ void delete_form_record(void* payload, void* data, xmlChar* name){
     uint64_t form_id;
     memcpy(&form_id, form_rec->form_id, 8);
 
-    fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %llx\n", 
-        gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
-        form_id);
-
+    if (ft_hk_data->hargs->conf->log_form_tag_details){
+        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %llx\n",
+            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
+            form_id);
+    }
     decrement_form_set(form_rec);
 
     // A hash table scanner calling another hash table scanner.
@@ -379,15 +383,20 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
     struct form_tag_housekeeping_data * ft_hk_data = data;
 
     if (form_rec == NULL){
-        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d unexpected null form_tag name=%s\n",
+        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d "
+            "unexpected null form_tag name=%s\n",
             gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
             name);
     }else{
         uint64_t form_id;
         memcpy(&form_id, form_rec->form_id, 8);
-        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d checking form_id=%llx %s %d\n",
-            gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
-            form_id, "expires in", (time(NULL) - form_rec->expires) );
+
+        if (ft_hk_data->hargs->conf->log_form_tag_details){
+            fprintf(ft_hk_data->hargs->log, "%f %d %s:%d "
+                "checking form_id=%llx %s %d\n",
+                gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
+                form_id, "expires in", (time(NULL) - form_rec->expires) );
+        }
     }
 
     // Allow twice the duration before removing 
@@ -419,7 +428,7 @@ void form_tag_housekeeping(struct handler_args* hargs,
     };
 
     // hash scan args: xmlHashTablePtr, scanner function, blind data 
-    xmlHashScan(this_session->form_tags, form_tag_housekeeping_scanner, 
+    xmlHashScan(this_session->form_tags, form_tag_housekeeping_scanner,
         &ft_hk_data);
 
     xmlHashScan(this_session->form_sets, form_set_housekeeping_scanner, 
@@ -431,7 +440,8 @@ void form_tag_housekeeping(struct handler_args* hargs,
  *
  *  What it says on the tin.
  */
-void close_all_form_tags(struct handler_args* hargs, struct session* this_session){
+void close_all_form_tags(struct handler_args* hargs,
+    struct session* this_session){
 
     struct form_tag_housekeeping_data ft_hk_data = 
         (struct form_tag_housekeeping_data) {
@@ -479,7 +489,8 @@ struct form_record* get_posted_form_record(struct handler_args* h){
     this_form = xmlHashLookup(h->session->form_tags, payload_str);
 
     if (this_form == NULL){ 
-        fprintf(h->log, "%f %d %s:%d fail form record not found in hash table\n", 
+        fprintf(h->log, "%f %d %s:%d fail form record not found "
+           "in hash table\n",
            gettime(), h->request_id, __func__, __LINE__); 
          
         return NULL;

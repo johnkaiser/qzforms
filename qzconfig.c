@@ -243,6 +243,9 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->max_log_file_size = DEFAULT_MAX_LOG_FILE_SIZE;
     conf->max_log_file_count = DEFAULT_MAX_LOG_FILE_COUNT;
     conf->audit_id_index = DEFAULT_AUDIT_ID_INDEX;
+    conf->log_table_action_details = DEFAULT_LOG_TABLE_ACTION_DETAILS;
+    conf->log_form_tag_details = DEFAULT_LOG_FORM_TAG_DETAILS;
+    conf->log_form_set_details = DEFAULT_LOG_FORM_SET_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -331,6 +334,21 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     setting = xmlHashLookup(conf_hash, "AUDIT_ID_INDEX");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->audit_id_index = is_true(setting);
+    }
+
+    setting = xmlHashLookup(conf_hash, "LOG_TABLE_ACTION_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_table_action_details = is_true(setting);
+    }
+    
+    setting = xmlHashLookup(conf_hash, "LOG_FORM_TAG_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_form_tag_details = is_true(setting);
+    }
+
+    setting = xmlHashLookup(conf_hash, "LOG_FORM_SET_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_form_set_details = is_true(setting);
     }
 
     // Put postgres vars into environment.
@@ -469,6 +487,11 @@ int main(int argc, char* argv[], char* env[]){
     printf("audit_form_set_ref_count=%c\n", (config->audit_form_set_ref_count) ? 't':'f');
     printf("max_log_file_size=%llu\n", config->max_log_file_size);
     printf("max_log_file_count=%d\n",  config->max_log_file_count);
+    printf("audit_id_index=%c\n", (config->audit_id_index) ? 't':'f');
+    printf("log_table_action_details=%c\n", (config->log_table_action_details) ? 't':'f'); 
+    printf("log_form_tag_details=%c\n", (config->log_form_tag_details) ? 't':'f'); 
+    printf("log_form_set_details=%c\n", (config->log_form_set_details) ? 't':'f'); 
+
     
     char* allowed_vars[] = {
         "PGAPPNAME",

@@ -631,17 +631,19 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         final_rs = PQexec(h->session->conn, "ROLLBACK");
     }else{
         final_rs = PQexec(h->session->conn, "COMMIT");
+        xmlNodePtr result_node;
+
         if (PQresultStatus(final_rs) == PGRES_COMMAND_OK){
-            xmlNewTextChild(divqz, NULL, "p", "COMMIT OK");
+            result_node = xmlNewTextChild(divqz, NULL, "p", "COMMIT OK");
+            xmlNewProp(result_node, "id", "__GRID_RESULT__");
         }else{
             char* err_msg = nlfree_error_msg(final_rs);
-            xmlNewTextChild(divqz, NULL, "p", err_msg);
+            result_node = xmlNewTextChild(divqz, NULL, "p", err_msg);
+            xmlNewProp(result_node, "id", "__GRID_RESULT__");
             free(err_msg);
         }
     }
-
 }
-
 
 void grid(struct handler_args* h){
  // useful stuff here

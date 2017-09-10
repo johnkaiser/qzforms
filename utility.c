@@ -283,10 +283,16 @@ void add_jscss_links(struct handler_args* h){
     }
 
     if (has_data(h->page_ta->inline_js)){
-        xmlNewTextChild(head, NULL, "script", h->page_ta->inline_js);
+        xmlNodePtr new_script =
+            xmlNewTextChild(head, NULL, "script", h->page_ta->inline_js);
+
+        xmlNewProp(new_script, "type", "text/javascript");
     }
     if (has_data(h->page_ta->inline_css)){
-        xmlNewTextChild(head, NULL, "style", h->page_ta->inline_css);
+        xmlNodePtr new_style =
+            xmlNewTextChild(head, NULL, "style", h->page_ta->inline_css);
+
+        xmlNewProp(new_style, "type", "text/javascript");
     }
 
     return;
@@ -482,6 +488,7 @@ void add_listener(struct handler_args* h, char* id, char* event, char* action){
         }
         events_node = xmlNewChild(head, NULL, "script", "\n");
         xmlNewProp(events_node, "id", "__EVENTS__");
+        xmlNewProp(events_node, "type", "text/javascript");
     }
     char* content;
 
