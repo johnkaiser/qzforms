@@ -91,7 +91,7 @@ void serve_output( struct handler_args* hargs ){
 
         }
     } else {
-        error_page(hargs, SC_EXPECTATION_FAILED, "No content generated" );
+        error_page(hargs, SC_BAD_REQUEST, "No content generated" );
     }
 
     return;

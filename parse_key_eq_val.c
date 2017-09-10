@@ -306,7 +306,7 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
         fprintf(hargs->log, "%f %d %s:%d fail invalid utf-8\n", 
             gettime(), hargs->request_id, __func__, __LINE__);
 
-        error_page(hargs, SC_EXPECTATION_FAILED, 
+        error_page(hargs, SC_BAD_REQUEST, 
             "Post data contains invalid UTF-8 data");
         
         xmlHashFree(pt, NULL);

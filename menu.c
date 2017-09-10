@@ -49,7 +49,7 @@ void menupage( struct handler_args* h ){
         fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",
             gettime(), h->request_id, __func__, __LINE__);
 
-        error_page(h, SC_EXPECTATION_FAILED,  "Element with id qz not found");
+        error_page(h, SC_BAD_REQUEST,  "Element with id qz not found");
         return;
     }
 

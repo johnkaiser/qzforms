@@ -210,7 +210,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             gettime(), h->request_id, __func__, __LINE__,
             grid_edit_ta->target_div);
 
-        error_page(h, SC_EXPECTATION_FAILED,  "id element not found");
+        error_page(h, SC_BAD_REQUEST,  "id element not found");
         return;
     }
 
@@ -226,7 +226,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
-        error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
+        error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
     }
     int nfields = PQnfields(grid_edit_rs);
@@ -235,7 +235,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             gettime(), h->request_id, __func__, __LINE__,
             nfields);
 
-        error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
+        error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
     }
 
@@ -529,7 +529,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             gettime(), h->request_id, __func__, __LINE__,
             grid_save_ta->target_div);
 
-        error_page(h, SC_EXPECTATION_FAILED,  "id element not found");
+        error_page(h, SC_BAD_REQUEST,  "id element not found");
         return;
     }
 
@@ -543,7 +543,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
-        error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
+        error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
     }
 
@@ -667,7 +667,7 @@ void grid(struct handler_args* h){
         fprintf(h->log, "%f %d %s:%d fail xml root element not found\n",
             gettime(), h->request_id, __func__, __LINE__);
 
-        error_page(h, SC_EXPECTATION_FAILED,  "xml document open failure");
+        error_page(h, SC_BAD_REQUEST,  "xml document open failure");
         return;
     }
 

@@ -534,7 +534,7 @@ void init_table_entry(struct handler_args* hargs,
             form_name, action,
             PQresultErrorMessage(rs_prep));
 
-        error_page(hargs, SC_EXPECTATION_FAILED, error_msg );
+        error_page(hargs, SC_BAD_REQUEST, error_msg );
 
         // ZZZZZ clean up and return
     }
@@ -938,7 +938,7 @@ PGresult* perform_post_row_action(struct handler_args* h,
                 fieldname);
 
             free(fieldname);
-            error_page(h, SC_EXPECTATION_FAILED, "missing parameter");
+            error_page(h, SC_BAD_REQUEST, "missing parameter");
             return NULL;
         }
 

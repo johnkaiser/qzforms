@@ -368,7 +368,7 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
 
-        error_page(h, SC_EXPECTATION_FAILED, "Null result"); // not expected.
+        error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
     }
 
@@ -575,7 +575,7 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
         gettime(), h->request_id, __func__, __LINE__);
 
-        error_page(h, SC_EXPECTATION_FAILED, "action returned null");
+        error_page(h, SC_BAD_REQUEST, "action returned null");
         return;
     }
 
@@ -588,7 +588,7 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s %d Record not found.\n",
             gettime(), h->request_id, __func__, __LINE__ );
 
-        error_page(h, SC_EXPECTATION_FAILED, "Record not found.");
+        error_page(h, SC_NOT_FOUND, "Record not found.");
         PQclear(edit_rs);
         return;
     }
@@ -599,7 +599,7 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             gettime(), h->request_id, __func__, __LINE__,
             PQntuples(edit_rs));
 
-        error_page(h, SC_EXPECTATION_FAILED, "Wrong data count");
+        error_page(h, SC_BAD_REQUEST, "Wrong data count");
         PQclear(edit_rs);
         return;
     }
@@ -625,7 +625,7 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "create");
 
-        error_page(h,SC_EXPECTATION_FAILED, "Not Found");
+        error_page(h, SC_NOT_FOUND, "Not Found");
         return;
     }
 
@@ -636,7 +636,7 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
             gettime(), h->request_id, __func__, __LINE__);
 
-        error_page(h, SC_EXPECTATION_FAILED, "action returned null");
+        error_page(h, SC_NOT_FOUND, "action returned null");
         return;
     }
 
@@ -647,7 +647,7 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             gettime(), h->request_id, __func__, __LINE__,
             PQntuples(create_rs));
 
-        error_page(h, SC_EXPECTATION_FAILED, "Wrong data count");
+        error_page(h, SC_BAD_REQUEST, "Wrong data count");
         PQclear(create_rs);
         return;
     }
@@ -672,7 +672,7 @@ void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "insert");
 
-        error_page(h,SC_EXPECTATION_FAILED, "Not Found");
+        error_page(h, SC_NOT_FOUND, "Not Found");
         return;
     }
 
@@ -683,7 +683,7 @@ void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
         gettime(), h->request_id, __func__, __LINE__);
 
-        error_page(h, SC_EXPECTATION_FAILED, "action returned null");
+        error_page(h, SC_NOT_FOUND, "action returned null");
         return;
     }
 
@@ -724,7 +724,7 @@ void onetable_update(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "update");
 
-        error_page(h,SC_EXPECTATION_FAILED, "Not Found");
+        error_page(h, SC_NOT_FOUND, "Not Found");
         return;
     }
 
@@ -771,7 +771,7 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s:%d delete_ta is null from %s, %s\n",
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "delete");
-        error_page(h,SC_EXPECTATION_FAILED, "Not Found");
+        error_page(h, SC_NOT_FOUND, "Not Found");
         return;
     }
 
@@ -781,7 +781,7 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
         gettime(), h->request_id, __func__, __LINE__);
 
-        error_page(h, SC_EXPECTATION_FAILED, "action returned null");
+        error_page(h, SC_NOT_FOUND, "action returned null");
         return;
     }
 
@@ -839,7 +839,7 @@ void onetable(struct handler_args* h){
             gettime(), h->request_id, __func__, __LINE__,
             this_ta->target_div);
 
-        error_page(h, SC_EXPECTATION_FAILED,  "id element not found");
+        error_page(h, SC_NOT_FOUND,  "id element not found");
         return;
     }
 
