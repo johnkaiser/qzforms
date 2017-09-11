@@ -95,9 +95,21 @@ bool form_set_is_valid(struct handler_args* h, struct form_set* fs){
  *  Remove the named form set from the session freeing the item.
  */
 
-void remove_form_set(struct session* this_session, char* id){
+void remove_form_set(struct form_tag_housekeeping_data* ft_hk_data, char* id){
+
+    struct session* this_session = ft_hk_data->this_session;
+    struct handler_args* hargs = ft_hk_data->hargs;
 
     struct form_set* fs = xmlHashLookup(this_session->form_sets, id);
+
+    if (hargs->conf->log_form_set_details){
+        uint64_t form_set_id;
+        memcpy(&form_set_id, fs->id, 8);
+
+        fprintf(hargs->log, "%f %d %s:%d form_set->id=%llx\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            form_set_id);
+    }
 
     if (fs != NULL){
        xmlHashFree(fs->context_parameters, (xmlHashDeallocator)xmlFree);
@@ -318,17 +330,30 @@ void clear_context_parameters(struct handler_args* h, char* form_set_name){
 
 void close_form_set_scanner(void* payload, void* data, xmlChar* name){
     struct form_set* fs = payload;
-    struct session* session = (struct session*)data;
+    struct form_tag_housekeeping_data* ft_hk_data = data;
+    struct session* session = ft_hk_data->this_session;
+    struct handler_args* hargs = ft_hk_data->hargs;
     char* id = name;
 
     if (fs->context_parameters != NULL){
         xmlHashFree(fs->context_parameters, (xmlHashDeallocator)xmlFree);
     }
+    if (hargs->conf->log_form_set_details){
+
+        uint64_t form_set_id;
+        memcpy(&form_set_id, id, 8);
+
+        fprintf(hargs->log, "%f %d %s:%d remove_form_set %llx.\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            form_set_id);
+    }
     xmlHashRemoveEntry(session->form_sets, id, (xmlHashDeallocator)xmlFree);
 }
 
-void close_all_form_sets(struct session* session){
-    xmlHashScan(session->form_sets, close_form_set_scanner, (void*)session);
+void close_all_form_sets(struct form_tag_housekeeping_data* ft_hk_data){
+    xmlHashScan(ft_hk_data->this_session->form_sets,
+        close_form_set_scanner,
+        (void*)ft_hk_data);
 }
 
 
@@ -429,7 +454,7 @@ void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name){
     
             // What this is all about
             if  (form_set->ref_count == 0){
-                remove_form_set(session, form_set->id);
+                remove_form_set(ft_hk_data, form_set->id);
             }    
         }else{
             fprintf(h->log, "%f %d %s:%d form_set %s %llx "
@@ -442,7 +467,7 @@ void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name){
         // The normal case - auditing is turned off.
 
         if  (form_set->ref_count == 0){
-            remove_form_set(session, form_set->id);
+            remove_form_set(ft_hk_data, form_set->id);
         }    
     }
 }

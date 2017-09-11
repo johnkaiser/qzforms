@@ -321,7 +321,13 @@ void close_session(struct handler_args* hargs, struct session* this_session){
     }
 
     if (this_session->form_sets != NULL){
-        close_all_form_sets(this_session);
+        struct form_tag_housekeeping_data ft_hk_data =
+            (struct form_tag_housekeeping_data) {
+                .this_session = this_session,
+                .hargs = hargs
+        };
+
+        close_all_form_sets(&ft_hk_data);
         xmlHashFree(this_session->form_sets, NULL);
         this_session->form_sets = NULL;
     }    

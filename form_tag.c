@@ -393,9 +393,9 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
 
         if (ft_hk_data->hargs->conf->log_form_tag_details){
             fprintf(ft_hk_data->hargs->log, "%f %d %s:%d "
-                "checking form_id=%llx %s %d\n",
+                "checking form_id=%llx %s %ld\n",
                 gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
-                form_id, "expires in", (time(NULL) - form_rec->expires) );
+                form_id, "expires in", (long) (time(NULL) - form_rec->expires) );
         }
     }
 

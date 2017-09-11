@@ -90,7 +90,7 @@ qzforms.fcgi: $(OBJ) qzmain.o
 		-lpq
 
 qzmain.o: qzmain.c qz.h
-	$(CC) $(CFLAGS)  -DQZVER="$(VERSION)" -c qzmain.c
+	$(CC) $(CFLAGS)  -DQZVER="$(VERSION)" -DSCHEMA_VER=$(SCHEMA_VERSION) -c qzmain.c
 
 qzhandlers.o: qzhandlers.c qz.h
 	$(CC) $(CFLAGS) -c qzhandlers.c

@@ -979,7 +979,7 @@ extern void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* na
  *  close_all_form_sets
  *  form_set.c
  */
-extern void close_all_form_sets(struct session*);
+extern void close_all_form_sets(struct form_tag_housekeeping_data*);
 
 /*
  *  save_context_parameters

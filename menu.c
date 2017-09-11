@@ -428,8 +428,10 @@ void add_all_menus(struct handler_args* hargs){
 
         error_page(hargs, SC_INTERNAL_SERVER_ERROR, "form set invalid");
         return;
-    }    
-    log_context_variables(hargs);
+    }
+    if (hargs->conf->log_form_set_details){
+        log_context_variables(hargs);
+    }
 
     // Use menu_set in pg to feed add_menu.
     char* params[3];
