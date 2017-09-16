@@ -135,6 +135,30 @@ void build_index(struct handler_args* h){
 }
 
 /*
+ *  add_index
+ *
+ *  Add the given node id and node ptr to the id index.
+ */
+void add_to_id_index(struct handler_args* h, xmlNodePtr the_node){
+
+    char* node_id = xmlGetProp(the_node, "id");
+
+    if (node_id != NULL){
+        if (xmlHashLookup(h->id_index, node_id) != NULL){
+            error_page(h, 500, "Duplicate ID");
+            return;
+        }
+
+        struct id_node* new_id = calloc(1, sizeof(struct id_node));
+        new_id->node = the_node;
+        snprintf(new_id->id, QZ_MAX_ID_LENGTH, "%s", node_id);
+
+        xmlHashAddEntry(h->id_index, new_id->id, new_id);
+        xmlFree(node_id);
+    }
+}
+
+/*
  *  doc_from_file
  *
  *  Turn a file name into an xml node tree,
@@ -185,11 +209,17 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
     // of the form duration so that 3 refresh requests have a chance
     // before the inactivity timer kills things. d*95/300 for a
     // 60 second duration would refresh at 19,38, and 57 seconds.
-    asprintf(&form_refresh, "form_refresh_init(%d*1000)",
-        h->conf->form_duration*95/300);
 
-    add_listener(h, NULL, "onLoad", form_refresh);
-    free(form_refresh);
+    if ( !
+        (uri_part_n_is(h, QZ_URI_FORM_NAME, "login") ||
+         uri_part_n_is(h, QZ_URI_FORM_NAME, "logout")) ){
+
+        asprintf(&form_refresh, "form_refresh_init(%d*1000)",
+            h->conf->form_duration*95/300);
+
+        add_listener(h, NULL, "onLoad", form_refresh);
+        free(form_refresh);
+    }
     fprintf(h->log, "%f %d %s:%d doc_from_file complete\n", 
         gettime(), h->request_id, __func__, __LINE__); 
 }
