@@ -225,9 +225,26 @@ void catch_notifies(struct handler_args* h){
 
 
 /*
+ *  form_tag_required
+ */
+
+bool form_tag_required(char* handler_name){
+
+    static char* form_tag_not_required[] = {"login", "logout", "refresh", 
+        "timestamp", "fs", NULL};
+
+    int n;
+
+    for(n=0; form_tag_not_required[n] != NULL; n++){
+        if (strcmp(handler_name, form_tag_not_required[n]) == 0){
+            return false;
+        }
+    }
+    return true;
+}
+/*
  *  do_page
  *
- *  
  */
 void do_page( struct handler_args* hargs ){
     
@@ -235,7 +252,8 @@ void do_page( struct handler_args* hargs ){
     // or if content length is not bytes read.
     if (hargs->error_exists){
         return;
-    }    
+    }
+    bool has_valid_form_tag = false;
 
     // Check the post data for being legal
     // It must contain a name 'form_tag' with value
@@ -252,12 +270,16 @@ void do_page( struct handler_args* hargs ){
             // This was a hard error, but it happens too frequently for that. 
             logout(hargs);
             return;
+        }else{
+            has_valid_form_tag = true;
         }
     }
 
     // The handler name will come from qz.form unless it is a builtin.
     static char* builtins[] = {"login","logout","refresh","status",
         "timestamp", NULL};
+
+
     static char menu_txt[] = "menupage";
     
     char* form_name = get_uri_part(hargs, QZ_URI_FORM_NAME);
@@ -356,17 +378,24 @@ void do_page( struct handler_args* hargs ){
                 struct handler* handler;
                 handler = xmlHashLookup(handler_hash, handler_name);
 
+                if (form_tag_required(handler_name) && ! has_valid_form_tag ){
 
-                if (handler != NULL){
+                    fprintf(hargs->log, "%f %d %s:%d fail form tag not found\n",
+                        gettime(), hargs->request_id, __func__, __LINE__);
+
+                    error_page(hargs, SC_BAD_REQUEST, "validation failed");
+                }
+
+                if ( ! hargs->error_exists && (handler != NULL) ){
                     catch_notifies(hargs);
                     handler->count++;
 
                     if ( check_postdata(hargs) ){
                        // Execute the selected handler
                         handler->handler( hargs );
-                    }    
-                } 
-            }    
+                    }
+                }
+            }
         }else{
              error_page(hargs, SC_UNAUTHORIZED, "session logged out");
         }

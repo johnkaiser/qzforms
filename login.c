@@ -104,6 +104,57 @@ void req_login( struct handler_args* h ){
 }
 
 /*
+ *  redirect_to_menu
+ *
+ *  Creat a page with one menu button to /qz/menu.
+ *  Submit it with js.
+ */
+
+void redirect_to_menu(struct handler_args* h){
+
+    xmlNodePtr divqz;
+    xmlNodePtr form;
+
+    doc_from_file(h, "login.xml");
+    if (h->error_exists) return;
+
+    divqz = qzGetElementByID(h, "qz");
+
+    if (divqz !=  NULL){
+
+        char* action;
+        asprintf(&action, "/%s/menu", h->uri_parts[QZ_URI_BASE_SEGMENT]);
+
+        form = xmlNewChild(divqz, NULL, "form", NULL);
+        register_form(h, form, SUBMIT_ONLY_ONCE, action);
+        xmlNewProp(form, "action", action);
+        free(action);
+
+        xmlNewProp(form, "method", "post");
+        xmlNewProp(form, "id", "menu");
+        xmlNewProp(form, "name", "menu");
+        xmlNewProp(form, "enctype", "application/x-www-form_urlencoded");
+        xmlNewProp(form, "class", "menu main");
+
+        xmlNodePtr submit = xmlNewChild(form, NULL, "input", NULL);
+        xmlNewProp(submit, "type", "submit");
+        xmlNewProp(submit, "value", "menu");
+
+        content_type(h, "text/html");
+
+        char* js_func =
+            "function(){ "
+            "console.log('loaded'); "
+            "document.getElementById('menu').submit(); "
+            "}";
+
+        add_listener(h, NULL, "DOMContentLoaded", js_func);
+    }else{
+        fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",
+            gettime(), h->request_id, __func__, __LINE__);
+    }
+}
+/*
  *  validate_login
  *
  *  Attempt to login with the credentials supplied.
@@ -194,10 +245,8 @@ void validate_login( struct handler_args* h  ){
         fprintf(h->log, "%f %d %s:%d user %s logged in\n", 
             gettime(), h->request_id, __func__, __LINE__, user);
 
-        char* uri_parts[] = {h->uri_parts[0], "menu", NULL};
-        char* menu_target = build_path(uri_parts);
-        location(h, menu_target);
-        free(menu_target);
+        h->page_ta = open_table(h, "menu", "view");
+        redirect_to_menu(h);
     }else{
 
         fprintf(h->log, "%f %d %s:%d user %s login failed\n", 
