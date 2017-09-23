@@ -216,8 +216,16 @@ void free_handler(struct handler_args* handler){
 
         if (handler->postdata != NULL){
             xmlHashFree(handler->postdata, NULL);
-            free(handler->postbuf);
             handler->postdata = NULL;
+        }
+
+        if (handler->postbuf != NULL){
+            free(handler->postbuf);
+            handler->postbuf = NULL;
+        }
+
+        if (handler->data != NULL){
+            strbuf_free_chain(handler->data);
         }
 
         FCGX_Finish_r(handler->request);

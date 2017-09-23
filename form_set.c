@@ -351,9 +351,11 @@ void close_form_set_scanner(void* payload, void* data, xmlChar* name){
 }
 
 void close_all_form_sets(struct form_tag_housekeeping_data* ft_hk_data){
-    xmlHashScan(ft_hk_data->this_session->form_sets,
-        close_form_set_scanner,
-        (void*)ft_hk_data);
+    if (ft_hk_data->this_session->form_sets != NULL){
+
+        xmlHashScan(ft_hk_data->this_session->form_sets,
+            close_form_set_scanner, (void*)ft_hk_data);
+    }
 }
 
 

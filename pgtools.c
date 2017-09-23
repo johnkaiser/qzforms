@@ -537,6 +537,7 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
         free(error_msg);
         free(fetch_list);
         fetch_list = NULL;
+        PQclear(rs);
         return NULL;
     }
     fprintf(h->log, "%f %d %s:%d select_fkey %s returned %d items\n",
@@ -566,6 +567,7 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
 
     free(fetch_list);
     fetch_list = NULL;
+    PQclear(rs);
 
     return options;
 }

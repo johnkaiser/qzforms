@@ -1175,11 +1175,10 @@ void add_prompt(struct handler_args* hargs,
     struct prompt_rule default_rule = (struct prompt_rule){
         .form_name = default_name,
         .fieldname = fname,
-        .prompt_type = "input_text",
+        .prompt_type = input_text,
     };
 
     if (args->rule == NULL) args->rule = &default_rule;
-    if (args->rule->prompt_type == NULL) args->rule->prompt_type = input_text;
 
     xmlNodePtr input = NULL;
     // !*&^$#%!!!
@@ -1414,6 +1413,40 @@ char**  fetch_options(
 
 #ifdef PROMPT_RULE_MAIN
 
+void free_test_handler(struct handler_args* handler){
+    if (handler != NULL){
+        double start = handler->starttime;
+
+        if (handler->doc != NULL) xmlFreeDoc(handler->doc);
+        if (handler->id_index != NULL) xmlHashFree(handler->id_index,(xmlHashDeallocator) xmlFree);
+        if (handler->uri_parts != NULL) free(handler->uri_parts);
+        if (handler->headers   != NULL) strbuf_free_chain(handler->headers);
+
+        if (handler->cookiesin != NULL){
+            xmlHashFree(handler->cookiesin, NULL);
+            free(handler->cookie_buf);
+            handler->cookie_buf = NULL;
+        }
+
+        if (handler->postdata != NULL){
+            xmlHashFree(handler->postdata, NULL);
+            free(handler->postbuf);
+            handler->postdata = NULL;
+        }
+
+        // FCGX_Finish_r(handler->request);
+
+        if (handler->log!=NULL) fprintf(handler->log, "%f %d %s:%d %s %f\n",
+            gettime(), handler->request_id, __func__, __LINE__,
+            "free_handler - request duration ",
+            gettime() - start);
+
+        fflush(handler->log);
+        fclose(handler->log);
+        // free(handler);
+    }
+}
+
 void print_prompt_rule(struct prompt_rule* rule, double elapsed){
 
     if (rule==NULL){
@@ -1436,6 +1469,16 @@ void print_prompt_rule(struct prompt_rule* rule, double elapsed){
     return; 
 }
 
+void usage(void){
+
+    printf("-h hostname\n"
+           "-d database\n"
+           "-u username\n"
+           "-p password\n"
+           "The password is assumed to be to a test account\n"
+          );
+}
+
 int main(int argc, char* argv[]){
 
 
@@ -1445,23 +1488,63 @@ int main(int argc, char* argv[]){
 
     struct handler_args hargs = (struct handler_args){
        .request_id = 1,
+       .starttime = gettime()
     };
     struct handler_args* h = &hargs;
     hargs.log = stdout;
 
-    struct session s;
-    hargs.session = &s;
+    struct session s = (struct session){
+
+    };
+    hargs.session = &s,
     
     hargs.conf = init_config();
 
-    h->doc = doc_from_file(h, "base.xml");
+    int ch;
+    char* pg_host = "localhost";
+    char* pg_db = NULL;
+    char* pg_user = NULL;
+    char* pg_passwd = NULL;
+    int   test = 0;
+
+    while ((ch = getopt(argc, argv,  "h:d:u:p:t:")) != -1){
+        switch(ch) {
+
+            case 'h':
+                pg_host = optarg;
+                break;
+
+            case 'd':
+                pg_db = optarg;
+                break;
+
+            case 'u':
+                pg_user = optarg;
+                break;
+
+            case 'p':
+                pg_passwd = optarg;
+                break;
+
+            case 't':
+                test = atoi(optarg);
+                break;
+
+            default:
+                usage();
+                return 0;
+        }
+    }
+
+
+    doc_from_file(h, "base.xml");
 
     xmlNodePtr qzdiv = qzGetElementByID(h, "qz");
     
     const char* kw[] = { "host", "dbname", "user", "password", 
         "application_name", NULL };
 
-    char* vals[] = { "localhost", "info", "qz", "42", "qztest", NULL };
+    char* vals[] = { pg_host, pg_db, pg_user, pg_passwd, "qztest", NULL };
 
     h->session->conn = PQconnectdbParams(kw, (const char* const*) vals, 0);
 
@@ -1472,85 +1555,108 @@ int main(int argc, char* argv[]){
     h->session->opentables = xmlHashCreate(50); 
     h->session->pgtype_datum = xmlHashCreate(50);
     h->session->form_tags = xmlHashCreate(50);
+    h->session->form_sets = xmlHashCreate(5);
     h->request_id = 42;
 
     init_prompt_type_hash();
     init_open_table(h);
-    struct table_action* t_action = open_table(h, "todo", "getone");
-    
-    char* data[] = {"26",NULL};
-    perform_action(h, t_action, data);
 
-    char* fields[] = { "uid", "seq", "created", "last_mod", "priority", 
-        "summary", "status", "completed", "percent", "description", "location", 
-        "class", "url", "notfound", NULL};
+    if (test == 0){
 
-    double start, finish;
-
-    struct prompt_rule* rule;
-
-    int j;
-    for( j=0; fields[j] != NULL; j++){
-        printf("field is %s\n", fields[j]); 
-        start = gettime();
-
-        rule = fetch_prompt_rule(h, "todo", fields[j]);
-
-         add_prompt(h, t_action, rule, NULL /*type*/,
-              NULL /*options*/, 0 /*row*/,
-              qzdiv, fields[j], NULL);
-        
-        finish = gettime();
-        if (rule != NULL){
-            print_prompt_rule(rule, finish-start); 
-        }else{
-            printf("null result in %f\n", finish-start);
-        }    
-
-        free_prompt_rule(h, rule);
-        
+        printf("No test specified, try -t 1 or -t 2\n");
+        usage();
     }
 
-    xmlBufferPtr xbuf = xmlBufferCreate();
-    xmlSaveCtxtPtr ctxt = xmlSaveToBuffer(xbuf, "UTF-8", 
-             XML_SAVE_FORMAT|XML_SAVE_NO_DECL|XML_SAVE_AS_HTML);
-    
-    xmlSaveDoc(ctxt, h->doc);
-    xmlSaveClose(ctxt);
-    printf("%s", xbuf->content);
+    if (test == 1){
+        struct table_action* t_action = open_table(h, "form", "edit");
+        char* data[] = {"table_action_edit",NULL};
+        PGresult* rs = perform_action(h, t_action, data);
 
+        char* fields[] = { "form_name", "handler_name", "schema_name",
+            "table_name", "xml_template", "target_div", "hidden",
+            "add_description", "prompt_container", "form_set_name", "pkey",
+            NULL};
 
-    rule = fetch_prompt_rule(h, "stuff", "xyz");
-    printf("\njson_add_element_args empty rule\n%s\n", 
-        json_add_element_args("stupid_test", rule, NULL));
-    
-    rule = fetch_prompt_rule(h, "stuff", "ar");
-    printf("json_add_element_args\n%s\n", 
-        json_add_element_args("stupid_test", rule, NULL));
+        int j;
+        double start, finish;
+        struct prompt_rule* rule = NULL;
 
-    rule = fetch_prompt_rule(h, "test", "test");
-    printf("json_add_element_args\n%s\n",
-        json_add_element_args("stupid_test", rule, NULL));
+        for (j=0; fields[j] != NULL; j++){
 
-    char* qpct[] = {"normal(x)", "single(%n)", "else(%x)", 
-        "more(%n,%n,%n,%n)", NULL};
+            printf("field is %s\n", fields[j]);
+            start = gettime();
 
-    for(j=0; qpct[j] != NULL; j++){
-        char* q = quantify_percent_n(qpct[j], j);
-        printf("quantify_percent_n(%s)=%s\n", qpct[j], q);
+            rule = fetch_prompt_rule(h, "form", fields[j]);
+
+            /*
+             *  void add_prompt(struct handler_args*, struct table_action*,
+             *  struct prompt_rule*, struct pgtype_datum*, char* options[],
+             *  int row_index, xmlNodePtr, xmlChar*, xmlChar*);
+             */
+            add_prompt(h, t_action, rule, NULL /*type*/,
+                NULL /*options*/, 0 /*row*/,
+                qzdiv, fields[j], NULL);
+
+            finish = gettime();
+            if (rule != NULL){
+                print_prompt_rule(rule, finish-start);
+            }else{
+                printf("null result in %f\n", finish-start);
+            }
+            free_prompt_rule(h, rule);
+            rule = NULL;
+        }
+
+        xmlBufferPtr xbuf = xmlBufferCreate();
+        xmlSaveCtxtPtr ctxt = xmlSaveToBuffer(xbuf, "UTF-8",
+                 XML_SAVE_FORMAT|XML_SAVE_NO_DECL|XML_SAVE_AS_HTML);
+        
+        xmlSaveDoc(ctxt, h->doc);
+        xmlSaveClose(ctxt);
+        printf("%s", xbuf->content);
+        xmlBufferFree(xbuf);
+        PQclear(rs);
+    }
+    if (test == 2){
+        struct prompt_rule* rule;
+        int j;
+
+        rule = fetch_prompt_rule(h, "stuff", "xyz");
+        printf("\njson_add_element_args empty rule\n%s\n",
+            json_add_element_args("stupid_test", rule, NULL));
+
+        rule = fetch_prompt_rule(h, "stuff", "ar");
+        printf("json_add_element_args\n%s\n",
+            json_add_element_args("stupid_test", rule, NULL));
+
+        rule = fetch_prompt_rule(h, "test", "test");
+        printf("json_add_element_args\n%s\n",
+            json_add_element_args("stupid_test", rule, NULL));
+
+        char* qpct[] = {"normal(x)", "single(%n)", "else(%x)",
+            "more(%n,%n,%n,%n)", NULL};
+
+        for(j=0; qpct[j] != NULL; j++){
+            char* q = quantify_percent_n(qpct[j], j);
+            printf("quantify_percent_n(%s)=%s\n", qpct[j], q);
+            free(q);
+        }
+
+        char* q = quantify_percent_n("big(%n)", 1234);
+        printf("quantify_percent_n(%s)=%s\n", "big(%n)", q);
         free(q);
-    }    
-    char* q = quantify_percent_n("big(%n)", 1234);
-    printf("quantify_percent_n(%s)=%s\n", "big(%n)", q);
-    free(q);
-    
-    struct prompt_rule* defr = fetch_prompt_rule(h, "gluxton", "noctal");
-    printf("default_prompt_rule(%s,%s) prompt_type:%s\n",
-       defr->form_name, defr->fieldname, defr->prompt_type);
-    free(defr);
 
+        struct prompt_rule* defr = fetch_prompt_rule(h, "gluxton", "noctal");
+
+        printf("default_prompt_rule(%s,%s) prompt_type:%s\n",
+           defr->form_name, defr->fieldname, defr->prompt_type);
+
+        free(defr);
+
+    }
+    close_session(h, h->session);
+    // PQfinish(h->session->conn);
+    free_test_handler(h);
     return 0;
 }
-
-
 #endif
