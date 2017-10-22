@@ -79,6 +79,8 @@ struct form_record* register_form(struct handler_args* h,
     make_etag(tagbuf, h->session->tagger_socket_path, form_id);
     xmlNewProp(tag_node, "value", tagbuf);
 
+    snprintf(form_rec->full_tag, ETAG_MAX_LENGTH, "%s", tagbuf);
+
     // add an expires attribute
 
     char* expires_buf;
@@ -509,11 +511,24 @@ struct form_record* get_posted_form_record(struct handler_args* h){
         return NULL;
     }
 
+    // The full_tag attribute contains the text of the tag saved by
+    // register_form. It must match the form tag from post data.
+    if (strncmp(form_tag, this_form->full_tag, ETAG_MAX_LENGTH) != 0){
+        fprintf(h->log, "%f %d %s:%d fail form tag submitted validates, "
+            "but does not match saved tag\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
+        h->session->is_logged_in = false;
+
+        return NULL;
+    }
+
     if ( (this_form->form_set != NULL) && 
         (! form_set_is_valid(h, this_form->form_set))){
 
         fprintf(h->log, 
-            "%f %d %s:%d fail form set integrity token check invalid\n",
+                "%f %d %s:%d fail form set integrity token check invalid\n",
             gettime(), h->request_id, __func__, __LINE__);
         
         error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");

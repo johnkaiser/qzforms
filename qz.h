@@ -141,6 +141,7 @@ struct handler{
 struct session{
     unsigned char session_id[9];
     int zero;
+    char full_tag[ETAG_MAX_LENGTH];
     char user[MAX_USER_NAME_LENGTH+2];
     pthread_mutex_t session_lock;
     bool is_logged_in;
@@ -285,6 +286,7 @@ struct prompt_rule{
 
 struct form_record{
     xmlChar form_id[9];
+    char full_tag[ETAG_MAX_LENGTH];
     bool is_valid;
     time_t created;
     time_t expires;

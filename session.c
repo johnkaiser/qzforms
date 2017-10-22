@@ -182,6 +182,13 @@ setup_session(struct handler_args* hargs,
 
     make_etag(hargs->session_key, conf->tagger_socket_path, session_id);
 
+    /*  Don't allow a replay attack to successfully validate to a random 64 bit
+     *  number because the birthday paradox says it may happen.
+     *  Save the whole string with 192 bits of data to check against.
+     */
+    snprintf(this_session->full_tag, SESSION_KEY_LENGTH, "%s",
+        hargs->session_key);
+
     snprintf(this_session->tagger_socket_path, MAXPATHLEN, "%s", 
         conf->tagger_socket_path);  
 
@@ -270,6 +277,20 @@ session_from_hargs(struct handler_args* hargs,
         fprintf(hargs->log,"%f %d %s:%d session closed for bad integrity token",
             gettime(), hargs->request_id, __func__, __LINE__);
         
+        return NULL;
+    }
+
+    if (strncmp(this_session->full_tag, hargs->session_key,
+        SESSION_KEY_LENGTH) != 0){
+        // This is a double check that not only is the tag value
+        // a match, but the whole tag as a string, which includes the IV.
+        // Here the test failed,
+
+        close_session(hargs, this_session);
+
+        fprintf(hargs->log,"%f %d %s:%d session closed for bad session match",
+            gettime(), hargs->request_id, __func__, __LINE__);
+
         return NULL;
     }
 
