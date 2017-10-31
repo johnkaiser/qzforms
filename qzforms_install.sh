@@ -1,4 +1,7 @@
 #!/bin/sh
+## To run the install as a non-root user,
+## replace RUNUSER,RUNGROUP,FORMDEVGROUP,ADMINUSER,ADMINGROUP with
+## the user and a group of account running the script.
 ##
 ##  The user and group that will be running the qzforms application. 
 ##
@@ -144,6 +147,7 @@ install -d -m 770 -o ${ADMINUSER} -g  ${ADMINGROUP} ${INSTALLDIR}/sql
 install  -m 660 -o ${ADMINUSER} -g ${ADMINGROUP} \
     ${INSTALL_FROM}/qz_db_install_SV*.sql  \
     ${INSTALL_FROM}/qz_db_update_SV*.sql \
+    ${INSTALL_FROM}/qzforms_examples.sql \
     ${INSTALLDIR}/sql
 
 ##

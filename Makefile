@@ -65,10 +65,12 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 7_jscss_data.sql 8_menu.sql \
 	9_functions.sql  pgtype_datum.sql comment.sql 
 
-SQLUTIL= qz_examples.sql qz_db_update_SV3.sql qz_db_update_SV4.sql \
+SQLUTIL= qzforms_examples.sql qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
 	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql
- 
+
+EXAMPLES=examples/release_checklist.sql examples/release_checklist_data.sql \
+	examples/stuff_and_gridle.sql examples/todo.sql examples/todo_data.sql
 
 JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/add_input_radio.js js/add_input_text.js js/add_prompt.js \
@@ -80,7 +82,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html 
 
-all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql
+all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql qzforms_examples.sql
 
 qzforms.fcgi: $(OBJ) qzmain.o
 	$(CC)   -o qzforms.fcgi $(OBJ) qzmain.o \
@@ -292,6 +294,13 @@ inc:
 	printf "%.3f\n" `cat Version.new` > Version
 	cat Version
 
+qzforms_examples.sql: $(EXAMPLES)
+	cat examples/release_checklist.sql > qzforms_examples.sql
+	cat examples/release_checklist_data.sql >> qzforms_examples.sql
+	cat examples/stuff_and_gridle.sql >> qzforms_examples.sql
+	cat examples/todo.sql >> qzforms_examples.sql
+	cat examples/todo_data.sql >> qzforms_examples.sql
+
 qzforms.js.sql: $(JS) 
 	echo "UPDATE qz.js SET data = \\044QZ\\044"  > qzforms.js.sql
 	cat js/httpRequest.js >> qzforms.js.sql
@@ -321,10 +330,11 @@ qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
 
 tar:
 	tar -cz -s '|^|qzforms-$(VERSION)/|' -f qzforms-$(VERSION).tgz \
-    $(FILES) $(SQL) $(SQLUTIL) $(DOCS) $(JS)
+    $(FILES) $(SQL) $(SQLUTIL) $(DOCS) $(JS) $(EXAMPLES)
 
 # XXXXX add all the tests
 clean:
-	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array testopentable \
-		qzrandom64_test crypto_etag_test test_prompt_rule hex_to_uchar_test \
-        qzforms.js.sql qz_db_install_SV$(SCHEMA_VERSION).sql
+	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array \
+	testopentable qzrandom64_test crypto_etag_test test_prompt_rule \
+	hex_to_uchar_test qzforms.js.sql qz_db_install_SV$(SCHEMA_VERSION).sql \
+	qzforms_examples.sql

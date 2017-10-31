@@ -76,9 +76,9 @@ COMMENT ON COLUMN gridle.current_mood IS 'An enumerated type';
 COMMENT ON COLUMN gridle.yesno IS 'A boolean';
 
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, 
-xml_template, target_div, add_description, prompt_container) 
+xml_template, target_div, add_description, prompt_container, pkey) 
 VALUES ('gridle', 'grid', 'public', 'gridle', 'base.xml', 'qz', false, 
-'no_container');
+'no_container', '{n}');
 
 INSERT INTO gridle (n, t, txt, location, current_mood, yesno) 
 VALUES (3, 'three', 
@@ -133,56 +133,56 @@ INSERT INTO qz.page_js (form_name, sequence, filename)
 VALUES ('gridle', 30, 'qzforms.js');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, readonly, regex_pattern, rows, 
-cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect,
+cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect,
 onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, 
 onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, 
 publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 'n', false, '\d*', NULL, NULL, 5, 1504, NULL, NULL, NULL, 
+VALUES ('gridle', 'n', false, '\d*', NULL, NULL, 5, NULL, NULL, NULL, 
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
 NULL, NULL, NULL, 'input_text', false, true, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 'yesno', 'testing', false, NULL, NULL, NULL, 1593, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', false, true, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('gridle', 'yesno', 'testing', false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', false, true, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 'current_mood', NULL, false, NULL, NULL, NULL, 1796, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_options', false, true, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('gridle', 'current_mood', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_options', false, true, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 'location', NULL, false, NULL, NULL, NULL, 1575, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_fkey', false, true, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('gridle', 'location', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_fkey', false, true, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 't', NULL, false, NULL, NULL, 10, 1627, '{one,two,three,four,five,six,"sev en","The eighth thing.",niner}', 20, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_options', false, true, '{one,two,three,four,five,six,"sev en"}');
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('gridle', 't', NULL, false, NULL, NULL, 10, '{one,two,three,four,five,six,"sev en","The eighth thing.",niner}', 20, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'select_options', false, true, '{one,two,three,four,five,six,"sev en"}');
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 'Button', NULL, false, NULL, NULL, NULL, 1619, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'alert(''ouch! '' + ''%n''.toString() )', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'button', false, true, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('gridle', 'Button', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'alert(''ouch! '' + ''%n''.toString() )', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'button', false, true, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('gridle', 'txt', NULL, false, 2, 20, NULL, 1795, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'textarea', false, true, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('gridle', 'txt', NULL, false, 2, 20, NULL, NULL, NULL, NULL, NULL, 'change_status(%n, ''U'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'textarea', false, true, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('gridle', 'edit', 'SELECT n,t, location, current_mood, yesno, 
 ''Button''::text "Button", txt 
 FROM gridle 
-ORDER BY n', NULL, '{n}', 2237, 'Gridle is an example of a grid handler. The location drop down is from a foreign key, current_mood is enumerated, yesno boolean.   ');
+ORDER BY n', NULL, 'Gridle is an example of a grid handler. The location drop down is from a foreign key, current_mood is enumerated, yesno boolean.   ');
 
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
-VALUES ('gridle', 'delete_row', 'DELETE FROM gridle WHERE n = $1', '{n}', '{n}', 2239, NULL);
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+VALUES ('gridle', 'delete_row', 'DELETE FROM gridle WHERE n = $1', '{n}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
-VALUES ('gridle', 'insert_row', 'INSERT INTO gridle  ("n", "t", "location", "current_mood", "yesno", "txt") VALUES ($1, $2, $3, $4, $5, $6)', '{n,t,location,current_mood,yesno,txt}', '{n}', 2241, NULL);
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+VALUES ('gridle', 'insert_row', 'INSERT INTO gridle  ("n", "t", "location", "current_mood", "yesno", "txt") VALUES ($1, $2, $3, $4, $5, $6)', '{n,t,location,current_mood,yesno,txt}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('gridle', 'update_row', 'UPDATE gridle
 SET "t" = $2, 
 "location" = $3,
 "current_mood" = $4,
 "yesno" = $5,
 txt = $6
-WHERE n = $1', '{n,t,location,current_mood,yesno,txt}', '{n}', 2243, NULL);
+WHERE n = $1', '{n,t,location,current_mood,yesno,txt}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
-VALUES ('gridle', 'save', 'SELECT ''t''::bool "value";', NULL, '{n}', 2245, NULL);
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
+VALUES ('gridle', 'save', 'SELECT ''t''::bool "value";', NULL, NULL);
 
 
 --
@@ -372,8 +372,8 @@ VALUES (nextval('stuff_n'), 'a word or two or six', '(1,2)', '{123}', NULL, 'hap
 INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
 VALUES (nextval('stuff_n'), 'eight', '(9,1)', NULL, 18, NULL, '192.168.1.8', B'1000', 8.88888888, 8.000000, 'ocho', true);
 
-INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container) 
-VALUES ('stuff', 'onetable', 'public', 'stuff', 'base.xml', 'qz', false, 'fieldset');
+INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, pkey) 
+VALUES ('stuff', 'onetable', 'public', 'stuff', 'base.xml', 'qz', false, 'fieldset', '{n}');
 
 INSERT INTO qz.menu_set (menu_name, host_form_name, action) 
 VALUES ('main', 'stuff', 'any');
@@ -384,67 +384,67 @@ VALUES ('stuff', 10, 'qzforms.css');
 INSERT INTO qz.page_js (form_name, sequence, filename) 
 VALUES ('stuff', 30, 'qzforms.js');
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'ar', 'testclass', false, '\d*', NULL, NULL, 25, 1497, NULL, 64, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'text_array', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'ar', 'testclass', false, '\d*', NULL, NULL, 25, NULL, 64, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'text_array', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'trouble', NULL, false, '\(\d*,\d*\)', NULL, NULL, NULL, 1499, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'trouble', NULL, false, '\(\d*,\d*\)', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'words', NULL, false, NULL, NULL, 50, 1500, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'words', NULL, false, NULL, NULL, 50, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'yesno', NULL, true, NULL, NULL, NULL, 1501, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'yesno', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'addr', NULL, false, NULL, NULL, NULL, 1502, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'addr', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'pos', NULL, false, NULL, NULL, NULL, 1503, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size,  options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'pos', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'current_mood', 'current_mood', false, NULL, NULL, NULL, 1505, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'current_mood', 'current_mood', false, NULL, NULL, NULL,  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', true, false, NULL);
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, etag, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
-VALUES ('stuff', 'button', NULL, false, NULL, NULL, NULL, 1602, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'alert(''ouch!'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'button', true, false, NULL);
+INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest) 
+VALUES ('stuff', 'button', NULL, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'alert(''ouch!'')', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'button', true, false, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('stuff', 'delete', 'DELETE FROM stuff
-WHERE n = $1', '{n}', '{n}', 1699, NULL);
+WHERE n = $1', '{n}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('stuff', 'insert', 'INSERT INTO stuff
 ("n", "words", "trouble", "ar","pos", "addr", "mask", "nbr", "fixed", "yesno", "current_mood")
 VALUES
 ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-', '{n,words,trouble,ar,pos,addr,mask,nbr,fixed,yesno,current_mood}', '{n}', 1703, NULL);
+', '{n,words,trouble,ar,pos,addr,mask,nbr,fixed,yesno,current_mood}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('stuff', 'update', 'UPDATE stuff SET words = $2, trouble = $3,ar = $4,
 pos = $5,addr = $6,mask = $7,nbr = $8,fixed = $9,
 current_mood = $10, name = $11, yesno = $12
-WHERE n = $1', '{n,words,trouble,ar,pos,addr,mask,nbr,fixed,current_mood,stf_name,yesno}', '{n}', 1705, NULL);
+WHERE n = $1', '{n,words,trouble,ar,pos,addr,mask,nbr,fixed,current_mood,stf_name,yesno}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('stuff', 'edit', 'SELECT  
   n, words, current_mood, trouble, ar, pos, addr, mask, nbr,
   fixed, name stf_name, yesno, ''clickit''::text button 
 FROM 
   stuff
 WHERE 
-  n = $1', '{n}', '{n}', 1958, 'Test Data');
+  n = $1', '{n}', 'Test Data');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text) 
 VALUES ('stuff', 'create', 'SELECT n, words, trouble, ar, pos, current_mood, addr, mask, nbr,fixed, ''f''::bool yesno
-FROM create_stuff()', NULL, NULL, 1894, NULL);
+FROM create_stuff()', NULL, NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, pkey, etag, helpful_text) 
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames,  helpful_text) 
 VALUES ('stuff', 'list', 'SELECT "n", "words", "trouble", "ar", "nbr", "current_mood",
 CASE WHEN "yesno" THEN ''yes'' WHEN not "yesno" THEN ''no'' 
 END "yesno", 
 "fixed"
 FROM "stuff" 
-ORDER BY "n"', NULL, '{n}', 1950, 'Stuff is a test table with lots of 
+ORDER BY "n"', NULL, 'Stuff is a test table with lots of 
 different kinds of data.');
 
 INSERT INTO qz.menu_item (menu_name, menu_item_sequence, target_form_name, action, menu_text, context_parameters) 
