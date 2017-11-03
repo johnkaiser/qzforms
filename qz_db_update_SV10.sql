@@ -8,11 +8,6 @@ VALUES
  UPDATE qz.constants
  SET schema_version = '10';
 
-INSERT INTO qz.handler_action
-(handler_name, action_name)
-VALUES
-('onetable', 'list');
-
 UPDATE qz.table_action
 SET action = 'list'
 WHERE action = 'getall';

@@ -62,7 +62,7 @@ $RCLI$
 ),
 ('release_checklist', 'update', 
 '{version, seems_to_work, compiles_clean, installs_clean, 
-  simple_test_on_install, upgrades_clean, simple_test_on_upgreade,
+  simple_test_on_install, upgrades_clean, simple_test_on_upgrade,
   git_up_to_date, qzforms_com_up_to_date}', 
 $RCUPD$
     UPDATE release_checklist
@@ -117,9 +117,9 @@ COMMENT ON COLUMN release_checklist.seems_to_work IS 'QZForms is stable and runn
 COMMENT ON COLUMN release_checklist.compiles_clean IS 'Compiles without warnings on gcc and clang';
 COMMENT ON COLUMN release_checklist.installs_clean IS 'Installs without errors';
 COMMENT ON COLUMN release_checklist.simple_test_on_install IS 'Test the install by creating a new onetable and grid form';
-COMMENT ON COLUMN release_checklist.upgrade_clean   IS 'Test the schema version upgrade script';
+COMMENT ON COLUMN release_checklist.upgrades_clean   IS 'Test the schema version upgrade script';
 COMMENT ON COLUMN release_checklist.simple_test_on_upgrade IS 'Test the upgrade by creating a new onetable and grid form';
-COMMENT ON COLUMN release_checklist.git_is_up_to_date IS '';
-COMMENT ON COLUMN release_checklist.qzforms_com_is_up_to_date  IS '';
+COMMENT ON COLUMN release_checklist.git_up_to_date IS '';
+COMMENT ON COLUMN release_checklist.qzforms_com_up_to_date  IS '';
 
 
