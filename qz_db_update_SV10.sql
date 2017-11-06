@@ -25,6 +25,21 @@ WHERE action = 'getall';
 DELETE FROM qz.handler_action
 WHERE action_name = 'getall';
 
+UPDATE qz.table_action
+SET sql = $QZTAL$
+     SELECT form_name, handler_name
+     FROM qz.form
+     WHERE NOT hidden
+     ORDER BY form_name $QZTAL$
+WHERE form_name = 'form'
+AND action = 'list';
+
+UPDATE qz.form
+SET hidden = 't' 
+WHERE schema_name = 'qz'
+OR (form_name) IN ('form_dev','menu_menu_page', 'pg_stat_activity', 'status');
+
+
 UPDATE qz.js SET data = $QZ$
 var httpRequest;
 /*
