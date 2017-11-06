@@ -217,7 +217,7 @@ setup_session(struct handler_args* hargs,
     char* path = build_path(uri_parts);
 
     make_cookie(hargs, "session_key", hargs->session_key, path,
-        NULL, 0, false, true);
+        NULL, 0, true, true);
     free(path);
 
     hargs->session = this_session;
