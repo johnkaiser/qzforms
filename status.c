@@ -44,7 +44,7 @@ void open_table_scanner(void* val, void* data, xmlChar* name){
     xmlNewTextChild(tr, NULL, "td", ta->table_name);
     xmlNewTextChild(tr, NULL, "td", ta->prepare_name);
 
-    asprintf(&buf, "%llu", ta->etag);
+    asprintf(&buf, "%"PRIu64, ta->etag);
     xmlNewTextChild(tr, NULL, "td", buf);
     free(buf);
 
@@ -78,7 +78,7 @@ void form_tag_status_scanner(void* val, void* data, xmlChar* name){
         uint64_t id_val;
         memcpy(&id_val, form_tag->form_set->id, 8);
         char* id_str;
-        asprintf(&id_str, "%llx", id_val);
+        asprintf(&id_str, "%"PRIx64, id_val);
         xmlNewTextChild(tr, NULL, "td", id_str);
         free(id_str);
     }else{
@@ -109,12 +109,12 @@ void form_set_scanner(void* val, void* data, xmlChar* name){
     uint64_t id_val;
     memcpy(&id_val, form_set->id, 8);
     char* id_str;
-    asprintf(&id_str, "%llx", id_val);
+    asprintf(&id_str, "%"PRIx64, id_val);
     xmlNewTextChild(tr, NULL, "td", id_str);
     free(id_str);
  
     char* ref_count;
-    asprintf(&ref_count, "%lld", form_set->ref_count);
+    asprintf(&ref_count, "%"PRId64, form_set->ref_count);
     xmlNewTextChild(tr, NULL, "td", ref_count);
     free(ref_count);
 

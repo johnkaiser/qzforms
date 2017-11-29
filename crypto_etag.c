@@ -255,7 +255,7 @@ int main(void){
 
     uint64_t payload;
     payload = validate_crypto_etag(bf_key, 42, etag);
-    printf("payload = %lld\n", payload);
+    printf("payload = %"PRIu64"\n", payload);
 
     free(ivec);
     free(keydata);

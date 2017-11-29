@@ -159,7 +159,7 @@ void timestamp( struct handler_args *h ){
     xmlNewTextChild(timelist, NULL, "li", etag_time);
 
     char validate_time[1024];
-    snprintf(validate_time, 1023, "Time to validate an etag %f (%llu)",
+    snprintf(validate_time, 1023, "Time to validate an etag %f (%"PRId64")",
         t_etag_fin - t_validate_etag, payload);
 
     xmlNewTextChild(timelist, NULL, "li", validate_time);

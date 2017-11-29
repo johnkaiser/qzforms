@@ -26,7 +26,7 @@ struct form_set* create_form_set(struct handler_args* h, char name[64]){
 
     uint64_t fsid;
     memcpy(&fsid, fs->id, 8);
-    fprintf(h->log, "%f %d %s:%d  %s %llx\n",
+    fprintf(h->log, "%f %d %s:%d  %s %"PRIx64"\n",
         gettime(), h->request_id, __func__, __LINE__,
         fs->name, fsid);
 
@@ -106,7 +106,7 @@ void remove_form_set(struct form_tag_housekeeping_data* ft_hk_data, char* id){
         uint64_t form_set_id;
         memcpy(&form_set_id, fs->id, 8);
 
-        fprintf(hargs->log, "%f %d %s:%d form_set->id=%llx\n",
+        fprintf(hargs->log, "%f %d %s:%d form_set->id=%"PRIx64"\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             form_set_id);
     }
@@ -343,7 +343,7 @@ void close_form_set_scanner(void* payload, void* data, xmlChar* name){
         uint64_t form_set_id;
         memcpy(&form_set_id, id, 8);
 
-        fprintf(hargs->log, "%f %d %s:%d remove_form_set %llx.\n",
+        fprintf(hargs->log, "%f %d %s:%d remove_form_set %"PRIx64".\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             form_set_id);
     }
@@ -450,7 +450,7 @@ void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name){
         memcpy(&fsid, form_set->id, 8);
         if (form_set->audit_count == form_set->ref_count){
     
-            fprintf(h->log, "%f %d %s:%d form_set %s %llx audit passed\n",
+            fprintf(h->log, "%f %d %s:%d form_set %s %"PRIx64" audit passed\n",
                gettime(), h->request_id, __func__, __LINE__,
                form_set->name, fsid);
     
@@ -459,8 +459,8 @@ void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name){
                 remove_form_set(ft_hk_data, form_set->id);
             }    
         }else{
-            fprintf(h->log, "%f %d %s:%d form_set %s %llx "
-                "ref count %lld audit count %lld\n",
+            fprintf(h->log, "%f %d %s:%d form_set %s %"PRIx64" "
+                "ref count %"PRId64" audit count %"PRId64"\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 form_set->name, fsid, form_set->ref_count, form_set->audit_count);
         }

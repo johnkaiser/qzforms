@@ -85,7 +85,7 @@ struct form_record* register_form(struct handler_args* h,
 
     char* expires_buf;
     int arc;
-    arc = asprintf(&expires_buf, "%lld", form_rec->expires);
+    arc = asprintf(&expires_buf, "%"PRId64, form_rec->expires);
     xmlNewProp(form_node, "expires", expires_buf);
     free(expires_buf);
 
@@ -98,7 +98,7 @@ struct form_record* register_form(struct handler_args* h,
     }    
 
     if (h->conf->log_form_tag_details){
-        fprintf(h->log, "%f %d %s:%d form_id = %llx\n",
+        fprintf(h->log, "%f %d %s:%d form_id = %"PRIx64"\n",
             gettime(), h->request_id, __func__, __LINE__,
             form_id);
     }
@@ -209,7 +209,7 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     }
 
     if (this_form->expires < time(NULL)){
-        fprintf(h->log, "%f %d %s:%d fail form expired at %lld "
+        fprintf(h->log, "%f %d %s:%d fail form expired at %"PRId64" "
            "form_action=%s\n",
            gettime(), h->request_id, __func__, __LINE__,
            this_form->expires, this_form->form_action);
@@ -285,7 +285,7 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
         time_t new_expires = time(NULL) + this_form->duration;
         this_form->expires = new_expires;
 
-        asprintf(&result, "%c {%s:%lld}", comma, form_id, new_expires);
+        asprintf(&result, "%c {%s:%"PRId64"}", comma, form_id, new_expires);
 
     }else{
         //  not valid, no change, return zero
@@ -358,7 +358,7 @@ void delete_form_record(void* payload, void* data, xmlChar* name){
     memcpy(&form_id, form_rec->form_id, 8);
 
     if (ft_hk_data->hargs->conf->log_form_tag_details){
-        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %llx\n",
+        fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %"PRIx64"\n",
             gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
             form_id);
     }
@@ -395,7 +395,7 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
 
         if (ft_hk_data->hargs->conf->log_form_tag_details){
             fprintf(ft_hk_data->hargs->log, "%f %d %s:%d "
-                "checking form_id=%llx %s %ld\n",
+                "checking form_id=%"PRIx64" %s %ld\n",
                 gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
                 form_id, "expires in", (long) (time(NULL) - form_rec->expires) );
         }

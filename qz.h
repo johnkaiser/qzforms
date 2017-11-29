@@ -9,6 +9,7 @@
 #include <fcgi_config.h>
 #include <fcgiapp.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <libgen.h>
 #include <libpq-fe.h>
 #include <libxml/hash.h>

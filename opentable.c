@@ -234,7 +234,7 @@ void log_table_action_details(struct handler_args* h,
         gettime(), h->request_id, __func__, __LINE__,
         ta->prepare_name);
 
-    fprintf(h->log, "%f %d %s:%d etag=%llx\n",
+    fprintf(h->log, "%f %d %s:%d etag=%"PRIx64"\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->etag);
 
@@ -315,7 +315,7 @@ void log_table_action_details(struct handler_args* h,
         }
     }
 
-    fprintf(h->log, "%f %d %s:%d integrity_token=%llx\n",
+    fprintf(h->log, "%f %d %s:%d integrity_token=%"PRIx64"\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->integrity_token);
 }

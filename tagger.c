@@ -49,6 +49,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <inttypes.h>
 
 #define TAGBUF 1024
 #define TAG_MAX_LENGTH 50
@@ -61,7 +62,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
     if (debug) log = fopen(conf->logfile_name, "a");
 
     DEBUG(log, "begin tagger_serve\n");
-    DEBUG(log, "qzrandom64 %llx\n", qzrandom64());
+    DEBUG(log, "qzrandom64 %"PRIx64"\n", qzrandom64());
     DEBUG(log, "strlen(conf->server_token)=%lu\n", strlen(conf->server_token));
     FLUSH;
 
@@ -76,7 +77,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
     }else{
         server_token = qzrandom64();
     }
-    DEBUG(log, "server_token=%llx\n", server_token);
+    DEBUG(log, "server_token=%"PRIx64"\n", server_token);
     FLUSH;
     
     if (server_token == 0){
@@ -110,7 +111,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
     }
     memcpy(server_key, rnbr, 16);
 
-    DEBUG(log, "server_key=%llx%llx\n", rnbr[0], rnbr[1]);
+    DEBUG(log, "server_key=%"PRIx64"%"PRIx64"\n", rnbr[0], rnbr[1]);
     FLUSH;
     // setup key 
     BF_KEY* bf_key;
@@ -373,7 +374,7 @@ int main(int argc, char* argv[]){
         make_etag(tagbuf, conf->tagger_socket_path, k);
         printf("etag %d %s  ", k, tagbuf);
         payload = validate_etag(conf->tagger_socket_path, tagbuf);
-        printf(" payload=%llu\n", payload);
+        printf(" payload=%"PRIu64"\n", payload);
     } 
 
     clock_gettime(CLOCK_REALTIME, &fin);
@@ -419,13 +420,13 @@ int main(int argc, char* argv[]){
     if (strlen(argv[1]) == 16){
         printf("make_etag(%s, %s, %s)\n","tagbuf", sockname, argv[1]);
         payload = strtoull(argv[1], NULL, 16);
-        printf( "payload=%llx\n", payload);
+        printf( "payload=%"PRIx64"\n", payload);
         make_etag(tagbuf, sockname, payload);
         printf("etag=%s\n", tagbuf);
     }else{ 
         printf("validate_etag(%s, %s)\n", sockname, argv[1]);
         payload = validate_etag(sockname, argv[1]);
-        printf( "payload=%llx\n", payload);
+        printf( "payload=%"PRIx64"\n", payload);
     }    
     
     return 0;

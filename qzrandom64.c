@@ -294,7 +294,7 @@ int main(void){
 
     memcpy(&rvc, ar, 8);
 
-    printf("qzrandom64ch=%llu=%llu\n", rv, rvc);
+    printf("qzrandom64ch=%"PRIu64"=%"PRIu64"\n", rv, rvc);
 
     for(j=0; j<8; j++){
       printf("%u:", ar[j]);
@@ -317,7 +317,7 @@ int main(void){
     for(j=0; j<10000; j++){
         rnbr = qzrandom64ch(chbuf);
         if (strlen(chbuf) != 8){
-            printf("bad buf from qzrandom64ch %llx\n", rnbr);
+            printf("bad buf from qzrandom64ch %"PRIx64"\n", rnbr);
             chfilter_ok = false;
         }
     }

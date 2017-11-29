@@ -483,9 +483,9 @@ int main(int argc, char* argv[], char* env[]){
     printf("session_inactivity_timeout=%d\n", config->session_inactivity_timeout);
     printf("form_duration=%d\n", config->form_duration);
     printf("housekeeper_nap_time=%d\n", config->housekeeper_nap_time);
-    printf("integrity_token=%llx\n", config->integrity_token);
+    printf("integrity_token=%"PRIx64"\n", config->integrity_token);
     printf("audit_form_set_ref_count=%c\n", (config->audit_form_set_ref_count) ? 't':'f');
-    printf("max_log_file_size=%llu\n", config->max_log_file_size);
+    printf("max_log_file_size=%"PRIu64"\n", config->max_log_file_size);
     printf("max_log_file_count=%d\n",  config->max_log_file_count);
     printf("audit_id_index=%c\n", (config->audit_id_index) ? 't':'f');
     printf("log_table_action_details=%c\n", (config->log_table_action_details) ? 't':'f'); 
