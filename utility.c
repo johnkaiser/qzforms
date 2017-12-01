@@ -292,7 +292,7 @@ void add_jscss_links(struct handler_args* h){
         xmlNodePtr new_style =
             xmlNewTextChild(head, NULL, "style", h->page_ta->inline_css);
 
-        xmlNewProp(new_style, "type", "text/javascript");
+        xmlNewProp(new_style, "type", "text/css");
     }
 
     return;
