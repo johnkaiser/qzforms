@@ -114,7 +114,9 @@ install -m 544 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.init \
 ##
 install -d -m 775 -o ${ADMINUSER} -g ${FORMDEVGROUP} ${INSTALLDIR}/templates
 install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
-    ${INSTALL_FROM}/templates/base.xml ${INSTALL_FROM}/templates/login.xml \
+    ${INSTALL_FROM}/templates/base.xml \
+    ${INSTALL_FROM}/templates/login.xml \
+    ${INSTALL_FROM}/templates/tinymce.xml \
     ${INSTALLDIR}/templates 
 
 ##
