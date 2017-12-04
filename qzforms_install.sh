@@ -83,11 +83,15 @@ fi
 
 if [ "$idcheck" ]; then 
     echo "You will need to setup a user and group to run the application."
-    echo "It may be convienient to add the form developer to the qzforms group."
+    echo "It may be convenient to add the form developer to the qzforms group."
     echo "Something like:"
     echo "groupadd qzforms"
     echo "groupadd formdev"
-    echo "useradd -L daemon -s /usr/bin/false -g qzforms -d ${INSTALLDIR} qzforms"
+    echo "For OpenBSD try:"
+    echo "    useradd -L daemon -s /usr/bin/false -g qzforms -d ${INSTALLDIR} qzforms"
+    echo "For Debian try:"
+    echo "    useradd -G daemon -s /usr/bin/false -g qzforms -d ${INSTALLDIR} qzforms"
+
     exit 1
 fi
 
@@ -101,7 +105,7 @@ install -d -m 755 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALLDIR}
 ##
 ##  Copy the qzforms executable to libexec.
 ##  Some people may want to put the executable into /usr/local/libexec.
-##  It must be read only for the account running the fast-cgi process.
+##  It must be read-only for the account running the fast-cgi process.
 ##
 install -d -m 750 -o ${ADMINUSER} -g ${RUNGROUP}  ${INSTALLDIR}/libexec
 install -m 550 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.fcgi \
