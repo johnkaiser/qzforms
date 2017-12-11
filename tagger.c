@@ -164,8 +164,10 @@ void tagger_serve(struct qz_config* conf, bool debug){
     uint64_t payload;
 
     DEBUG(log, "server ready\n");
+    if (debug) fclose(log);
     FLUSH;
     for(;;){
+        if (debug) log = fopen(conf->logfile_name, "a");
         bzero(inbuf, TAGBUF);
         output = NULL;
 
@@ -224,6 +226,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
 
         close(incoming);
         if (output != NULL) free(output);
+        if (debug) fclose(log);
         FLUSH;
     }
 }
@@ -278,7 +281,7 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
     tagger_serve(conf, false);
 
     return -1;
- }
+}
 
 
 
