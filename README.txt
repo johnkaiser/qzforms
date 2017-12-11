@@ -80,7 +80,7 @@ request from the web server to the qzforms.fcgi process.
 For nginx:
 location /qz/ {
     include fastcgi_params;
-    fastcgi_pass 192.168.1.1:9074;
+    fastcgi_pass 127.0.0.1:9074;
     fastcgi_buffering off;
 }
 
@@ -99,10 +99,10 @@ QZForms will work with TCP or UNIX domain sockets.
 
 Database
 
-You must run the install script for the database. The database install
-script will have the Schema Version as part of the name, such as _SV9.
-From psql "\i qz_db_install_SV9.sql" will create the schema qz
-and the necessary tables and types.
+You must run the install script on the database. The database install
+script will have the Schema Version as part of the name, such as _SV10.
+From psql "\i qz_db_install_SV10.sql" will create the schema qz
+and the necessary tables and types in the current database.
 
 qz_examples.sql will install the sample applications
 stuff and gridle with the tables in the public schema.

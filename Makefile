@@ -302,8 +302,9 @@ qzforms_examples.sql: $(EXAMPLES)
 	cat examples/todo_data.sql >> qzforms_examples.sql
 
 qzforms.js.sql: $(JS) 
-	echo "UPDATE qz.js SET data = \\044QZ\\044"  > qzforms.js.sql
-	cat js/httpRequest.js >> qzforms.js.sql
+	echo "UPDATE qz.js SET data = "  > qzforms.js.sql
+	cat js/dollarquote              >> qzforms.js.sql
+	cat js/httpRequest.js           >> qzforms.js.sql
 	cat js/base64_attribs.js        >> qzforms.js.sql
 	cat js/refresh_result.js        >> qzforms.js.sql
 	cat js/form_refresh.js          >> qzforms.js.sql
@@ -322,7 +323,8 @@ qzforms.js.sql: $(JS)
 	cat js/grid_add_row.js          >> qzforms.js.sql
 	cat js/grid_delete_row.js       >> qzforms.js.sql
 	cat js/set_action_options.js    >> qzforms.js.sql
-	echo "\\044QZ\\044 WHERE filename = 'qzforms.js'" >> qzforms.js.sql
+	cat js/dollarquote              >> qzforms.js.sql
+	echo " WHERE filename = 'qzforms.js'" >> qzforms.js.sql
 
 qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
 	cat $(SQL) > qz_db_install_SV$(SCHEMA_VERSION).sql
