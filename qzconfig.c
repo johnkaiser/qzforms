@@ -246,6 +246,9 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->log_table_action_details = DEFAULT_LOG_TABLE_ACTION_DETAILS;
     conf->log_form_tag_details = DEFAULT_LOG_FORM_TAG_DETAILS;
     conf->log_form_set_details = DEFAULT_LOG_FORM_SET_DETAILS;
+    conf->failed_login_block_timeout = DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT;
+    conf->max_failed_logins = DEFAULT_MAX_FAILED_LOGINS;
+    conf->log_login_tracker_details = DEFAULT_LOG_LOGIN_TRACKER_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -349,6 +352,26 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     setting = xmlHashLookup(conf_hash, "LOG_FORM_SET_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_form_set_details = is_true(setting);
+    }
+
+
+    setting = xmlHashLookup(conf_hash, "FAILED_LOGIN_BLOCK_TIMEOUT");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        unsigned int block_timeout = (unsigned int)
+            strtol(setting, NULL, 10);
+        conf->failed_login_block_timeout = block_timeout;
+    }
+
+    setting = xmlHashLookup(conf_hash, "MAX_FAILED_LOGINS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        unsigned int failed_logins = (unsigned int)
+            strtol(setting, NULL, 10);
+        conf->max_failed_logins = failed_logins;
+    }
+
+    setting = xmlHashLookup(conf_hash, "LOG_LOGIN_TRACKER_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_login_tracker_details = is_true(setting);
     }
 
     // Put postgres vars into environment.

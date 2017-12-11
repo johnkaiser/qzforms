@@ -30,6 +30,193 @@
 
 #include "qz.h"
 
+pthread_mutex_t login_tracker_mutex;
+xmlHashTablePtr failed_login_tracker;
+/*
+ *  init_login_tracker
+ *
+ *  setup mutex for tracking failed logins
+ */
+void init_login_tracker(void){
+    pthread_mutex_init(&login_tracker_mutex,NULL);
+    failed_login_tracker = xmlHashCreate(101);
+}
+
+/*
+ *  record_login_attempt
+ *
+ *  Record the count of failed and successfull logins for a
+ *  period of time. Used as a basis for blocking dictionary
+ *  attacks.
+ */
+void record_login_attempt(struct handler_args* hargs, char* remote,
+    bool success_or_fail){
+
+    if ((remote == NULL) || (remote[0] == '\0')) return;
+    if (hargs->conf->max_failed_logins == 0) return;
+
+    // lock access  here
+    pthread_mutex_lock(&login_tracker_mutex);
+    double previous_attempt = 0;
+    struct login_tracker* lt = xmlHashLookup(failed_login_tracker, remote);
+
+    if (lt == NULL){
+        lt = calloc(1, sizeof(struct login_tracker));
+        snprintf(lt->remote_host, (INET6_ADDRSTRLEN+1), "%s", remote);
+        xmlHashAddEntry(failed_login_tracker, lt->remote_host, lt);
+    }else{
+        previous_attempt = lt->last_attempt;
+        if ((gettime() - lt->last_attempt) >
+            hargs->conf->failed_login_block_timeout){
+
+            lt->success = 0;
+            lt->failed = 0;
+        }
+    }
+
+    lt->last_attempt = gettime();
+
+    if (success_or_fail == true){
+        lt->success++;
+    }else{
+        lt->failed++;
+    }
+
+    if (hargs->conf->log_login_tracker_details){
+        fprintf(hargs->log, "%f %d %s:%d host %s %s last attempt %f "
+            "failed count %d success count %d\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            remote, (success_or_fail) ? "success":"fail",
+            previous_attempt, lt->failed, lt->success);
+    }
+    pthread_mutex_unlock(&login_tracker_mutex);
+}
+
+
+/*
+ *  check_login_tracker
+ *
+ *  Check the failed login record and indicate if the request
+ *  should be honored.
+ */
+bool check_login_tracker(struct handler_args* h){
+
+    if (h->conf->max_failed_logins == 0) return true;
+
+    char* remote = FCGX_GetParam("REMOTE_ADDR", h->envpfcgi);
+
+    pthread_mutex_lock(&login_tracker_mutex);
+
+    struct login_tracker* lt = xmlHashLookup(failed_login_tracker, remote);
+
+    if (lt == NULL){
+        // This means there have been no failed logins
+
+        if (h->conf->log_login_tracker_details){
+            fprintf(h->log, "%f %d %s:%d host %s no tracker record\n",
+            gettime(), h->request_id, __func__, __LINE__, remote);
+        }
+        pthread_mutex_unlock(&login_tracker_mutex);
+        return true;
+    }
+
+    if (lt->success > 0){
+        // Someone has logged in from this address, so OK
+
+        if (h->conf->log_login_tracker_details){
+            fprintf(h->log, "%f %d %s:%d host %s previous login OK\n",
+            gettime(), h->request_id, __func__, __LINE__, remote);
+        }
+        pthread_mutex_unlock(&login_tracker_mutex);
+        return true;
+    }
+
+    if ((gettime() - lt->last_attempt) >
+            h->conf->failed_login_block_timeout){
+       // The record is old, ignore it.
+
+        if (h->conf->log_login_tracker_details){
+            fprintf(h->log, "%f %d %s:%d host %s ignoring old record\n",
+            gettime(), h->request_id, __func__, __LINE__, remote);
+        }
+        pthread_mutex_unlock(&login_tracker_mutex);
+        return true;
+   }
+
+   if (lt->failed > h->conf->max_failed_logins){
+
+        fprintf(h->log, "%f %d %s:%d denying login attempt from host %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            remote);
+
+        error_page(h, SC_TOO_MANY_REQUESTS,
+            "Too many failed login attempts.\nTry again later.");
+
+        pthread_mutex_unlock(&login_tracker_mutex);
+        return false;
+    }else{
+        pthread_mutex_unlock(&login_tracker_mutex);
+        return true;
+    }
+
+    fprintf(h->log, "%f %d %s:%d fail unexpected result\n",
+        gettime(), h->request_id, __func__, __LINE__);
+
+    pthread_mutex_unlock(&login_tracker_mutex);
+    return false; // should never happen.
+}
+
+/*
+ *  login_tracking_housekeeping
+ *  login_tracking_scanner
+ *
+ *  Remove expired login tracking records.
+ */
+void login_tracking_scanner(void* payload, void* data, xmlChar* name){
+    struct login_tracker* lt = payload;
+    struct handler_args* hargs = data;
+
+    if (hargs->conf->log_login_tracker_details){
+        fprintf(hargs->log, "%f %d %s:%d checking host %s "
+            "last_attempt %f failed %d success %d\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            lt->remote_host, lt->last_attempt, lt->failed, lt->success);
+    }
+
+    if ((gettime() - lt->last_attempt) >
+            hargs->conf->failed_login_block_timeout){
+
+        if (hargs->conf->log_login_tracker_details){
+            fprintf(hargs->log, "%f %d %s:%d removing host %s\n",
+                gettime(), hargs->request_id, __func__, __LINE__,
+                lt->remote_host);
+        }
+       // The record is old, clear it out.
+       xmlHashRemoveEntry(failed_login_tracker, name,
+           (xmlHashDeallocator)xmlFree);
+    }
+}
+void login_tracking_housekeeping(struct handler_args* hargs){
+
+    double start_time = gettime();
+    if (hargs->conf->log_login_tracker_details){
+        fprintf(hargs->log, "%f %d %s:%d beginning housekeeping\n",
+            gettime(), hargs->request_id, __func__, __LINE__);
+    }
+
+    pthread_mutex_lock(&login_tracker_mutex);
+
+    xmlHashScan(failed_login_tracker, login_tracking_scanner, hargs);
+
+    pthread_mutex_unlock(&login_tracker_mutex);
+
+     fprintf(hargs->log, "%f %d %s:%d completed in %f\n",
+        gettime(), hargs->request_id, __func__, __LINE__,
+        gettime() - start_time);
+
+}
+
+
 /*
  *  req_login
  *
@@ -45,9 +232,15 @@ void req_login( struct handler_args* h ){
     fprintf(h->log, "%f %d %s:%d\n", 
         gettime(), h->request_id, __func__, __LINE__);
 
-    // XXXXX login.xml should be documented somewhere 
+    // logged by function
+    if (check_login_tracker(h) == false) return;
+
     doc_from_file(h, "login.xml");
     if (h->error_exists) return;
+
+    fprintf(h->log, "%f %d %s:%d login request from host %s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        FCGX_GetParam("REMOTE_ADDR", h->envpfcgi));
 
     divqz = qzGetElementByID(h, "qz");
     if (divqz != NULL){
@@ -183,7 +376,8 @@ void validate_login( struct handler_args* h  ){
 
     // If a user name and password are not present then it is 
     // not a real login attempt and validate should not be called.
-    if ((vals[0] == NULL) || (vals[1] == NULL)){
+    if ((vals[0] == NULL) || (vals[0][0] == '\0') || 
+        (vals[1] == NULL) || (vals[1][0] == '\0')  ){
         char* login_uri;
         asprintf(&login_uri, "/%s/login", h->uri_parts[0]);
         location(h, login_uri); 
@@ -214,6 +408,8 @@ void validate_login( struct handler_args* h  ){
  
     h->session->conn = PQconnectdbParams(kw, (const char* const*)vals, 0);
 
+    char* remote_address =  FCGX_GetParam("REMOTE_ADDR", h->envpfcgi);
+
     if (PQstatus(h->session->conn) == CONNECTION_OK){    
 
         strncpy(h->session->user, user, MAX_USER_NAME_LENGTH); 
@@ -242,15 +438,19 @@ void validate_login( struct handler_args* h  ){
         }
         PQclear(listen_rs);
 
-        fprintf(h->log, "%f %d %s:%d user %s logged in\n", 
-            gettime(), h->request_id, __func__, __LINE__, user);
+        fprintf(h->log, "%f %d %s:%d user %s login success from host %s\n",
+            gettime(), h->request_id, __func__, __LINE__, user, remote_address);
+
+        record_login_attempt(h, remote_address, true);
 
         h->page_ta = open_table(h, "menu", "view");
         redirect_to_menu(h);
     }else{
 
-        fprintf(h->log, "%f %d %s:%d user %s login failed\n", 
-            gettime(), h->request_id, __func__, __LINE__, user);
+        fprintf(h->log, "%f %d %s:%d user %s login failed from host %s\n",
+            gettime(), h->request_id, __func__, __LINE__, user, remote_address);
+
+        record_login_attempt(h, remote_address, false);
 
         char* uri_parts[] = {h->uri_parts[0], "login", NULL};
         char* login_target = build_path(uri_parts);
@@ -267,15 +467,17 @@ void logout(struct handler_args* hargs){
  
     if (hargs->session != NULL){
 
-        if (*hargs->session->user == '\0'){
+        if (*hargs->session->user != '\0'){
             fprintf(hargs->log, 
-                "%f %d %s:%d logout user %s\n", 
+                "%f %d %s:%d logout user %s from host %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
-                hargs->session->user);
+                hargs->session->user,
+                FCGX_GetParam("REMOTE_ADDR", hargs->envpfcgi));
         }else{
             fprintf(hargs->log, 
-                "%f %d %s:%d logout user with null name\n", 
-                gettime(), hargs->request_id, __func__, __LINE__);
+                "%f %d %s:%d logout user with null name from host %s\n",
+                gettime(), hargs->request_id, __func__, __LINE__,
+                FCGX_GetParam("REMOTE_ADDR", hargs->envpfcgi));
         }
 
         close_session(hargs, hargs->session);

@@ -31,6 +31,9 @@
 #define DEFAULT_LOG_TABLE_ACTION_DETAILS false
 #define DEFAULT_LOG_FORM_TAG_DETAILS false
 #define DEFAULT_LOG_FORM_SET_DETAILS false
+#define DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT 300
+#define DEFAULT_MAX_FAILED_LOGINS 20
+#define DEFAULT_LOG_LOGIN_TRACKER_DETAILS false;
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -57,6 +60,9 @@ struct qz_config {
     bool log_table_action_details;
     bool log_form_tag_details;
     bool log_form_set_details;
+    unsigned int failed_login_block_timeout;
+    unsigned int max_failed_logins;
+    bool log_login_tracker_details;
     uint64_t integrity_token;
 };
 

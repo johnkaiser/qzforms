@@ -495,6 +495,8 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         }
     }
 
+    login_tracking_housekeeping(h);
+
     fprintf(h->log, 
         "%f %d %s:%d housekeeping complete duration %f\n",
         gettime(), h->request_id, __func__, __LINE__,

@@ -423,6 +423,7 @@ int main(int argc, char* argv[], char* envpmain[]){
 
     qzrandom64_init();
     struct qz_config* conf = init_config();
+    init_login_tracker();
 
     int next_id = 0;
     log_file_rotation(conf);

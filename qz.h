@@ -324,6 +324,13 @@ struct form_tag_housekeeping_data {
     struct handler_args* hargs;    // the housekeeper's not the session's
 };
 
+struct login_tracker {
+   char remote_host[INET6_ADDRSTRLEN + 2];
+   double last_attempt;
+   unsigned int failed;
+   unsigned int success;
+};
+
 static const char QZERR_EXPECTED_EQ[] = "Expected '='";
 static const char QZERR_BAD_VALUE[] = "Bad Value";
 static const char QZERR_EXPECTED_AMP[] = "Expected ampersand";
@@ -1044,3 +1051,15 @@ extern void add_listener(struct handler_args* h, char* id, char* event, char* ac
  *  intput.c
  */
 extern void add_to_id_index(struct handler_args* h, xmlNodePtr the_node);
+
+/*
+ *  init_login_tracker
+ *  login.c
+ */
+extern void init_login_tracker(void);
+
+/*
+ *  login_tracking_housekeeping(struct handler_args* hargs
+ *  login.c
+ */
+ extern void login_tracking_housekeeping(struct handler_args* hargs);
