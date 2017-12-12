@@ -318,60 +318,6 @@ VALUES (nextval('stuff_n'), 'whatever', NULL, '{2,3}', 7, 'ok', NULL, B'1010', 5
 INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
 VALUES (nextval('stuff_n'), 'be moody dangit.', '(2,3)', '{57,67,47,37,27}', NULL, 'happy', NULL, NULL, 1, NULL, NULL, true);
 
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'aword', '(1,2)', '{6,9}', 1, 'ok', NULL, B'0101', 69.69, 69.690000, NULL, false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'blah, blah, blah', '(1,2)', '{2,3,5,8,13,21,34,55,89,144,233,377,610,987}', NULL, 'chocolate', NULL, NULL, NULL, NULL, NULL, false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'really broken', NULL, '{10,9,8,7,6,5,4,3,2,1,0}', 7, 'ok', NULL, NULL, 7.00, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'hey wtf', '(1,2)', '{2,3,5,7,11,13,17,30}', 7, 'chocolate', NULL, B'0101', 22.022002200022, NULL, NULL, false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'six', '(7,3)', '{420}', 16, NULL, '192.168.1.6', B'0110', 6.060606, 6.000000, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'two, two, words in one', '(3,7)', '{1,2,6546,65112,98798,12345798}', 120, 'chocolate', '192.168.1.2', B'0010', 2.0202, 2.000000, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'five', '(5,5)', '{5,5,5,5,5,6,8}', 15, 'chocolate', '192.168.1.5', B'0101', 5.05005, 5.000000, NULL, false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'four', '(5,5)', '{1,2,3,5,8,9,17,24}', 14, NULL, '192.168.1.4', B'0100', 4.4, 4.000000, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'niner', '(9,8)', '{2,3,5,7}', 99, 'ok', NULL, NULL, NULL, 9.090000, NULL, false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'typing them now', '(1,2)', '{1,1,2,3,5,8,13,21,34,55,89,144,233}', NULL, 'happy', NULL, NULL, NULL, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'tftest', '(1,2)', '{1,2,3,4,5,6,7,8,10}', NULL, 'happy', NULL, NULL, NULL, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'chocolate', '(1,2)', '{1,2,999,998,997,996,995,994}', 1, 'happy', NULL, NULL, NULL, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'wtf', NULL, '{1,2,3,4}', 86, 'happy', NULL, NULL, 0.00001, NULL, 'wtfwtfwtf', false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'does it still work', '(,)', '{1}', NULL, 'ok', NULL, NULL, NULL, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'wage peace', '(2,3)', NULL, NULL, 'sad', NULL, NULL, NULL, NULL, NULL, false);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'massive system failure', '(1,10)', '{1,10}', NULL, 'happy', NULL, NULL, NULL, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'a word or two or six', '(1,2)', '{123}', NULL, 'happy', NULL, NULL, NULL, NULL, NULL, true);
-
-INSERT INTO stuff (n, words, trouble, ar, pos, current_mood, addr, mask, nbr, fixed, name, yesno) 
-VALUES (nextval('stuff_n'), 'eight', '(9,1)', NULL, 18, NULL, '192.168.1.8', B'1000', 8.88888888, 8.000000, 'ocho', true);
-
 INSERT INTO qz.form (form_name, handler_name, schema_name, table_name, xml_template, target_div, add_description, prompt_container, pkey) 
 VALUES ('stuff', 'onetable', 'public', 'stuff', 'base.xml', 'qz', false, 'fieldset', '{n}');
 

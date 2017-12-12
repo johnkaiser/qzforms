@@ -24,15 +24,34 @@ INSERT INTO qz.table_action
 VALUES
 ('release_checklist', 'create', '{version}', 
 $RCCR$
-    SELECT ''::text "version"
+SELECT $1::text "version",
+    'f'::bool seems_to_work,
+    'f'::bool compiles_clean,
+    'f'::bool installs_clean,
+    'f'::bool simple_test_on_install,
+    'f'::bool upgrades_clean,
+    'f'::bool simple_test_on_upgrade,
+    'f'::bool git_up_to_date,
+    'f'::bool qzforms_com_up_to_date
 $RCCR$
 ),
-('release_checklist', 'insert', '{version}', 
+('release_checklist', 'insert', 
+    '{version, seems_to_work, compiles_clean, installs_clean,
+      simple_test_on_install, upgrades_clean, simple_test_on_upgrade,
+    git_up_to_date, qzforms_com_up_to_date }', 
 $RCINS$
-    INSERT INTO public.release_checklist
-    ("version")
+INSERT INTO public.release_checklist
+    ("version", 
+     seems_to_work,
+    compiles_clean,
+    installs_clean,
+    simple_test_on_install,
+    upgrades_clean,
+    simple_test_on_upgrade,
+    git_up_to_date,
+    qzforms_com_up_to_date)
     VALUES
-    ($1)
+    ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 $RCINS$
 ),
 ('release_checklist', 'edit', '{version}', 
@@ -119,7 +138,7 @@ COMMENT ON COLUMN release_checklist.installs_clean IS 'Installs without errors';
 COMMENT ON COLUMN release_checklist.simple_test_on_install IS 'Test the install by creating a new onetable and grid form';
 COMMENT ON COLUMN release_checklist.upgrades_clean   IS 'Test the schema version upgrade script';
 COMMENT ON COLUMN release_checklist.simple_test_on_upgrade IS 'Test the upgrade by creating a new onetable and grid form';
-COMMENT ON COLUMN release_checklist.git_up_to_date IS '';
-COMMENT ON COLUMN release_checklist.qzforms_com_up_to_date  IS '';
+COMMENT ON COLUMN release_checklist.git_up_to_date IS 'Github current changes should include Version and a tag for the release';
+COMMENT ON COLUMN release_checklist.qzforms_com_up_to_date  IS 'Read the documentaion and update for any recent changes';
 
 
