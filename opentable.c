@@ -398,12 +398,16 @@ void init_table_entry(struct handler_args* hargs,
                          2, (const char * const *) &paramValues, NULL, NULL, 0);
 
     if (hargs->conf->log_table_action_details){
+        char* error_msg = nlfree_error_msg(rs_table_action);
+
         fprintf(hargs->log, "%f %d %s:%d rs_table_action(%s, %s) = %s,%s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             paramValues[0],
             paramValues[1],
             PQresStatus( PQresultStatus(rs_table_action) ),
             PQresultErrorMessage(rs_table_action));
+
+        free(error_msg);
     }
 
     if (PQntuples(rs_table_action) == 0){
@@ -950,10 +954,13 @@ PGresult* perform_post_row_action(struct handler_args* h,
     rs = PQexecPrepared(h->session->conn, ta->prepare_name, ta->nbr_params,
         (const char * const *) paramdata, NULL, NULL, 0);
 
+    char* error_msg = nlfree_error_msg(rs);
+
     fprintf(h->log, "%f %d %s:%d perform_post_row_action completed %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
-        PQresStatus(PQresultStatus(rs)), PQresultErrorMessage(rs));
+        PQresStatus(PQresultStatus(rs)), error_msg);
 
+    free(error_msg);
     free(paramdata);
 
     return rs;
@@ -1052,9 +1059,13 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
     }
     free(paramdata);
 
+    char* error_msg = nlfree_error_msg(rs);
+
     fprintf(h->log, "%f %d %s:%d perform_post_action completed %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
-        PQresStatus(PQresultStatus(rs)), PQresultErrorMessage(rs));
+        PQresStatus(PQresultStatus(rs)), error_msg);
+
+    free(error_msg);
 
     return rs;
 }
@@ -1086,10 +1097,13 @@ PGresult* perform_action(struct handler_args* h, struct table_action* ta,
     rs = PQexecPrepared(h->session->conn, ta->prepare_name, ta->nbr_params,
         (const char * const *) data, NULL, NULL, 0);
 
+    char* error_msg = nlfree_error_msg(rs);
+
     fprintf(h->log, "%f %d %s:%d perform_action completed %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)), PQresultErrorMessage(rs));
 
+    free(error_msg);
     return rs;
 }
 
