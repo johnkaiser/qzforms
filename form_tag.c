@@ -84,8 +84,7 @@ struct form_record* register_form(struct handler_args* h,
     // add an expires attribute
 
     char* expires_buf;
-    int arc;
-    arc = asprintf(&expires_buf, "%"PRId64, form_rec->expires);
+    asprintf(&expires_buf, "%"PRId64, (int64_t)form_rec->expires);
     xmlNewProp(form_node, "expires", expires_buf);
     free(expires_buf);
 
@@ -212,7 +211,7 @@ bool post_contains_valid_form_tag(struct handler_args* h){
         fprintf(h->log, "%f %d %s:%d fail form expired at %"PRId64" "
            "form_action=%s\n",
            gettime(), h->request_id, __func__, __LINE__,
-           this_form->expires, this_form->form_action);
+           (int64_t)this_form->expires, this_form->form_action);
 
         return false;   
     }
@@ -285,7 +284,7 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
         time_t new_expires = time(NULL) + this_form->duration;
         this_form->expires = new_expires;
 
-        asprintf(&result, "%c {%s:%"PRId64"}", comma, form_id, new_expires);
+        asprintf(&result, "%c {%s:%"PRId64"}", comma, form_id, (int64_t)new_expires);
 
     }else{
         //  not valid, no change, return zero

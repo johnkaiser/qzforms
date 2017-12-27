@@ -416,8 +416,6 @@ void rs_to_table(xmlNodePtr add_here, PGresult* rs, char* id){
     xmlNodePtr thead;
     xmlNodePtr tbody;
     xmlNodePtr tr;
-    xmlNodePtr td;
-    xmlNodePtr th;
     int t, f;
 
     xmlNewProp(table, "class", "qztable tablesorter");
@@ -426,7 +424,7 @@ void rs_to_table(xmlNodePtr add_here, PGresult* rs, char* id){
     thead = xmlNewChild(table,NULL,"thead",NULL);
     tr = xmlNewChild(thead, NULL, "tr", NULL);
     for(t=0; t<PQnfields(rs); t++){
-        th = xmlNewTextChild(tr, NULL, "th",
+        xmlNewTextChild(tr, NULL, "th",
             PQfname(rs,t) );
     }
     tbody = xmlNewChild(table,NULL,"tbody",NULL);
@@ -434,7 +432,7 @@ void rs_to_table(xmlNodePtr add_here, PGresult* rs, char* id){
         tr = xmlNewChild(tbody, NULL, "tr", NULL);
 
         for(f=0; f<PQnfields(rs); f++ ){
-            td = xmlNewTextChild(tr,NULL, "td", 
+            xmlNewTextChild(tr,NULL, "td",
                 PQgetvalue(rs, t, f) );
         }
     }

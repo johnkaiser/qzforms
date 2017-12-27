@@ -327,10 +327,9 @@ int open_socket(char* sockname){
 
 void make_etag(char* tagbuf, char* sockname, uint64_t payload){
     int socket = open_socket(sockname);
-    int bytesread;
 
     write(socket, &payload, sizeof(payload));
-    bytesread = read(socket, tagbuf, ETAG_STR_LEN);
+    read(socket, tagbuf, ETAG_STR_LEN);
     tagbuf[ETAG_STR_LEN] = '\0';
 
     close(socket);

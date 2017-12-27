@@ -275,7 +275,7 @@ void launch_connection_thread(void* data){
             int this_error = errno;
             char errbuf[BUFLEN];
             bzero(errbuf, BUFLEN);
-            strerror_r(this_error, errbuf, BUFLEN)
+            strerror_r(this_error, errbuf, BUFLEN);
 
             FILE* log = fopen(thread_dat->conf->logfile_name, "a");
             fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d "

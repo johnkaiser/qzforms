@@ -367,8 +367,7 @@ void add_menu(struct handler_args* hargs,
         xmlNewProp(submit_button, "value", get_value(menu_rs,row,"menu_text"));
         append_class(submit_button, "menu_button");
 
-        struct form_record* form_rec;
-        form_rec = register_form(hargs, form, SUBMIT_MULTIPLE, action_target);
+        register_form(hargs, form, SUBMIT_MULTIPLE, action_target);
 
         free(action_target);
     } // row
