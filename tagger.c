@@ -52,13 +52,12 @@
 #include <inttypes.h>
 
 #define TAGBUF 1024
-#define TAG_MAX_LENGTH 50
 
 #define DEBUG if (debug) fprintf
 #define FLUSH if (debug) fflush(log)
 
 void tagger_serve(struct qz_config* conf, bool debug){
-    FILE* log;
+    FILE* log = NULL;
     if (debug) log = fopen(conf->logfile_name, "a");
 
     DEBUG(log, "begin tagger_serve\n");
@@ -114,9 +113,6 @@ void tagger_serve(struct qz_config* conf, bool debug){
     DEBUG(log, "server_key=%"PRIx64"%"PRIx64"\n", rnbr[0], rnbr[1]);
     FLUSH;
     // setup key 
-    BF_KEY* bf_key;
-    bf_key = malloc(sizeof(BF_KEY));
-    BF_set_key(bf_key, 16, server_key);
 
     // setup socket
     mode_t old_umask = umask(077);
@@ -165,9 +161,9 @@ void tagger_serve(struct qz_config* conf, bool debug){
 
     DEBUG(log, "server ready\n");
     if (debug) fclose(log);
-    FLUSH;
+    if (debug) log = fopen(conf->logfile_name, "a");
+
     for(;;){
-        if (debug) log = fopen(conf->logfile_name, "a");
         bzero(inbuf, TAGBUF);
         output = NULL;
 
@@ -186,34 +182,39 @@ void tagger_serve(struct qz_config* conf, bool debug){
                 //sscanf(&payload, "%lu", incoming); 
                 memcpy(&payload, inbuf, 8);
                 DEBUG(log, "make_crypto_etag \n");
-                output = make_crypto_etag(bf_key, server_token, payload);
+
+                output = make_crypto_etag(server_key, server_token, payload);
+
                 DEBUG(log, "OK\n");
-                write(incoming, output, strlen(output)+1);
+                write(incoming, output, ETAG_STR_LEN);
                 break;
       
-            case 51:
+            case ETAG_STR_LEN+2:
                 // maybe quotes like so:
-                // "61ee029125dd839a.4cf0d06856f9bad03e85cc5002fc0b37"
-                if ( (('\'' == inbuf[0]) && ('\'' == inbuf[50]))  ||
-                     (('"'  == inbuf[0]) && ('"'  == inbuf[50])) ){
+                // "61ee029125dd839a61ee029125dd839a.4cf0d06856f9bad03e85cc5002fc0b37"
+                if ( (('\'' == inbuf[0]) && ('\'' == inbuf[ETAG_STR_LEN+1]))  ||
+                     (('"'  == inbuf[0]) && ('"'  == inbuf[ETAG_STR_LEN+1])) ){
                     // so try without the quotes 
-                    inbuf[50] = '\0'; 
-                    payload = validate_crypto_etag(bf_key, server_token, 
+                    inbuf[ETAG_STR_LEN+1] = '\0';
+                    payload = validate_crypto_etag(server_key, server_token,
                         &(inbuf[1]));
                     write(incoming, &payload, sizeof(payload));
                     DEBUG(log, "skipping quotes\n");
-                }else{    
+                }else{
                     payload = 0;
                     write(incoming, &payload, sizeof(payload));
-                    DEBUG(log, "inbuf[50]=%c\n", inbuf[50]);
-                }    
+                    DEBUG(log,"length error inbuf[0]=%c inbuf[ETAG_STR_LEN]=%c\n",
+                        inbuf[0], inbuf[ETAG_STR_LEN]);
+                }
                 break;
-                     
-            case 49:
-            case 50:
+
+            case ETAG_STR_LEN:
+            case ETAG_STR_LEN+1:
                 DEBUG(log, "validate_crypto_etag \n");
-                payload = validate_crypto_etag(bf_key, server_token, inbuf);
-                DEBUG(log, "OK\n");
+
+                payload = validate_crypto_etag(server_key, server_token, inbuf);
+
+                DEBUG(log, "validate_crypto_etag returned %"PRIu64"\n", payload);
                 write(incoming, &payload, sizeof(payload));
                 break;
            
@@ -225,7 +226,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
         }
 
         close(incoming);
-        if (output != NULL) free(output);
+        //if (output != NULL) free(output);
         if (debug) fclose(log);
         FLUSH;
     }
@@ -265,7 +266,7 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
                     // Success
                     return pid;
                 }
-                usleep(1000);
+                usleep(10000);
             }
             // time out waiting for tagger
             fprintf(stderr, "time out waiting for tagger\n");
@@ -329,7 +330,8 @@ void make_etag(char* tagbuf, char* sockname, uint64_t payload){
     int bytesread;
 
     write(socket, &payload, sizeof(payload));
-    bytesread = read(socket, tagbuf, TAG_MAX_LENGTH);
+    bytesread = read(socket, tagbuf, ETAG_STR_LEN);
+    tagbuf[ETAG_STR_LEN] = '\0';
 
     close(socket);
 }
@@ -351,8 +353,11 @@ uint64_t validate_etag(char* sockname, char* etag){
 #ifdef TAGGER_MAIN
 
 #include <signal.h>
+#include <fcntl.h>
 
 int main(int argc, char* argv[]){
+
+    debug=false;
 
     qzrandom64_init();
 
@@ -361,12 +366,15 @@ int main(int argc, char* argv[]){
     double delta_time;
 
     struct qz_config* conf = init_config();
+    close(STDERR_FILENO);
+    int fd = open(conf->logfile_name, O_WRONLY|O_APPEND);
+    dup(fd);
 
     pid_t tagger_pid = tagger_init(conf, argv);
-    printf("tagger_pid=%d\n", tagger_pid);
+    printf("tagger_pid=%d logfile=%s\n", tagger_pid, conf->logfile_name);
     sleep(1);
 
-    int k;
+    uint64_t k;
     uint64_t payload;
     char tagbuf[1024];
 
@@ -375,7 +383,7 @@ int main(int argc, char* argv[]){
     //for (k=1; k<1000000; k++){
     for (k=1; k<10000; k++){
         make_etag(tagbuf, conf->tagger_socket_path, k);
-        printf("etag %d %s  ", k, tagbuf);
+        printf("etag %"PRIu64" %s  ", k, tagbuf);
         payload = validate_etag(conf->tagger_socket_path, tagbuf);
         printf(" payload=%"PRIu64"\n", payload);
     } 

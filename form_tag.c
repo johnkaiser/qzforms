@@ -79,7 +79,7 @@ struct form_record* register_form(struct handler_args* h,
     make_etag(tagbuf, h->session->tagger_socket_path, form_id);
     xmlNewProp(tag_node, "value", tagbuf);
 
-    snprintf(form_rec->full_tag, ETAG_MAX_LENGTH, "%s", tagbuf);
+    snprintf(form_rec->full_tag, SESSION_KEY_LENGTH, "%s", tagbuf);
 
     // add an expires attribute
 
@@ -399,19 +399,19 @@ void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
                 gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
                 form_id, "expires in", (long) (time(NULL) - form_rec->expires) );
         }
+
+        // Allow twice the duration before removing
+        // This makes it possible to display expired messages instead
+        // of not found messages for recently expired forms.
+        if ( time(NULL) >  (form_rec->expires + 2*form_rec->duration)){
+
+            delete_form_record(form_rec, ft_hk_data, name);
+
+        }else if (time(NULL) > form_rec->expires){
+
+            form_rec->is_valid = false;
+        }
     }
-
-    // Allow twice the duration before removing 
-    // This makes it possible to display expired messages instead
-    // of not found messages for recently expired forms.
-    if ( time(NULL) >  (form_rec->expires + 2*form_rec->duration)){
-
-        delete_form_record(form_rec, ft_hk_data, name);
-
-    }else if (time(NULL) > form_rec->expires){
-
-        form_rec->is_valid = false;
-    }    
 }
 
 /* 
@@ -513,10 +513,11 @@ struct form_record* get_posted_form_record(struct handler_args* h){
 
     // The full_tag attribute contains the text of the tag saved by
     // register_form. It must match the form tag from post data.
-    if (strncmp(form_tag, this_form->full_tag, ETAG_MAX_LENGTH) != 0){
+    if (strncmp(form_tag, this_form->full_tag, SESSION_KEY_LENGTH) != 0){
         fprintf(h->log, "%f %d %s:%d fail form tag submitted validates, "
-            "but does not match saved tag\n",
-            gettime(), h->request_id, __func__, __LINE__);
+            "but does not match saved form_tag %s this_form->full_tag %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            form_tag, this_form->full_tag);
 
         error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
         h->session->is_logged_in = false;

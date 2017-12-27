@@ -121,31 +121,31 @@ unsigned char* hex_to_uchar(char* instr){
  *  The result must be freed.
  */
 
-unsigned char* uchar_to_hex(unsigned char* instr){
+unsigned char* uchar_to_hex(unsigned char* instr, unsigned long uchar_length){
     if (instr == NULL) return NULL;
 
-    unsigned int slen = strlen(instr);
     // If its more than 100MB then give up.
     // It's a web app after all.
-    if (slen > 104857600) return NULL;
+    if (uchar_length > 104857600) return NULL;
 
     unsigned char const canary = 0xff;
 
-    unsigned char* outstr = calloc(2, slen + 4);
-    outstr[2*slen + 2] = canary;
-    unsigned char* outch = outstr;
-    unsigned char* inch;
+    unsigned char* outstr = calloc(2, uchar_length + 4);
+    outstr[2*uchar_length + 2] = canary;
 
-    for (inch=instr; *inch!='\0'; inch++){
-        div_t hexval = div(*inch, 16);
+    unsigned char* outch = outstr;
+    unsigned long j;
+
+    for (j=0; j<uchar_length; j++){
+        div_t hexval = div(instr[j], 16);
 
         *outch++ = (hexval.quot < 10) ? '0'+hexval.quot : 'a'+hexval.quot-10;
         *outch++ = (hexval.rem < 10) ? '0'+hexval.rem : 'a'+hexval.rem-10;
     }
     
-    if ((outstr[2*slen+1] != '\0')
-        || (outstr[2*slen+2] != canary)
-        || (outstr[2*slen+3] != '\0')){
+    if ((outstr[2*uchar_length+1] != '\0')
+        || (outstr[2*uchar_length+2] != canary)
+        || (outstr[2*uchar_length+3] != '\0')){
         
         exit(52);
     }    
@@ -196,7 +196,7 @@ int main(void){
         uch = hex_to_uchar(test[nt]);
         conv_back = gettime();
 
-        back = uchar_to_hex(uch);
+        back = uchar_to_hex(uch, strlen(test[nt])/2);
         conv_fin = gettime();
 
         printf("hex_to_uchar [%s] %f ", uch, conv_back - conv_start);

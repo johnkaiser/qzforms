@@ -30,10 +30,10 @@
  
 /*  
  *  A crytpo_etag looks like this:
- *  c0e9bd0cddeea0a5.c9d0522c78525077402b755f8bcd0c14
+ *  013efa48188c5ad9692474d746d94f6c.c9d0522c78525077402b755f8bcd0c14
  *
  *  The part before the dot is the initialization vector.
- *  The second part is two blowfish encrypted 64 bit 
+ *  The second part is two aes encrypted 64 bit
  *  unsigned integers.  The first is the server token,
  *  and is a constant and verifies the etag originated
  *  from this server.  The second is the payload.  It
@@ -51,71 +51,78 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/time.h>
-#include <openssl/blowfish.h>
-#include <openssl/bn.h>
+#include <inttypes.h>
+#include <stdbool.h>
+#include <openssl/evp.h>
 #include "hex_to_uchar.h"
 #include "qzrandom64.h"
+#include "crypto_etag.h"
+
+#define DEBUG if (debug) fprintf
+
+#ifdef CRYPTO_ETAG_MAIN
+bool debug = true;
+#endif
 
 /*
  *  make_crypto_etag
  *
  *  Return a text string that is a hex char array 
- *  0123456789abcdef.0123456789abcdef0123456789abcdef
+ *  0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef
  * 
- *  The first part is random.
- *  The second part is blowfish encrypted,
+ *  The first part is random 128 bits.
+ *  The second part is aes encrypted,
  *  a 64 bit constant, server_token, to prove validity,
- *  a 64 bit non-zero payload. 
+ *  a 64 bit non-zero payload.
  *
  *  The result must be freed.
  */
 
-unsigned char* make_crypto_etag(BF_KEY* bf_key, uint64_t server_token, uint64_t payload){
+unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token,\
+    uint64_t payload){
 
     // Never create a 0 payload, a zero payload is always an error.
-    if (payload==0) return NULL;
+    if (payload == 0) return NULL;
 
-    // the size will be:
-    // 16 hex chars for the  8 bit ivec, 
-    // 1 byte .,
-    // 16 hex chars for the 8 byte server token,
-    // 16 hex chars for the 8 byte paylod, 
-    // 1 null,  1 extra null for good luck, 
-    // 51 bytes total.
+    int ivec_hex_len = (IVEC_LEN+1)*2;
+    unsigned char ivec[ivec_hex_len];
+    bzero(ivec, ivec_hex_len);
+    qzrandom128ch(ivec);
 
-    unsigned char* etag = calloc(1, 51);
-    unsigned char* ch = etag;
+    unsigned char* ch_in = (char*)&payload;
 
-    // 8 random bytes for the ivec plus a null,
-    unsigned char ivec[9];
-    qzrandom64ch(ivec);
+    uint64_t data_out;
+    unsigned char* ch_out = (char*) &data_out;
 
-    // Save the ivec as hex to the output buffer at ch.
-    int j;
-    for(j=0; j<8; j++){
-        // 3 is 2 for 2 hex digits + 1 null
-        snprintf(ch, 3, "%02x", ivec[j]);
-        ch += 2;
-    }        
-    *ch = '.';
-    ch++;
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
-    // Mapping 64 bit integer input to a char array for BF.
-    uint64_t data[2];
-    data[0] = server_token;
-    data[1] = payload;
+    int enclen;
+    int rc;
 
-    unsigned char* data_in = (unsigned char*) &data;
-    unsigned char data_out[16];
-
-
-    BF_cbc_encrypt(data_in, data_out, 16, bf_key, ivec, BF_ENCRYPT);
-
-    // Fill out the rest of the etag with hex from BF char array. 
-    for(j=0; j<16; j++){
-        snprintf(ch, 3, "%02x", data_out[j]);
-        ch += 2;
+    rc = EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL,  key, ivec);
+    if (rc != 1){
+        DEBUG(stderr, "EVP_EncryptInit failed\n");
+        return NULL;
     }
+    rc = EVP_EncryptUpdate(ctx, ch_out, &enclen, ch_in, CRYPT_DATA_LEN);
+    if (rc != 1){
+        DEBUG(stderr, "EVP_EncryptUpdate failed\n");
+        return NULL;
+    }
+
+    DEBUG(stderr, "EVP_EncryptUpdate (%d)\n", enclen);
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    // Fill out the etag with hex
+    static char etag[ETAG_STR_LEN+2];
+    char* iv_hex  = uchar_to_hex(ivec, IVEC_LEN);
+    char* data_hex = uchar_to_hex(ch_out, CRYPT_DATA_LEN);
+    snprintf(etag, ETAG_STR_LEN+2, "%s.%s%c", iv_hex, data_hex, '\0');
+
+    free(iv_hex);
+    free(data_hex);
+
     return etag;
 }
 
@@ -127,94 +134,119 @@ unsigned char* make_crypto_etag(BF_KEY* bf_key, uint64_t server_token, uint64_t 
  *  any kind of error.  0 is never a valid payload.
  *
  *  An etag looks like this:
- *  c0e9bd0cddeea0a5:c9d0522c78525077402b755f8bcd0c14
+ *  0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef
  *
  */
-uint64_t validate_crypto_etag(BF_KEY* bf_key, uint64_t server_token, char* etag){
+uint64_t
+validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
 
-    //fprintf(stderr, "vce,");
-    uint64_t payload = 0xFFFFFFFF;
+    uint64_t payload = 0;
+    int rc;
 
-    if (strlen(etag) != 49){
-        fprintf(stderr, "invalid etag not 49 chars\n");
+    DEBUG(stderr, "validate_crypto_etag\n");
+
+    if (strlen(etag) != ETAG_STR_LEN){
+        DEBUG(stderr, "invalid etag not %d chars (%lu)\n", 
+            ETAG_STR_LEN, strlen(etag));
+
         return 0;
     }
 
-    if (etag[16] != '.'){
-        fprintf(stderr, "invalid etag misplaced period\n");
+    if (etag[(IVEC_LEN*2)] != '.'){
+        DEBUG(stderr, "invalid etag misplaced period\n");
         return 0;
     }
-    etag[16] = '\0';
+    etag[(IVEC_LEN*2)] = '\0';
     char* hex_ivec = etag;
-    char* hex_data = etag + 17;
-
+    char* hex_data = etag + (IVEC_LEN*2) + 1;
     // 
     // These length checks are redundant, but they 
     // ease my paranoia
     //
-    if (strlen(hex_ivec) != 16){
-        fprintf(stderr, "invalid etag ivec not 16 chars\n");
+    if (strlen(hex_ivec) != (IVEC_LEN*2)){
+        DEBUG(stderr, "invalid etag ivec not %d chars\n", (IVEC_LEN*2));
         return 0;
     }
     int c;
-    for(c=0; c<16; c++){
+    for(c=0; c<(IVEC_LEN*2); c++){
         if (isxdigit(hex_ivec[c]) == 0){
-            fprintf(stderr, "invalid etag ivec not hex\n");
+            DEBUG(stderr, "non hex digit in ivec\n");
             return 0;
         }
     }
-    if (strlen(hex_data) != 32){
-        fprintf(stderr, "invalid etag data not 32 chars\n");
+    if (strlen(hex_data) != (CRYPT_DATA_LEN*2)){
+        DEBUG(stderr, "invalid etag hex_data not %d chars\n", (CRYPT_DATA_LEN*2));
         return 0;
     }
-    for(c=0; c<32; c++){
+    for(c=0; c<(CRYPT_DATA_LEN*2); c++){
         if (isxdigit(hex_data[c]) == 0){
-            fprintf(stderr, "invalid etag data not hex\n");
+            DEBUG(stderr, "non hex digit in hex_data\n");
             return 0;
         }
     }
 
-    //fprintf(stderr, "ok,");
+    DEBUG(stderr, "passed tests\n");
 
     unsigned char* ivec = hex_to_uchar(hex_ivec);
-    if (ivec == NULL){ 
-        fprintf(stderr, "invalid etag ivec hex conversion failed\n");
-        return 0; 
-    } // ivec must now be freed
 
-    //fprintf(stderr, "ivec,");
+    if (ivec == NULL){ 
+        DEBUG(stderr, "ivec is null\n");
+        return 0;
+    } // ivec must now be freed
 
     unsigned char* crypt_data = hex_to_uchar(hex_data);
     if (crypt_data == NULL) {
-        fprintf(stderr, "invalid etag crypt_data hex conversion failed\n");
+        free(ivec);
+        DEBUG(stderr, "crypt_data is null\n");
         free(ivec);
         return 0;
     } // crypt_data must now be freed
-    //fprintf(stderr, "data,");
 
-    // I need the data to be both character and integer
-    unsigned char plain_data[33];
-    bzero(plain_data, 33);
-    uint64_t* data = (uint64_t*) plain_data;
+    DEBUG(stderr, "strlen(hex_data)=%lu\n", strlen(hex_data));
+    DEBUG(stderr, "hex_to_uchar complete\n");
 
-     
-    //fprintf(stderr, "decrypt,");
-    BF_cbc_encrypt(crypt_data, plain_data, 16, bf_key, ivec, BF_DECRYPT);
-    //fprintf(stderr, "OK,");
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
-    if (data[0] == server_token){
-        payload = data[1];
-    }else{
-        fprintf(stderr, "invalid etag server token does not match\n");
-        payload = 0;
+    DEBUG(stderr, "cipher context init complete\n");
+
+    rc = EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, ivec);
+    if (rc != 1){
+        DEBUG(stderr, "EVP_DecryptInit failed\n");
+        free(ivec);
+        free(crypt_data);
+        return 0;
     }
+    DEBUG(stderr, "decrypt init complete\n");
+
+    int declen;
+    //char* ch_out = (char *)  &payload;
+    char ch_out[CRYPT_DATA_LEN*2];
+
+    rc = EVP_DecryptUpdate(ctx, ch_out, &declen, crypt_data, (CRYPT_DATA_LEN+1));
+    if (rc != 1){
+        DEBUG(stderr, "EVP_DecryptUpdate failed\n");
+        free(ivec);
+        free(crypt_data);
+        return 0;
+    }
+    memcpy(&payload, ch_out, 8);
+
+    DEBUG(stderr, "decrypt update complete (%d)\n", declen);
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    DEBUG(stderr, "payload val set\n");
     free(ivec);
     free(crypt_data);
 
+    DEBUG(stderr, "free complete\n");
+    DEBUG(stderr, "validate payload = %"PRIu64"\n", payload);
     return payload;
 }
 
 #ifdef CRYPTO_ETAG_MAIN
+
+extern double gettime(void);
 
 void print_uchar(unsigned char* uch, int len){
     int n;
@@ -226,39 +258,37 @@ void print_uchar(unsigned char* uch, int len){
 }
 
 int main(void){
-    char* hex_key  = "013efa48188c5ad9692474d746d94f6c";
-    char* hex_ivec = "cc63a18ce8cf2621";
-    unsigned char* testdata = "739dd9415d2469b5d44af51e9762a058";
-    unsigned char* testcrypt = malloc(35);
-    unsigned char* testout = malloc(35);
+
+    unsigned char* key = hex_to_uchar("013efa48188c5ad9692474d746d94f6c");
+
+    // unsigned char* testdata = "739dd9415d2469b5d44af51e9762a058";
+    unsigned char* testcrypt = malloc(64);
+    unsigned char* testout = malloc(64);
     bzero(testcrypt,35);
     bzero(testout,35);
 
-    BF_KEY* bf_key;
-    bf_key = malloc(sizeof(BF_KEY));
-    unsigned char *keydata = hex_to_uchar(hex_key);
-    unsigned char *ivec = hex_to_uchar(hex_ivec);
- 
-    BF_set_key(bf_key, 16, keydata);
-
-    printf("\nbefore: %s\n", testdata);
-    BF_cbc_encrypt(testdata, testcrypt, 32, bf_key, ivec, BF_ENCRYPT);
-
-    free(ivec);
-    ivec = hex_to_uchar(hex_ivec);
-
-    BF_cbc_encrypt(testcrypt, testout, 32, bf_key, ivec, BF_DECRYPT);
-    printf("after:  %s\n", testout);
-
-    char* etag = make_crypto_etag(bf_key, (uint64_t) 42, (uint64_t) 420);
-    printf("etag: %s\n", etag);
-
     uint64_t payload;
-    payload = validate_crypto_etag(bf_key, 42, etag);
-    printf("payload = %"PRIu64"\n", payload);
+    payload = 420;
 
-    free(ivec);
-    free(keydata);
+    double start = gettime();
+
+    char* etag = make_crypto_etag(key, (uint64_t) 42, payload);
+
+    printf("etag: %s\n", etag);
+    printf("etag length is %lu\n", strlen(etag));
+
+    double created = gettime();
+
+    uint64_t pload = validate_crypto_etag(key, (uint64_t) 42, etag);
+
+    double validated = gettime();
+
+    // validate_crypto_etag(payload, key, 42, etag);
+    printf("validate returned\n");
+    printf("payload = %"PRIu64"\n", pload);
+
+    printf("time to make %f, time to validate %f\n", created - start, validated - created );
+
 
     return 0;
 }

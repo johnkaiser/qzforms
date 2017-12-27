@@ -61,10 +61,11 @@
 #define MAX_USER_NAME_LENGTH (62)
 #define MAX_NBR_SEGMENTS (32)
 #define PATH_SEPARATOR "/"
+#define BUFLEN 1024
 
 // This length includes the ending null.
 // This is the same as tagger.c TAG_MAX_LENGTH
-#define SESSION_KEY_LENGTH 50 
+#define SESSION_KEY_LENGTH 66
 
 #define PG_NAMEDATALEN 63
 #define NAME_RANDOMNESS 16
@@ -142,7 +143,7 @@ struct handler{
 struct session{
     unsigned char session_id[9];
     int zero;
-    char full_tag[ETAG_MAX_LENGTH];
+    char full_tag[SESSION_KEY_LENGTH+2];
     char user[MAX_USER_NAME_LENGTH+2];
     pthread_mutex_t session_lock;
     bool is_logged_in;
@@ -287,7 +288,7 @@ struct prompt_rule{
 
 struct form_record{
     xmlChar form_id[9];
-    char full_tag[ETAG_MAX_LENGTH];
+    char full_tag[ETAG_MAX_LENGTH+3]; // 2 for quotes + 1 for \0
     bool is_valid;
     time_t created;
     time_t expires;

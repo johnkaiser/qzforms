@@ -58,6 +58,8 @@
 #include <sys/types.h>
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
+#include "qzrandom64.h"
 
 /* Other includes are specific to a defined algorithm. */
 
@@ -197,6 +199,43 @@ uint64_t qzrandom64ch(char* buf){
 }
 
 /*
+ *  qzrandom128ch
+ *
+ * Similar to qzrandom64ch, except in a 16 bytes.
+ * The first 16 bytes are random not \0 chars
+ * returned as a struct with an array.
+ * If buf is not null, then it is assumed to be
+ * at least 17 bytes long, with the same value
+ * written to buf as returned.
+ * The last byte is always \0.
+ */
+
+struct rand128 qzrandom128ch(char* buf){
+
+    struct rand128 data;
+    uint64_t rnbr = 0;
+
+    do{
+        rnbr = qzrandom64();
+    } while ( ! is_null_free(rnbr) );
+
+    memcpy(data.rnbr, &rnbr, 8);
+
+    do{
+        rnbr = qzrandom64();
+    } while ( ! is_null_free(rnbr) );
+
+    memcpy(data.rnbr + 1, &rnbr, 8);
+
+    if (buf != NULL){
+        memcpy(buf, data.rnbr, 16);
+        buf[16] = '\0';
+    }
+
+    return data;
+}
+
+/*
  * gen_random_key
  *
  * Fill the buffer with 63 chars that represent a 
@@ -331,6 +370,19 @@ int main(void){
     for (j=0; j<100; j++){
         printf("p=%f\n", qzprobability());
     }
+
+    struct rand128 rd;
+    unsigned char chd[16];
+    int i;
+
+    for (j=0; j<100; j++){
+        rd = qzrandom128ch(chd);
+        for(i=0; i<2; i++){
+            printf("%016"PRIX64, rd.rnbr[i]);
+        }
+        printf("\n");
+    }
+
     return 0;
 }
 #endif

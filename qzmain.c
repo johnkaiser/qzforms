@@ -273,10 +273,16 @@ void launch_connection_thread(void* data){
 
         if (rc < 0){
 
+            int this_error = errno;
+            char errbuf[BUFLEN];
+            bzero(errbuf, BUFLEN);
+            strerror_r(this_error, errbuf, BUFLEN);
+
             FILE* log = fopen(thread_dat->conf->logfile_name, "a");
-            fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d\n",
+            fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d "
+                "error=%s\n",
                 gettime(), next_id, __func__, __LINE__,
-                thread_dat->thread_id, rc);
+                thread_dat->thread_id, rc, errbuf);
 
             fclose(log);
 
@@ -452,6 +458,7 @@ int main(int argc, char* argv[], char* envpmain[]){
     fprintf(log, "%f %d %s:%d logfile_name=%s\n",
         gettime(), next_id, __func__, __LINE__, conf->logfile_name);
 
+    fflush(log);
     tagger_pid = tagger_init(conf, argv);
 
     // In order to know the compiler did not optimize away

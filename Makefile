@@ -208,9 +208,9 @@ hex_to_uchar_test: hex_to_uchar.c gettime.o
 crypto_etag.o: crypto_etag.c crypto_etag.h
 	$(CC) $(CFLAGS) -c crypto_etag.c
 
-crypto_etag_test: crypto_etag.c qzrandom64.o hex_to_uchar.o
+crypto_etag_test: crypto_etag.c qzrandom64.o hex_to_uchar.o gettime.o
 	$(CC) $(CFLAGS) -DCRYPTO_ETAG_MAIN  crypto_etag.c qzrandom64.o hex_to_uchar.o \
-		-lcrypto -o crypto_etag_test
+		gettime.o -lcrypto -o crypto_etag_test
 
 tagger.o:tagger.c
 	$(CC) $(CFLAGS) -c tagger.c
