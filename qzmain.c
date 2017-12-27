@@ -43,6 +43,8 @@ struct thread_launch_data {
 
 };
 
+int next_id;
+
 /*
  *  cleanup
  *
@@ -178,7 +180,7 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
         // parse_post
         if ( ! hargs->error_exists ){ // possibly set by error_page() above
-            fprintf(hargs->log, "%f %d %s:%d parse_post called with %ld %s\n",
+            fprintf(hargs->log, "%f %d %s:%d parse_post called with %zu %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             strlen(hargs->postbuf), "bytes");
 
@@ -252,7 +254,6 @@ void launch_connection_thread(void* data){
 
     struct thread_launch_data* thread_dat = data;
     FCGX_Request request;
-
     if (FCGX_InitRequest(&request, 0, 0) != 0){
         FILE* log = fopen(thread_dat->conf->logfile_name, "a");
         fprintf(log,"%f %d %s:%d FCGX_InitRequest failed in thread %d\n",
@@ -262,13 +263,11 @@ void launch_connection_thread(void* data){
         return;
     }
 
-
     for(;;){
 
         pthread_mutex_lock(&(thread_dat->accept_mutex));
         int rc = FCGX_Accept_r(&request);
-        *thread_dat->next_id += 1;
-        int next_id = *thread_dat->next_id;
+        next_id += 1;
         pthread_mutex_unlock(&(thread_dat->accept_mutex));
 
         if (rc < 0){
@@ -276,7 +275,7 @@ void launch_connection_thread(void* data){
             int this_error = errno;
             char errbuf[BUFLEN];
             bzero(errbuf, BUFLEN);
-            strerror_r(this_error, errbuf, BUFLEN);
+            strerror_r(this_error, errbuf, BUFLEN)
 
             FILE* log = fopen(thread_dat->conf->logfile_name, "a");
             fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d "
@@ -431,7 +430,7 @@ int main(int argc, char* argv[], char* envpmain[]){
     struct qz_config* conf = init_config();
     init_login_tracker();
 
-    int next_id = 0;
+    next_id = 0;
     log_file_rotation(conf);
     FILE* log = fopen(conf->logfile_name,"a+");
 

@@ -395,7 +395,7 @@ void audit_form_set_scanner(void* payload, void* data, xmlChar* name){
     size_t name_len = strnlen(form_set->name,64);
     if ((name_len <1) || (name_len > 63)){
 
-        fprintf(h->log, "%f %d %s:%d form_set name length fail %ld\n",
+        fprintf(h->log, "%f %d %s:%d form_set name length fail %zu\n",
            gettime(), h->request_id, __func__, __LINE__,
            name_len);
 
@@ -404,7 +404,7 @@ void audit_form_set_scanner(void* payload, void* data, xmlChar* name){
 
     if (strnlen(form_set->id,10) != 8){
 
-        fprintf(h->log, "%f %d %s:%d form_set id length fail %ld\n",
+        fprintf(h->log, "%f %d %s:%d form_set id length fail %zu\n",
            gettime(), h->request_id, __func__, __LINE__,
            strnlen(form_set->id,10));
 

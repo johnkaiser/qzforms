@@ -1,9 +1,10 @@
 #!/bin/sh
 ## To run the install as a non-root user,
 ## replace RUNUSER,RUNGROUP,FORMDEVGROUP,ADMINUSER,ADMINGROUP with
-## the user and a group of account running the script.
+## the user and a group of the account running the script.
 ##
 ##  The user and group that will be running the qzforms application. 
+##  These must be the same in qzforms.init.
 ##
 RUNUSER=qzforms
 RUNGROUP=qzforms
@@ -15,7 +16,8 @@ FORMDEVGROUP=formdev
 
 ##
 ##  The admintrative account is commonly root, the group is wheel or root,
-##  but these can be any accounts that are not the run user and group.
+##  but these can be any accounts with the suggestion that they are not
+##  the run user and group.
 ##
 ADMINUSER=root
 ADMINGROUP=$(if (id root | grep -q wheel); then echo wheel; else echo root; fi)
@@ -82,6 +84,7 @@ else
 fi
 
 if [ "$idcheck" ]; then 
+    echo "Installation failed on user and group checks."
     echo "You will need to setup a user and group to run the application."
     echo "It may be convenient to add the form developer to the qzforms group."
     echo "Something like:"
@@ -91,6 +94,8 @@ if [ "$idcheck" ]; then
     echo "    useradd -L daemon -s /usr/bin/false -g qzforms -d ${INSTALLDIR} qzforms"
     echo "For Debian try:"
     echo "    useradd -G daemon -s /usr/bin/false -g qzforms -d ${INSTALLDIR} qzforms"
+    echo "The user and groups used can also be set at the top of qzforms_install.sh"
+    echo "Rerun qzforms_install.sh after making corrections."
 
     exit 1
 fi
@@ -160,6 +165,11 @@ install  -m 660 -o ${ADMINUSER} -g ${ADMINGROUP} \
 ##  Final Instructions
 ##
 echo 
-echo "You will need to construct a spawn-fcgi command line that matches the"
-echo "options above, the qzforms.conf file, and your web server." 
+echo "You will need to construct a spawn-fcgi command line that matches"
+echo "the options above by editing ${INSTALLDIR}/libexec/qzforms.init or"
+echo "setting the options for your init process."
+echo "${INSTALLDIR}/config/qzforms.conf will control how qzforms talks"
+echo "to PostgreSQL and sets how qzforms itself runs."
+echo "The (SOCKET_ADDR and SOCKET_PORT) or (SOCKET_PATH) in qzforms.init"
+echo "must match the configuration in your web server."
 

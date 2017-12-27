@@ -294,11 +294,11 @@ void log_table_action_details(struct handler_args* h,
                 ta->css_filenames[k]);
         }
     }
-    fprintf(h->log, "%f %d %s:%d inline_js %lu bytes\n",
+    fprintf(h->log, "%f %d %s:%d inline_js %zu bytes\n",
         gettime(), h->request_id, __func__, __LINE__,
         (ta->inline_js == NULL) ? 0 : strlen(ta->inline_js));
 
-    fprintf(h->log, "%f %d %s:%d inline_css %lu bytes\n",
+    fprintf(h->log, "%f %d %s:%d inline_css %zu bytes\n",
         gettime(), h->request_id, __func__, __LINE__,
         (ta->inline_css == NULL) ? 0 : strlen(ta->inline_css));
 
@@ -1045,7 +1045,7 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
              paramdata[k] = element;
          }
 
-         fprintf(h->log, "%f %d %s:%d matched param %s length %ld\n",
+         fprintf(h->log, "%f %d %s:%d matched param %s length %zu\n",
             gettime(), h->request_id, __func__, __LINE__,
             ta->fieldnames[k], strlen(element));
     }

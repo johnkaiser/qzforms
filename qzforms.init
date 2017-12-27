@@ -25,9 +25,24 @@ SOCKET_PORT="9074"
 QZFORMS_PID="/var/qzforms/run/qzforms.pid"
 STARTUP_DIR="/var/qzforms"
 QZFORMS_FCGI="./libexec/qzforms.fcgi" 
-SPAWN_FCGI=/usr/local/bin/spawn-fcgi
-QZUSER=qzforms
-QZGROUP=qzforms
+RUNUSER=qzforms
+RUNGROUP=qzforms
+
+# Try to find spawn-fcgi in the common places,
+# or you can just set it by replacing FAIL.
+
+SPAWN_FCGI="FAIL"
+if [ -x /usr/local/bin/spawn-fcgi ]; then
+    SPAWN_FCGI="/usr/local/bin/spawn-fcgi"
+fi
+if [ -x /usr/bin/spawn-fcgi ]; then
+    SPAWN_FCGI="/usr/bin/spawn-fcgi"
+fi
+if [ $SPAWN_FCGI = "FAIL" ]; then
+    echo "spawn-fcgi executable not found"
+    exit 1
+fi
+
 # 
 ## end options
 #
@@ -37,10 +52,10 @@ start)
 
     if [ -n "$SOCKET_PATH" ]; then
         $SPAWN_FCGI -s $SOCKET_PATH -P $QZFORMS_PID \
-        -d $STARTUP_DIR -u $QZUSER -g $QZGROUP -- $QZFORMS_FCGI
+        -d $STARTUP_DIR -u $RUNUSER -g $RUNGROUP -- $QZFORMS_FCGI
     else
         $SPAWN_FCGI -a $SOCKET_ADDR -p $SOCKET_PORT -P $QZFORMS_PID \
-        -d $STARTUP_DIR -u $QZUSER -g $QZGROUP -- $QZFORMS_FCGI
+        -d $STARTUP_DIR -u $RUNUSER -g $RUNGROUP -- $QZFORMS_FCGI
     fi
     ;;
 stop)

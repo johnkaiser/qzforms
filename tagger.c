@@ -62,7 +62,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
 
     DEBUG(log, "begin tagger_serve\n");
     DEBUG(log, "qzrandom64 %"PRIx64"\n", qzrandom64());
-    DEBUG(log, "strlen(conf->server_token)=%lu\n", strlen(conf->server_token));
+    DEBUG(log, "strlen(conf->server_token)=%zu\n", strlen(conf->server_token));
     FLUSH;
 
     // Get the server token from config or make one up.
@@ -81,7 +81,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
     
     if (server_token == 0){
         FILE* qzlog = fopen( conf->logfile_name, "a");
-        fprintf(qzlog, "fail - bad server token in config %s len=%ld\n",
+        fprintf(qzlog, "fail - bad server token in config %s len=%zu\n",
             conf->server_token, strlen(conf->server_token));
         exit(21);
     }
@@ -194,7 +194,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
                 // "61ee029125dd839a61ee029125dd839a.4cf0d06856f9bad03e85cc5002fc0b37"
                 if ( (('\'' == inbuf[0]) && ('\'' == inbuf[ETAG_STR_LEN+1]))  ||
                      (('"'  == inbuf[0]) && ('"'  == inbuf[ETAG_STR_LEN+1])) ){
-                    // so try without the quotes 
+                    // so try without the quotes
                     inbuf[ETAG_STR_LEN+1] = '\0';
                     payload = validate_crypto_etag(server_key, server_token,
                         &(inbuf[1]));
@@ -217,7 +217,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
                 DEBUG(log, "validate_crypto_etag returned %"PRIu64"\n", payload);
                 write(incoming, &payload, sizeof(payload));
                 break;
-           
+
             default:
                 payload = 0;
                 write(incoming, &payload, sizeof(payload));

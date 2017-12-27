@@ -60,6 +60,7 @@
 
 #define DEBUG if (debug) fprintf
 
+
 #ifdef CRYPTO_ETAG_MAIN
 bool debug = true;
 #endif
@@ -78,8 +79,7 @@ bool debug = true;
  *  The result must be freed.
  */
 
-unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token,\
-    uint64_t payload){
+unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, uint64_t payload){
 
     // Never create a 0 payload, a zero payload is always an error.
     if (payload == 0) return NULL;
@@ -146,9 +146,8 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
     DEBUG(stderr, "validate_crypto_etag\n");
 
     if (strlen(etag) != ETAG_STR_LEN){
-        DEBUG(stderr, "invalid etag not %d chars (%lu)\n", 
-            ETAG_STR_LEN, strlen(etag));
-
+        DEBUG(stderr, "invalid etag not %d chars (%zu)\n", ETAG_STR_LEN,
+            strlen(etag));
         return 0;
     }
 
@@ -202,7 +201,7 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
         return 0;
     } // crypt_data must now be freed
 
-    DEBUG(stderr, "strlen(hex_data)=%lu\n", strlen(hex_data));
+    DEBUG(stderr, "strlen(hex_data)=%zu\n", strlen(hex_data));
     DEBUG(stderr, "hex_to_uchar complete\n");
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
@@ -275,7 +274,7 @@ int main(void){
     char* etag = make_crypto_etag(key, (uint64_t) 42, payload);
 
     printf("etag: %s\n", etag);
-    printf("etag length is %lu\n", strlen(etag));
+    printf("etag length is %zu\n", strlen(etag));
 
     double created = gettime();
 
