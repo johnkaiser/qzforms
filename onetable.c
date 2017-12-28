@@ -508,7 +508,8 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                         xmlNewProp(input, "value", passed_in);
                     }
                  }
-             }
+            }
+            save_pkey_values(h, form_tag, list_ta, list_rs, row);
 
             // The button itself
             input = xmlNewChild(form, NULL, "input", NULL);

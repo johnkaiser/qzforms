@@ -298,7 +298,6 @@ struct form_record{
     xmlHashTablePtr pkey_values;
     uint64_t session_integrity_token;
     char form_action[];
-    // XXXXXX  tie to record key sometimes
 };
 
 
