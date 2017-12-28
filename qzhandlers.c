@@ -45,11 +45,6 @@ void init_handler_hash(void){
     {
         {
             .count = 0,
-            .name = "timestamp",
-            .handler = timestamp
-        },
-        {
-            .count = 0,
             .name = "login",
             .handler = req_login
         },

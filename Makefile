@@ -40,7 +40,7 @@ CFLAGS=-Wall \
 VERSION!=cat Version
 SCHEMA_VERSION=10
 
-OBJ=qzhandlers.o timestamp.o  onetable.o \
+OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
 	input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
@@ -52,7 +52,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	templates/base.xml templates/login.xml templates/tinymce.xml \
 	qzforms.init README.txt strbuf.c strbuf.h \
 	http_codes.h qzrandom64.h crypto_etag.h \
-	qzmain.c qzhandlers.c timestamp.c  onetable.c \
+	qzmain.c qzhandlers.c onetable.c \
 	str_to_array.c session.c login.c cookie.c \
 	input.c output.c menu.c utility.c strbufs.c \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
@@ -115,11 +115,8 @@ session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom64.o \
 		hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
 		opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
 		str_to_array.o login.o prompt_rule.o output.o \
-		input.o menu.o qzhandlers.o timestamp.o status.o qzfs.o onetable.o grid.o \
+		input.o menu.o qzhandlers.o status.o qzfs.o onetable.o grid.o \
 		-lpq -o session_test
-
-timestamp.o: timestamp.c qz.h
-	$(CC) $(CFLAGS) -c timestamp.c
 
 onetable.o: onetable.c qz.h
 	$(CC) $(CFLAGS) -c onetable.c
@@ -167,8 +164,8 @@ opentable_test: opentable.c parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools
 	-lpq \
 	-DOPENTABLE_TEST -g \
 	gettime.o pgtools.o strbuf.o parse_pg_array.o output.o qzrandom64.o \
-	prompt_rule.o tagger.o crypto_etag.o utility.o str_to_array.o hex_to_uchar.o \
-	form_tag.o qzhandlers.o  timestamp.o status.o qzfs.o \
+	prompt_rule.o tagger.o crypto_etag.o utility.o str_to_array.o \
+	hex_to_uchar.o form_tag.o qzhandlers.o  status.o qzfs.o \
 	onetable.o menu.o login.o input.o cookie.o session.o parse_key_eq_val.o \
 	opentable.c \
 	-o opentable_test
@@ -241,7 +238,7 @@ prompt_rule.o: prompt_rule.c qz.h
 
 test_prompt_rule: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DPROMPT_RULE_MAIN  prompt_rule.c \
-	qzhandlers.o timestamp.o  onetable.o \
+	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
 	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
@@ -266,7 +263,7 @@ form_set.o: form_set.c
 
 test_form_set: form_set.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DFORM_SET_MAIN form_set.c \
-	qzhandlers.o timestamp.o  onetable.o \
+	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
 	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
@@ -279,7 +276,7 @@ test_form_set: form_set.c
 
 id_index_test: input.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
-	qzhandlers.o timestamp.o  onetable.o \
+	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
 	 output.o strbuf.o menu.o utility.o strbufs.o form_set.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
