@@ -230,8 +230,8 @@ void catch_notifies(struct handler_args* h){
 
 bool form_tag_required(char* handler_name){
 
-    static char* form_tag_not_required[] = {"login", "logout", "refresh", 
-        "timestamp", "fs", NULL};
+    static char* form_tag_not_required[] = {"login", "logout", "refresh",
+        "fs", NULL};
 
     int n;
 
@@ -258,7 +258,7 @@ void do_page( struct handler_args* hargs ){
     // Check the post data for being legal
     // It must contain a name 'form_tag' with value
     // that passes the test for being a valid etag.
-    // Requests without postdata such as qzfs requests or list requests
+    // Requests without postdata such as qzfs requests requests
     // do not post anything, so skip this.
 
     if (hargs->postdata != NULL){
@@ -276,9 +276,7 @@ void do_page( struct handler_args* hargs ){
     }
 
     // The handler name will come from qz.form unless it is a builtin.
-    static char* builtins[] = {"login","logout","refresh","status",
-        "timestamp", NULL};
-
+    static char* builtins[] = {"login","logout","refresh","status", NULL};
 
     static char menu_txt[] = "menupage";
     
