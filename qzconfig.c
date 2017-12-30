@@ -242,13 +242,14 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->audit_form_set_ref_count = DEFAULT_AUDIT_FORM_SET_REF_COUNT;
     conf->max_log_file_size = DEFAULT_MAX_LOG_FILE_SIZE;
     conf->max_log_file_count = DEFAULT_MAX_LOG_FILE_COUNT;
-    conf->audit_id_index = DEFAULT_AUDIT_ID_INDEX;
+    conf->log_id_index_details = DEFAULT_LOG_ID_INDEX_DETAILS;
     conf->log_table_action_details = DEFAULT_LOG_TABLE_ACTION_DETAILS;
     conf->log_form_tag_details = DEFAULT_LOG_FORM_TAG_DETAILS;
     conf->log_form_set_details = DEFAULT_LOG_FORM_SET_DETAILS;
     conf->failed_login_block_timeout = DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT;
     conf->max_failed_logins = DEFAULT_MAX_FAILED_LOGINS;
     conf->log_login_tracker_details = DEFAULT_LOG_LOGIN_TRACKER_DETAILS;
+    conf->log_validate_regex_details = DEFAULT_LOG_VALIDATE_REGEX_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -334,9 +335,9 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
             conf->max_log_file_count = max_log_file_count;
     }
 
-    setting = xmlHashLookup(conf_hash, "AUDIT_ID_INDEX");
+    setting = xmlHashLookup(conf_hash, "LOG_ID_INDEX_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        conf->audit_id_index = is_true(setting);
+        conf->log_id_index_details = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "LOG_TABLE_ACTION_DETAILS");
@@ -354,6 +355,10 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         conf->log_form_set_details = is_true(setting);
     }
 
+    setting = xmlHashLookup(conf_hash, "LOG_VALIDATE_REGEX_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_validate_regex_details = is_true(setting);
+    }
 
     setting = xmlHashLookup(conf_hash, "FAILED_LOGIN_BLOCK_TIMEOUT");
     if ((setting != NULL) && (strlen(setting) > 0)){
@@ -510,10 +515,11 @@ int main(int argc, char* argv[], char* env[]){
     printf("audit_form_set_ref_count=%c\n", (config->audit_form_set_ref_count) ? 't':'f');
     printf("max_log_file_size=%"PRIu64"\n", config->max_log_file_size);
     printf("max_log_file_count=%d\n",  config->max_log_file_count);
-    printf("audit_id_index=%c\n", (config->audit_id_index) ? 't':'f');
+    printf("log_id_index_details=%c\n", (config->log_id_index_details) ? 't':'f');
     printf("log_table_action_details=%c\n", (config->log_table_action_details) ? 't':'f'); 
     printf("log_form_tag_details=%c\n", (config->log_form_tag_details) ? 't':'f'); 
     printf("log_form_set_details=%c\n", (config->log_form_set_details) ? 't':'f'); 
+    printf("log_validate_regex_details=%c\n", (config->log_validate_regex_details) ? 't':'f');
 
     
     char* allowed_vars[] = {

@@ -75,7 +75,7 @@ void build_index(struct handler_args* h){
     while (cur != NULL){
         this_id = xmlGetProp(cur, "id");
 
-        if (h->conf->audit_id_index){
+        if (h->conf->log_id_index_details){
             fprintf(h->log,  "%f %d %s:%d on node %s id %s\n",
                  gettime(), h->request_id, __func__, __LINE__,
                  cur->name, this_id);
@@ -233,22 +233,44 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
  */
 void validate_regex(void* val, void* data, xmlChar* key){
     struct handler_args* h = data;
+    char* base = NULL;
 
     // is there data there to check?
-    int subject_length = strlen(val);
+    size_t subject_length = strlen(val);
+    size_t key_length = strlen(key);
+
+    if (h->conf->log_validate_regex_details){
+        fprintf(h->log, "%f %d %s:%d key %s val length %"PRId64"\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            key, (int64_t) subject_length);
+    }
     if (subject_length == 0) return;
+    if (key_length == 0) return;
+
+    if (key[key_length-1] == ']'){
+        base = array_base(key);
+    }else{
+        asprintf(&base, "%s", key);
+    }
 
     // fetch the prompt rule
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
-    struct prompt_rule* rule = fetch_prompt_rule(h, form_name, key);
-    if (rule == NULL) return;
+    struct prompt_rule* rule = fetch_prompt_rule(h, form_name, base);
+
+    if (h->conf->log_validate_regex_details){
+        fprintf(h->log, "%f %d %s:%d base:%s %s regex:%s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            base,
+            (rule == NULL) ? "no rule":"rule found",
+            (rule == NULL || rule->regex_pattern == NULL) ? "none":rule->regex_pattern);
+    }
 
     // does it have a pattern?
     if (rule->comp_regex == NULL){
         free_prompt_rule(h, rule);
+        free(base);
         return;
     }
-
     // does the value fit the pattern?
     const int   ovectcount = 30;
     int ovector[ovectcount];
@@ -262,7 +284,7 @@ void validate_regex(void* val, void* data, xmlChar* key){
         if (h->data == NULL){
             // Then this is the first one, start with an
             // explanatory note about the failure.
-            static char* regex_failure_hdr = 
+            static char* regex_failure_hdr =
                 "One or more fields submitted failed validation.\n"
                 "This error should have been caught by the client\n"
                 "before the data was submitted.\n"
@@ -276,18 +298,26 @@ void validate_regex(void* val, void* data, xmlChar* key){
 
         char* error_msg;
         asprintf(&error_msg, "attribute %s failed regex_pattern %s rc=%d\n\n",
-             rule->fieldname, rule->regex_pattern, rc);
+             key, rule->regex_pattern, rc);
 
         strbuf_append(h->data, new_strbuf(error_msg,0));
 
         fprintf(h->log, "%f %d %s:%d "
-            "fail attribute \"%s\" val [%s] regex_pattern %s rc=%d\n\n",
+            "fail attribute \"%s\" regex_pattern %s rc=%d\n\n",
             gettime(), h->request_id, __func__, __LINE__,
-            rule->fieldname, (char*)val, rule->regex_pattern, rc);
-        
+            rule->fieldname, rule->regex_pattern, rc);
+
         free(error_msg);
+
+    }else{ // match passed
+
+        if (h->conf->log_validate_regex_details){
+            fprintf(h->log, "%f %d %s:%d regex_pattern passed for %s\n",
+                gettime(), h->request_id, __func__, __LINE__, key);
+        }
     }
     free_prompt_rule(h, rule);
+    free(base);
 }
 
 /*
@@ -325,7 +355,6 @@ bool check_postdata(struct handler_args* h){
     xmlHashScan(h->postdata, validate_regex, h);
 
     if (h->regex_check == failed){
-        error_page(h, SC_BAD_REQUEST, "fail");
         return false;
     }else{
         h->regex_check = passed;

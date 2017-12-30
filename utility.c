@@ -507,3 +507,58 @@ void add_listener(struct handler_args* h, char* id, char* event, char* action){
     free(content);
     return;
 }
+
+/*
+ *  array_base
+ *
+ *  Given an array name, field[5], return the name without
+ *  the brackets and index.
+ *  The result must be freed.
+ */
+char* array_base(char* name){
+
+    char* base;
+    char ch;
+    int len, j;
+    bool is_valid = false;
+
+    len = asprintf(&base, "%s", name);
+
+    if (base == NULL) return NULL;
+    if ((len == 0) || (base[len-1] != ']')){
+        free(base);
+        return NULL;
+    }
+
+    // Count backwards from the end of the string to the [ char
+    for(j=len-1; j>0; j--){  // This does skip the first char, "x[0]" not "[0]"
+       ch = base[j];
+       base[j] = '\0';
+       if (ch == '['){
+           is_valid = true;
+           break;
+       }
+    }
+    if (is_valid){
+        return base;
+    }else{
+        free(base);
+        return NULL;
+    }
+}
+
+#ifdef ARRAY_BASE_TEST
+int main(void){
+
+    char* test[] = {"test[1]", "X[2]", "[3]", "test4]", "test5",
+        "test[[6]", "test[7][x]", "test[]", NULL};
+    char* base;
+
+    int n;
+    for (n=0; test[n] != NULL; n++){
+        base = array_base(test[n]);
+        printf("%d %s %s\n", n, test[n], base);
+        free(base);
+    }
+}
+#endif

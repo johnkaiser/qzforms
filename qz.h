@@ -1063,3 +1063,9 @@ extern void init_login_tracker(void);
  *  login.c
  */
  extern void login_tracking_housekeeping(struct handler_args* hargs);
+
+/*
+ *  array_base
+ *  utility.c
+ */
+ extern char* array_base(char* name);
