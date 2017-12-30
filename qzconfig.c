@@ -233,7 +233,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     snprintf(conf->tagger_socket_path, MAX_SOCKET_NAME_LEN, "%s", 
         DEFAULT_TAGGER_SOCKET_PATH);
 
-    conf->number_of_users =  42;  // but it _is_ a magic number
+    conf->number_of_users =  DEFAULT_NUMBER_OF_USERS;
     conf->server_token[0] = '\0';
     conf->server_key[0] = '\0';
     conf->session_inactivity_timeout = DEFAULT_SESSION_INACTIVITY_TIMEOUT;
@@ -257,12 +257,16 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
 
     char* setting;
 
-    setting = xmlHashLookup(conf_hash, "QZ_TAGGER_SOCKET");
+    setting = xmlHashLookup(conf_hash, "TAGGER_SOCKET");
+    // Many settings were originally named with the prefix QZ_
+    // Allow them for backwards compatibility.
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_TAGGER_SOCKET");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->tagger_socket_path, MAX_SOCKET_NAME_LEN, "%s", setting);
     }
 
-    setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_USERS");
+    setting = xmlHashLookup(conf_hash, "NUMBER_OF_USERS");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_USERS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int nbr_users = (unsigned int) 
             strtol(setting, NULL, 10);
@@ -270,40 +274,47 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         conf->number_of_users = nbr_users;
     } 
     
-    setting = xmlHashLookup(conf_hash, "QZ_LOG_FILENAME"); 
+    setting = xmlHashLookup(conf_hash, "LOG_FILENAME"); 
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_LOG_FILENAME");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->logfile_name, MAXPATHLEN, "%s", setting);
     }
     
-    setting = xmlHashLookup(conf_hash, "QZ_TEMPLATE_PATH");
+    setting = xmlHashLookup(conf_hash, "TEMPLATE_PATH");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_TEMPLATE_PATH");
     snprintf(conf->template_path, MAXPATHLEN, "%s", 
         ((setting != NULL) && (strlen(setting) > 0)) ?  
             setting:DEFAULT_TEMPLATE_PATH );
 
-    setting = xmlHashLookup(conf_hash, "QZ_SERVER_TOKEN");
+    setting = xmlHashLookup(conf_hash, "SERVER_TOKEN");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SERVER_TOKEN");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->server_token, SERVER_TOKEN_HEX_LENGTH+1, "%s", setting);
     }
     
-    setting = xmlHashLookup(conf_hash, "QZ_SERVER_KEY");
+    setting = xmlHashLookup(conf_hash, "SERVER_KEY");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SERVER_KEY");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->server_key, SERVER_KEY_HEX_LENGTH+1, "%s", setting);
     }
 
-    setting = xmlHashLookup(conf_hash, "QZ_SESSION_INACTIVITY_TIMEOUT");
+    setting = xmlHashLookup(conf_hash, "SESSION_INACTIVITY_TIMEOUT");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SESSION_INACTIVITY_TIMEOUT");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int inactivity_timeout = (unsigned int) 
             strtol(setting, NULL, 10);
         conf->session_inactivity_timeout = inactivity_timeout;
     } 
 
-    setting = xmlHashLookup(conf_hash, "QZ_FORM_DURATION");
+    setting = xmlHashLookup(conf_hash, "FORM_DURATION");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_FORM_DURATION");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int form_duration = (unsigned int) 
             strtol(setting, NULL, 10);
         conf->form_duration = form_duration;
     }
-    setting = xmlHashLookup(conf_hash, "QZ_HOUSEKEEPER_NAP_TIME");
+    setting = xmlHashLookup(conf_hash, "HOUSEKEEPER_NAP_TIME");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_HOUSEKEEPER_NAP_TIME");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int housekeeper_nap_time = (unsigned int)
             strtol(setting, NULL, 10);
@@ -314,7 +325,8 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         conf->audit_form_set_ref_count = is_true(setting);
     }
 
-    setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_THREADS");
+    setting = xmlHashLookup(conf_hash, "NUMBER_OF_THREADS");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_THREADS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int number_of_threads = (unsigned int)
             strtol(setting, NULL, 10);
@@ -476,7 +488,7 @@ struct qz_config* init_config(void){
 }
 
 
-#ifdef QZCONFIG_MAIN
+#ifdef QZCONFIG_TEST
 
 int main(int argc, char* argv[], char* env[]){
 
@@ -504,6 +516,7 @@ int main(int argc, char* argv[], char* env[]){
 
     printf("tagger_socket_path=%s\n", config->tagger_socket_path);
     printf("number_of_users=%d\n", config->number_of_users);
+    printf("number_of_threads=%d\n", config->number_of_threads);
     printf("server_token=%s\n", config->server_token);
     printf("server_key=%s\n", config->server_key);
     printf("template_path=%s\n", config->template_path);
@@ -534,7 +547,6 @@ int main(int argc, char* argv[], char* env[]){
         "PGHOSTADDR",
         "PGOPTIONS",
         "PGPASSFILE",
-        "PGPASSWORD",
         "PGPORT",
         "PGREALM",
         "PGREQUIREPEER",
@@ -547,7 +559,6 @@ int main(int argc, char* argv[], char* env[]){
         "PGSSLMODE",
         "PGSSLROOTCERT",
         "PGTZ",
-        "PGUSER",
         NULL
     }; 
     char* var;

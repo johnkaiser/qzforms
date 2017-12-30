@@ -227,11 +227,11 @@ test_tagger: tagger.c
 qzconfig.o:qzconfig.c qzconfig.h 
 	$(CC) $(CFLAGS)  -Wall -c qzconfig.c 
 
-test_qzconfig:qzconfig.c qzconfig.h qzrandom64.o gettime.o  
-	$(CC) $(CFLAGS) -lcrypto -DQZCONFIG_MAIN  qzconfig.c \
+qzconfig_test:qzconfig.c qzconfig.h qzrandom64.o gettime.o
+	$(CC) $(CFLAGS) -lcrypto -DQZCONFIG_TEST  qzconfig.c \
 		-L$(XMLLIBDIR) -lxml2 \
 		qzrandom64.o gettime.o \
-		-o test_qzconfig
+		-o qzconfig_test
 
 prompt_rule.o: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(PCRECFLAGS)  -Wall -c prompt_rule.c 

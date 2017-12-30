@@ -18,21 +18,22 @@
  
 #define DEFAULT_CONFIG_FILE  "config/qzforms.conf"
 #define DEFAULT_TAGGER_SOCKET_PATH  "run/qzfcgi.sock"
+#define DEFAULT_NUMBER_OF_USERS (42)
 #define DEFAULT_LOGFILE_NAME "logs/qzfcgi.log"
-#define DEFAULT_SESSION_INACTIVITY_TIMEOUT 600
+#define DEFAULT_SESSION_INACTIVITY_TIMEOUT (600)
 #define DEFAULT_TEMPLATE_PATH "templates"
-#define DEFAULT_FORM_DURATION 240
-#define DEFAULT_NUMBER_OF_THREADS 10
-#define DEFAULT_HOUSEKEEPER_NAP_TIME 120
+#define DEFAULT_FORM_DURATION (180)
+#define DEFAULT_NUMBER_OF_THREADS (10)
+#define DEFAULT_HOUSEKEEPER_NAP_TIME (120)
 #define DEFAULT_AUDIT_FORM_SET_REF_COUNT false
-#define DEFAULT_MAX_LOG_FILE_SIZE 1000000
-#define DEFAULT_MAX_LOG_FILE_COUNT 9
+#define DEFAULT_MAX_LOG_FILE_SIZE (1000000)
+#define DEFAULT_MAX_LOG_FILE_COUNT (8)
 #define DEFAULT_LOG_ID_INDEX_DETAILS false
 #define DEFAULT_LOG_TABLE_ACTION_DETAILS false
 #define DEFAULT_LOG_FORM_TAG_DETAILS false
 #define DEFAULT_LOG_FORM_SET_DETAILS false
-#define DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT 300
-#define DEFAULT_MAX_FAILED_LOGINS 20
+#define DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT (300)
+#define DEFAULT_MAX_FAILED_LOGINS (20)
 #define DEFAULT_LOG_LOGIN_TRACKER_DETAILS false;
 #define DEFAULT_LOG_VALIDATE_REGEX_DETAILS false;
 
@@ -54,11 +55,11 @@ struct qz_config {
     int number_of_threads;
     unsigned int form_duration;
     unsigned int housekeeper_nap_time;
-    bool audit_form_set_ref_count;
     uint64_t max_log_file_size;
     uint8_t  max_log_file_count;
     unsigned int failed_login_block_timeout;
     unsigned int max_failed_logins;
+    bool audit_form_set_ref_count;
     bool log_id_index_details;
     bool log_table_action_details;
     bool log_form_tag_details;
