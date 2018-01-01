@@ -226,12 +226,12 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
 
 
 /*
- *  validate_regex
+ *  validate_rule
  *
  *  Check that postdata matches its regex pattern if it
- *  is defined in the prompt rule.
+ *  is defined in the prompt rule and the it fits in maxlength.
  */
-void validate_regex(void* val, void* data, xmlChar* key){
+void validate_rule(void* val, void* data, xmlChar* key){
     struct handler_args* h = data;
     char* base = NULL;
 
@@ -239,7 +239,7 @@ void validate_regex(void* val, void* data, xmlChar* key){
     size_t subject_length = strlen(val);
     size_t key_length = strlen(key);
 
-    if (h->conf->log_validate_regex_details){
+    if (h->conf->log_validate_rule_details){
         fprintf(h->log, "%f %d %s:%d key %s val length %"PRId64"\n",
             gettime(), h->request_id, __func__, __LINE__,
             key, (int64_t) subject_length);
@@ -257,7 +257,7 @@ void validate_regex(void* val, void* data, xmlChar* key){
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     struct prompt_rule* rule = fetch_prompt_rule(h, form_name, base);
 
-    if (h->conf->log_validate_regex_details){
+    if (h->conf->log_validate_rule_details){
         fprintf(h->log, "%f %d %s:%d base:%s %s regex:%s\n",
             gettime(), h->request_id, __func__, __LINE__,
             base,
@@ -279,17 +279,18 @@ void validate_regex(void* val, void* data, xmlChar* key){
     rc = pcre_exec(rule->comp_regex, NULL, val, subject_length, 0, 0,
         ovector, ovectcount);
 
+    static char* regex_failure_hdr =
+        "One or more fields submitted failed validation.\n"
+        "This error should have been caught by the client\n"
+        "before the data was submitted.\n"
+        "You may be able to recover by using your back\n"
+        "button and correcting your data (or may not).\n\n";
+
     if (rc < 0){ // match failed
 
         if (h->data == NULL){
             // Then this is the first one, start with an
             // explanatory note about the failure.
-            static char* regex_failure_hdr =
-                "One or more fields submitted failed validation.\n"
-                "This error should have been caught by the client\n"
-                "before the data was submitted.\n"
-                "You may be able to recover by using your back\n"
-                "button and correcting your data (or may not).\n\n";
 
             h->data = new_strbuf(regex_failure_hdr, 0);
             content_type(h, "text/plain");
@@ -311,9 +312,42 @@ void validate_regex(void* val, void* data, xmlChar* key){
 
     }else{ // match passed
 
-        if (h->conf->log_validate_regex_details){
+        if (h->conf->log_validate_rule_details){
             fprintf(h->log, "%f %d %s:%d regex_pattern passed for %s\n",
                 gettime(), h->request_id, __func__, __LINE__, key);
+        }
+    }
+
+    // Check the length of val against the rule maxlength
+
+    if (rule->maxlength > 0){
+        size_t val_length = strlen(val);
+        if (val_length > rule->maxlength){
+
+            h->regex_check = failed;
+
+            if (h->data == NULL){
+                // Then this is the first one, start with an
+                // explanatory note about the failure.
+
+                h->data = new_strbuf(regex_failure_hdr, 0);
+                content_type(h, "text/plain");
+                h->regex_check = failed;
+            }
+
+            char* length_error;
+            asprintf(&length_error,
+                "fail attribute \"%s\"\n"
+                "length of %lu exceeds maxlength %d\n\n",
+                key, val_length, rule->maxlength);
+
+            strbuf_append(h->data, new_strbuf(length_error,0));
+
+            fprintf(h->log, "%f %d %s:%d key %s value length %lu exceeds maxlength %d\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                key, val_length, rule->maxlength);
+
+            free(length_error);
         }
     }
     free_prompt_rule(h, rule);
@@ -352,7 +386,7 @@ bool check_postdata(struct handler_args* h){
 
     /* utf8 checking is done in parse_key_eq_val */
 
-    xmlHashScan(h->postdata, validate_regex, h);
+    xmlHashScan(h->postdata, validate_rule, h);
 
     if (h->regex_check == failed){
         return false;

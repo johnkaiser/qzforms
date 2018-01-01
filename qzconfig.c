@@ -249,7 +249,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->failed_login_block_timeout = DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT;
     conf->max_failed_logins = DEFAULT_MAX_FAILED_LOGINS;
     conf->log_login_tracker_details = DEFAULT_LOG_LOGIN_TRACKER_DETAILS;
-    conf->log_validate_regex_details = DEFAULT_LOG_VALIDATE_REGEX_DETAILS;
+    conf->log_validate_rule_details = DEFAULT_LOG_VALIDATE_RULE_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
 
@@ -367,9 +367,9 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         conf->log_form_set_details = is_true(setting);
     }
 
-    setting = xmlHashLookup(conf_hash, "LOG_VALIDATE_REGEX_DETAILS");
+    setting = xmlHashLookup(conf_hash, "LOG_VALIDATE_RULE_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        conf->log_validate_regex_details = is_true(setting);
+        conf->log_validate_rule_details = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "FAILED_LOGIN_BLOCK_TIMEOUT");
@@ -532,7 +532,7 @@ int main(int argc, char* argv[], char* env[]){
     printf("log_table_action_details=%c\n", (config->log_table_action_details) ? 't':'f'); 
     printf("log_form_tag_details=%c\n", (config->log_form_tag_details) ? 't':'f'); 
     printf("log_form_set_details=%c\n", (config->log_form_set_details) ? 't':'f'); 
-    printf("log_validate_regex_details=%c\n", (config->log_validate_regex_details) ? 't':'f');
+    printf("log_validate_rule_details=%c\n", (config->log_validate_rule_details) ? 't':'f');
 
     
     char* allowed_vars[] = {
