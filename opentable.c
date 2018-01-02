@@ -1151,14 +1151,7 @@ void close_table(struct handler_args* h, char* form_name, char* action){
             gettime(), h->request_id, __func__, __LINE__,
             cmd_buf,
             PQresStatus(PQresultStatus(rs)));
-
-    }else{
-        fprintf(h->log, "%f %d %s:%d  %s success %s\n",
-            gettime(), h->request_id, __func__, __LINE__,
-            cmd_buf,
-            PQresStatus(PQresultStatus(rs)));
     }
-
     free(cmd_buf);
     PQclear(rs);
 
