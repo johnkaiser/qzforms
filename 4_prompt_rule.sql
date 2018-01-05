@@ -300,8 +300,8 @@ VALUES ('table_action_edit', 'handler_name_ro', NULL, true, NULL, NULL, NULL, NU
 
 
 INSERT INTO qz.prompt_rule
-(form_name, fieldname, prompt_type, options)
-VALUES ('table_action_edit', 'clear_context_parameters', 'input_radio', '{yes,no}');
+(form_name, fieldname, prompt_type )
+VALUES ('table_action_edit', 'clear_context_parameters', 'text_array');
 
 --
 -- onetable_edit

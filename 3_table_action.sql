@@ -7,7 +7,7 @@ CREATE TABLE qz.table_action (
     helpful_text text,
     inline_js text,
     inline_css text,
-    clear_context_parameters boolean NOT NULL DEFAULT 'f',
+    clear_context_parameters varchar(63)[],
     PRIMARY KEY (form_name, action)
 );
 
@@ -47,7 +47,8 @@ VALUES ('form', 'list',
      ORDER BY form_name',
 NULL,
 'A form on this list will match incoming data to a particular set of table
- actions.  The form_name is the 2nd segment of the URL.', 't');
+ actions.  The form_name is the 2nd segment of the URL.',
+ '{form_name,handler_name}');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('form', 'edit',
@@ -255,7 +256,7 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('table_action_edit', 'create',
     $TAC$SELECT ta.form_name, ta.action new_action, fm.handler_name,
     ''::text helpful_text, ta.sql, ta.fieldnames,
-    'f'::boolean clear_context_parameters
+    ''::text clear_context_parameters
      FROM qz.create_table_action($1,$2) ta
     JOIN qz.form fm USING (form_name)$TAC$,
 '{form_name, action}', NULL);
@@ -326,7 +327,7 @@ VALUES ('menu_edit', 'list',
     FROM qz.menu
     ORDER BY menu_name, target_div',
 NULL,
-'This is a list of menus that have been created.  Press Insert to add a new menu.  Press Edit on a menu for more details.', 't');
+'This is a list of menus that have been created.  Press Insert to add a new menu.  Press Edit on a menu for more details.', '{menu_name,menu_item_sequence}');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('menu_edit', 'edit',
@@ -433,12 +434,13 @@ VALUES ('menu_item_edit', 'list',
 '{menu_name}',
 'Maintain the list of choices on a menu.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text,
+clear_context_parameters)
 VALUES ('menu_item_edit', 'delete',
     'DELETE FROM qz.menu_item
     WHERE menu_name = $1
     AND menu_item_sequence = $2',
-'{menu_name,menu_item_sequence}', NULL);
+'{menu_name,menu_item_sequence}', NULL, '{menu_item_sequence}');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('menu_item_edit', 'create',
@@ -464,15 +466,18 @@ The context parameters are fields in the current page to be passed to the named
 target lookup.  Fixed parameters are set keys and values allowing for example a
 button to edit a particular row.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text,
+clear_context_parameters)
 VALUES ('menu_item_edit', 'insert',
     'INSERT INTO qz.menu_item
     (menu_name, menu_item_sequence, target_form_name, action, menu_text)
     VALUES
     ($1,$2,$3,$4,$5)',
-'{menu_name,menu_item_sequence,target_form_name,action,menu_text}', NULL);
+'{menu_name,menu_item_sequence,target_form_name,action,menu_text}', NULL,
+'{menu_item_sequence}');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text,
+clear_context_parameters)
 VALUES ('menu_item_edit', 'update',
     'UPDATE qz.menu_item
     SET
@@ -485,7 +490,7 @@ VALUES ('menu_item_edit', 'update',
     AND
       menu_item_sequence = $2',
 '{menu_name,menu_item_sequence,target_form_name,action,menu_text,context_parameters}',
-NULL);
+NULL, '{menu_item_sequence}');
 
 --
 -- fixed_parameters

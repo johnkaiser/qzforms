@@ -213,6 +213,7 @@ void init_open_table(struct handler_args* h){
  */
 void log_table_action_details(struct handler_args* h,
     struct table_action* ta){
+    int k;
 
     fprintf(h->log, "%f %d %s:%d form_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -238,15 +239,18 @@ void log_table_action_details(struct handler_args* h,
         gettime(), h->request_id, __func__, __LINE__,
         ta->etag);
 
-    fprintf(h->log, "%f %d %s:%d clear_context_parameters=%c\n",
-        gettime(), h->request_id, __func__, __LINE__,
-        (ta->clear_context_parameters) ? 't':'f');
+    if (ta->clear_context_parameters != NULL){
+        for (k=0; ta->clear_context_parameters[k] != NULL; k++){
+            fprintf(h->log, "%f %d %s:%d clear context_parameters=%s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                ta->clear_context_parameters[k]);
+        }
+    }
 
     fprintf(h->log, "%f %d %s:%d nbr_params=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->nbr_params);
 
-    int k;
     for (k=0; k<ta->nbr_params; k++){
         fprintf(h->log, "%f %d %s:%d fieldnames[%d]=%s\n",
             gettime(), h->request_id, __func__, __LINE__,
@@ -418,6 +422,7 @@ void init_table_entry(struct handler_args* hargs,
             paramValues[1],
             "does not exist.");
 
+        PQclear(rs_table_action);
         return;
     }
 
@@ -426,6 +431,8 @@ void init_table_entry(struct handler_args* hargs,
             "%f %d %s:%d fail, %d rows, but there should be only 1.\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             PQntuples(rs_table_action));
+
+        PQclear(rs_table_action);
         return;
     }
     // Extract the data just received to some local vars
@@ -531,7 +538,6 @@ void init_table_entry(struct handler_args* hargs,
          &&
          !(PQresultStatus(rs_prep) == PGRES_COMMAND_OK) ){
         // Oh No,
-        // ZZZZZZZZ asprintf
         char error_msg[1024];
         bzero(error_msg, 1024);
         snprintf(error_msg, 1023, "Prepared query failed\n%s %s\n%s",
@@ -540,7 +546,10 @@ void init_table_entry(struct handler_args* hargs,
 
         error_page(hargs, SC_BAD_REQUEST, error_msg );
 
-        // ZZZZZ clean up and return
+        // clean up and return
+        PQclear(rs_table_action);
+        PQclear(rs_prep);
+        return;
     }
 
     // Now save all that to the open table hash.
@@ -602,7 +611,6 @@ void init_table_entry(struct handler_args* hargs,
         inline_css_len+1);
     data_target += inline_css_len+2;
 
-    // form_set_name is an array, not a pointer.
     memcpy(new_table_action->form_set_name, form_set_name,
        form_set_name_len+1);
 
@@ -632,6 +640,12 @@ void init_table_entry(struct handler_args* hargs,
         PQfnumber(rs_table_action, "context_parameters"));
     char** context_parameters = parse_pg_array(context_parameters_pgarray);
     new_table_action->context_parameters = context_parameters;
+
+    char* clear_context_parameters_pgarray = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "clear_context_parameters"));
+    char** clear_context_parameters =
+        parse_pg_array(clear_context_parameters_pgarray);
+    new_table_action->clear_context_parameters  = clear_context_parameters;
 
     // Count the number of params
     new_table_action->nbr_params = 0;
@@ -665,15 +679,6 @@ void init_table_entry(struct handler_args* hargs,
         new_table_action->add_description = true;
     }else{
         new_table_action->add_description = false;
-    }
-
-    // clear_context_parameters is a boolean
-    char* clear_context_parameters = PQgetvalue(rs_table_action, 0,
-        PQfnumber(rs_table_action, "clear_context_parameters"));
-    if (clear_context_parameters[0] == 't'){
-        new_table_action->clear_context_parameters = true;
-    }else{
-        new_table_action->clear_context_parameters = false;
     }
 
     // Set the check token
@@ -717,6 +722,7 @@ void free_table_action(struct table_action* ta){
     if (ta->js_filenames != NULL) free(ta->js_filenames);
     if (ta->css_filenames != NULL) free(ta->css_filenames);
     if (ta->context_parameters != NULL) free(ta->context_parameters);
+    if (ta->clear_context_parameters != NULL) free(ta->clear_context_parameters);
     free(ta);
 }
 

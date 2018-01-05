@@ -67,7 +67,8 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 
 SQLUTIL= qzforms_examples.sql qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
-	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql
+	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql \
+	qz_db_update_SV11.sql
 
 EXAMPLES=examples/release_checklist.sql examples/release_checklist_data.sql \
 	examples/stuff_and_gridle.sql examples/todo.sql examples/todo_data.sql

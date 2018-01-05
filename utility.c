@@ -509,6 +509,24 @@ void add_listener(struct handler_args* h, char* id, char* event, char* action){
 }
 
 /*
+ *  item_in_list
+ *
+ *  If the first item is in the null terminated array of the second.
+ */
+bool item_in_list(char* item, char** list){
+
+    if (list == NULL) return false;
+
+    int k;
+    for(k=0; list[k] != NULL; k++){
+        if (strcmp(item, list[k]) == 0){
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
  *  array_base
  *
  *  Given an array name, field[5], return the name without

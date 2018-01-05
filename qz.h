@@ -184,7 +184,7 @@ struct table_action{
     char*  inline_css;
     char form_set_name[PG_NAMEDATALEN+2];
     char** context_parameters;
-    bool clear_context_parameters;
+    char** clear_context_parameters;
     uint64_t integrity_token;
 };
 
@@ -1006,12 +1006,6 @@ extern void save_context_parameters(struct handler_args* h,
 extern struct form_set* get_form_set(struct handler_args*, char* form_set_id);
 
 /*
- *  clear_context_parameters 
- *  form_set.c
- */
-extern void clear_context_parameters(struct handler_args* h, char* form_set_name);
-
-/*
  *  form_set_is_valid
  *  form_set.c
  */
@@ -1065,7 +1059,13 @@ extern void init_login_tracker(void);
  extern void login_tracking_housekeeping(struct handler_args* hargs);
 
 /*
+ *  item_in_list
+ *  utility.c
+ */
+extern bool item_in_list(char* item, char** list);
+
+/*
  *  array_base
  *  utility.c
  */
- extern char* array_base(char* name);
+extern char* array_base(char* name);

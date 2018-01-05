@@ -287,9 +287,9 @@ void add_menu(struct handler_args* hargs,
         if (hargs->current_form_set != NULL){
    
             // The menu form gets data from the current context. 
-            // ZZZZZZZZZ get from page_ta char** context_parameters;
-            // ZZZZZZZZZ if page_ta bool clear_context_parameters 
-            // ZZZZZZZZZ is set then skip. but first...
+            // get from page_ta char** context_parameters;
+            // if page_ta clear_context_parameters is set then skip.
+            // But first...
 
             if ( ! form_set_is_valid(hargs, hargs->current_form_set)){ 
                  fprintf(hargs->log, "%f %d %s:%d fail current form set "
@@ -309,7 +309,9 @@ void add_menu(struct handler_args* hargs,
                     char* pvalue = xmlHashLookup(
                       hargs->current_form_set->context_parameters, params[p]);
                     
-                    if (pvalue != NULL){
+                    if ((pvalue != NULL) &&
+                        ( ! item_in_list(params[p],
+                           hargs->page_ta->clear_context_parameters))){
    
                       xmlNodePtr input_el = xmlNewChild(form, NULL, "input", NULL);
                       xmlNewProp(input_el, "type", "hidden");

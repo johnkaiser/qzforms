@@ -186,11 +186,6 @@ void save_context_parameters(struct handler_args* h,
         return;
     }
 
-    if (h->page_ta->clear_context_parameters == true){
-        // Well, not so much clear them as do not set them.
-
-        return;
-    }
     fprintf(h->log, "%f %d %s:%d form=%s action=%s,form_set_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         h->page_ta->form_name, h->page_ta->action,
@@ -238,6 +233,10 @@ void save_context_parameters(struct handler_args* h,
     int n;
     for(n=0; key[n] != NULL; n++){
 
+        if (item_in_list(key[n], h->page_ta->clear_context_parameters)){
+            // Well, not so much clear it as do not set it.
+            continue;
+        }
         char* param_value = NULL;
 
         param_value = xmlHashLookup(h->current_form_set->context_parameters, 
@@ -291,33 +290,6 @@ void save_context_parameters(struct handler_args* h,
     if (new_form_rec != NULL){
         new_form_rec->form_set = h->current_form_set;
         h->current_form_set->ref_count++;
-    }
-}
-
-/*
- *  clear_context_parameters
- *
- *  Remove the context parameters for the current form set.
- */
-void clear_context_parameters(struct handler_args* h, char* form_set_name){
-    if (h->page_ta == NULL) return;
-    if (h->current_form_set == NULL) return;
-
-    if (strncmp(h->current_form_set->name, form_set_name, 64) == 0){
-
-        int n;
-        char* value;
-        for (n=0; h->page_ta->context_parameters[n] != NULL; n++){
-            value = xmlHashLookup(h->current_form_set->context_parameters, 
-                h->page_ta->context_parameters[n]);
-            
-            if (value != NULL){
-                xmlHashRemoveEntry(h->current_form_set->context_parameters, 
-                    h->page_ta->context_parameters[n], NULL);
-                
-                free(value);
-            }
-        }
     }
 }
 
