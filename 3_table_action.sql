@@ -261,7 +261,7 @@ VALUES ('table_action_edit', 'create',
     JOIN qz.form fm USING (form_name)$TAC$,
 '{form_name, action}', NULL);
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text, inline_js)
 VALUES ('table_action_edit', 'list',
     $TAG$SELECT ta.action, ta.helpful_text,
     fm.handler_name
@@ -269,7 +269,8 @@ VALUES ('table_action_edit', 'list',
     JOIN qz.form fm USING (form_name)
     WHERE form_name = $1
     ORDER BY form_name, action$TAG$,
-'{form_name}', 'Edit the table actions for a given form_name.');
+'{form_name}', 'Edit the table actions for a given form_name.',
+$TAIJS$ document.addEventListener("DOMContentLoaded",set_action_options, true); $TAIJS$ );
 
 --
 -- menu_set_edit

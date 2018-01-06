@@ -285,12 +285,11 @@ VALUES
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$',
 'input_text');
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern, options, onfocus)
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern, options)
 VALUES ('table_action_edit', 'action', 'select_options',
 '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$',
 '{create,delete,delete_row,edit,etag_value,get,list,
-  insert,insert_row,save,update,update_row,view}',
-  'set_action_options()');
+  insert,insert_row,save,update,update_row,view}');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, regex_pattern, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
 VALUES ('table_action_edit', 'handler_name', NULL, true, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_text', NULL, false, NULL);

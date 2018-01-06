@@ -83,5 +83,17 @@ SET clear_context_parameters = '{menu_item_sequence}'
 WHERE form_name = 'menu_item_edit'
 AND (action) IN ('insert','update','delete');
 
+-- Do this the better way
+UPDATE qz.prompt_rule
+SET onfocus = NULL
+WHERE form_name  = 'table_action_edit'
+AND fieldname = 'action';
+
+UPDATE qz.table_action
+SET inline_js = $TAIJS$
+document.addEventListener("DOMContentLoaded",set_action_options, true);
+$TAIJS$
+WHERE form_name = 'table_action_edit'
+AND action = 'list';
 
 
