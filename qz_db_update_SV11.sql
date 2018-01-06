@@ -70,7 +70,9 @@ DROP COLUMN old_clear_context_parameters;
 
 UPDATE qz.prompt_rule
 SET options = NULL,
-prompt_type = 'text_array',
+prompt_type = 'text_array'
+WHERE form_name = 'table_action_edit'
+AND fieldname = 'clear_context_parameters';
 
 -- All that, for this.
 -- Drop the value after using it so it does not persist

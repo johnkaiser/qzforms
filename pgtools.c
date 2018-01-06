@@ -267,7 +267,7 @@ struct pgtype_datum* get_pgtype_datum(
         datum->table_schema, datum->table_name, datum->column_name,
         gettime() - start); 
 
-    // ZZZZZZZZZZZZZZzz
+    // XXXXXXXXXXXXXX
     // This stopped working because reasons
     //if (xmlHashAddEntry2(datums, datum->table_name, 
     //    datum->column_name, datum) !=0){
