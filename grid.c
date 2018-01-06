@@ -134,7 +134,7 @@ void add_row_form_data(xmlNodePtr add_row_form,
     // should be possible in the future.
     if (grid_insert_row_ta == NULL) return;
 
-    // ZZZZZZ Give it a default rule and continue
+    //  Give it a default rule and continue
     if (p_rule == NULL){
         struct prompt_rule default_prompt_rule = (struct prompt_rule){
             .form_name = "default",
@@ -418,6 +418,12 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     for(row=0; row<PQntuples(grid_edit_rs); row++){
 
         tr = xmlNewChild(tbody, NULL, "tr", NULL);
+        if (row%2 == 0){
+            append_class(tr, "even");
+        }else{
+            append_class(tr, "odd");
+        }
+
 
         // Add a td for the change status
 

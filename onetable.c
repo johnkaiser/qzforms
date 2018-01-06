@@ -451,6 +451,11 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     tbody = xmlNewChild(table, NULL, "tbody", NULL);
     for(row=0; row<PQntuples(list_rs); row++){
         tr = xmlNewChild(tbody, NULL, "tr", NULL);
+        if (row%2 == 0){
+            append_class(tr, "even");
+        }else{
+            append_class(tr, "odd");
+        }
 
         // The edit button
         if (has_edit_button){
