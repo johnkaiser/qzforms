@@ -39,16 +39,39 @@ CREATE TABLE qz.page_js (
 --
 
 INSERT INTO qz.css (filename, mimetype, modtime, data) 
-VALUES ('qzforms.css', 'text/css', '2015-05-26 20:43:16',
+VALUES ('qzforms.css', 'text/css', '2018-01-06 13:49:00',
 $QZF$
-.bold {font-weight:bold;}
-  .light { color: #999; }
-  legend {font-size: 50%;}
-  table.qztablez { border: 2pt solid black; border-collapse: collapse; }
-  table.qztablez tr td { border: 1pt solid #aaa; padding: 2pt; }
-  table.qztablez tr th { border: 1pt solid black; padding: 2pt; font-weight:bold; }
+div.menu {
+    display: block;
+    width: 100%;
+    clear: left;
+}
+ul.menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+li.menu {
+   float: left;
+   display: inline;
+}
 
-  label { padding-right: 1em; }
+#helpful_text {
+    display: block;
+    clear: both;
+    width: 40em;
+}
+
+.bold {font-weight:bold;}
+.light { color: #999; }
+legend {font-size: 50%;}
+
+table.qztablez { border: 2pt solid black; border-collapse: collapse; }
+table.qztablez tr td { border: 1pt solid #aaa; padding: 2pt; }
+table.qztablez tr th { border: 1pt solid black; padding: 2pt; font-weight:bold; }
+
+label { padding-right: 1em; }
 
 /* tables */
 table.tablesorter {

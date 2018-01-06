@@ -245,12 +245,21 @@ void add_menu(struct handler_args* hargs,
     append_class(child_of, "menu");
     append_class(child_of, get_value(menu_rs, 0, "menu_name"));
 
+    xmlNodePtr ul;
+    ul = xmlNewChild(child_of, NULL, "ul", NULL);
+    append_class(ul, "menu");
+    append_class(ul, get_value(menu_rs, 0, "menu_name"));
+
     int row;
     xmlNodePtr form;
+    xmlNodePtr li;
     for (row=0; row<PQntuples(menu_rs); row++){
 
+        li = xmlNewChild(ul, NULL, "li", NULL);
+        append_class(li, "menu");
+
         // For each row in _rs add a form.
-        form = xmlNewChild(child_of, NULL, "form", NULL);
+        form = xmlNewChild(li, NULL, "form", NULL);
         char* action_target;
 
         char* action = get_value(menu_rs, row, "action");
