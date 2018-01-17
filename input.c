@@ -338,14 +338,15 @@ void validate_rule(void* val, void* data, xmlChar* key){
             char* length_error;
             asprintf(&length_error,
                 "fail attribute \"%s\"\n"
-                "length of %lu exceeds maxlength %d\n\n",
-                key, val_length, rule->maxlength);
+                "length of %"PRIu64" exceeds maxlength %d\n\n",
+                key, (uint64_t)val_length, rule->maxlength);
 
             strbuf_append(h->data, new_strbuf(length_error,0));
 
-            fprintf(h->log, "%f %d %s:%d key %s value length %lu exceeds maxlength %d\n",
+            fprintf(h->log, "%f %d %s:%d key %s value length %"PRIu64
+                " exceeds maxlength %d\n",
                 gettime(), h->request_id, __func__, __LINE__,
-                key, val_length, rule->maxlength);
+                key, (uint64_t)val_length, rule->maxlength);
 
             free(length_error);
         }
