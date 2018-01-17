@@ -115,9 +115,10 @@ install -d -m 755 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALLDIR}
 install -d -m 750 -o ${ADMINUSER} -g ${RUNGROUP}  ${INSTALLDIR}/libexec
 install -m 550 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.fcgi \
     ${INSTALLDIR}/libexec/ 
-install -m 544 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.init \
+if [ ! -f ${INSTALLDIR}/libexec/qzforms.init ]; then
+install -m 744 -o ${ADMINUSER} -g ${RUNGROUP} ${INSTALL_FROM}/qzforms.init \
     ${INSTALLDIR}/libexec/ 
-
+fi
 ##
 ##  Create and populate the templates directory
 ##
@@ -153,9 +154,9 @@ install -d -m 770 -o ${RUNUSER} -g ${ADMINGROUP} ${INSTALLDIR}/run
 
 ##
 ##  Create a place for the various sql scripts
-install -d -m 770 -o ${ADMINUSER} -g  ${ADMINGROUP} ${INSTALLDIR}/sql
+install -d -m 775 -o ${ADMINUSER} -g  ${ADMINGROUP} ${INSTALLDIR}/sql
 
-install  -m 660 -o ${ADMINUSER} -g ${ADMINGROUP} \
+install  -m 664 -o ${ADMINUSER} -g ${ADMINGROUP} \
     ${INSTALL_FROM}/qz_db_install_SV*.sql  \
     ${INSTALL_FROM}/qz_db_update_SV*.sql \
     ${INSTALL_FROM}/qzforms_examples.sql \
