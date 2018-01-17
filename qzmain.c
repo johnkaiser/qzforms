@@ -513,8 +513,9 @@ int main(int argc, char* argv[], char* envpmain[]){
 
     FCGX_Request *request = calloc(1, sizeof(FCGX_Request));
     FCGX_InitRequest(request, 0, 0);
-    fprintf(log, "%f %d %s:%d FCGX_InitRequest complete\n",
-        gettime(), next_id, __func__, __LINE__);
+    fprintf(log, "%f %d %s:%d FCGX_InitRequest complete starting %d threads\n",
+        gettime(), next_id, __func__, __LINE__,
+        conf->number_of_threads);
 
     xmlHashTablePtr sessions = xmlHashCreate(conf->number_of_users);
     if (sessions == NULL){
