@@ -40,6 +40,8 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
+// for FreeBSD:
+#include <arpa/inet.h>
 
 #include "http_codes.h"
 #include "qzconfig.h"
