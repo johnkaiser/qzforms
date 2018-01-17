@@ -23,7 +23,7 @@ COMMENT ON COLUMN qz.form.table_name IS 'The name of the table being edited';
 COMMENT ON COLUMN qz.form.target_div IS 'An HTML div with the given id that exists in the xml_template that will contain the results.';
 COMMENT ON COLUMN qz.form.xml_template IS 'An xml file that exists in the QZ_TEMPLATE_PATH directory that will be the starting document.';
 COMMENT ON COLUMN qz.table_action.action IS 'Different objects will support different sets of actions. The form_name, action tuple will identify a particular SQL statement and name mapping.';
-COMMENT ON COLUMN qz.table_action.fieldnames IS 'The names of the fields to update.  The names come from the incoming form post data and may not match the names used in the table. The order must match the positional parameters in the prepared SQL statement.  An empty cell truncates the data and values after an empty field are lost.';
+COMMENT ON COLUMN qz.table_action.fieldnames IS 'The names of the fields to update.  The names come from the incoming form post data and may or may not match the names used in the table. The order must match the positional parameters in the prepared SQL statement.  An empty cell truncates the data and values after an empty field are lost.';
 COMMENT ON COLUMN qz.table_action.helpful_text IS 'A short paragraph of a hopefully helpful nature to be placed in a div with an id of "helpful_text", typically at the top of a form.';
 COMMENT ON COLUMN qz.table_action.form_name IS 'A common identity that binds together a set of actions.';
 COMMENT ON COLUMN qz.table_action.sql IS 'The actual command to be performed.  This is made into a prepared statement.  Use $n positional parameters, $1, $2, etc.  Map the positional parameters to names using fieldnames.';
