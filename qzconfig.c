@@ -237,23 +237,23 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->server_token[0] = '\0';
     conf->server_key[0] = '\0';
     conf->session_inactivity_timeout = DEFAULT_SESSION_INACTIVITY_TIMEOUT;
+    conf->number_of_threads = DEFAULT_NUMBER_OF_THREADS;
     conf->form_duration = DEFAULT_FORM_DURATION;
     conf->housekeeper_nap_time = DEFAULT_HOUSEKEEPER_NAP_TIME;
-    conf->audit_form_set_ref_count = DEFAULT_AUDIT_FORM_SET_REF_COUNT;
     conf->max_log_file_size = DEFAULT_MAX_LOG_FILE_SIZE;
     conf->max_log_file_count = DEFAULT_MAX_LOG_FILE_COUNT;
+    conf->failed_login_block_timeout = DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT;
+    conf->max_failed_logins = DEFAULT_MAX_FAILED_LOGINS;
+    conf->audit_form_set_ref_count = DEFAULT_AUDIT_FORM_SET_REF_COUNT;
     conf->log_id_index_details = DEFAULT_LOG_ID_INDEX_DETAILS;
     conf->log_table_action_details = DEFAULT_LOG_TABLE_ACTION_DETAILS;
     conf->log_form_tag_details = DEFAULT_LOG_FORM_TAG_DETAILS;
     conf->log_form_set_details = DEFAULT_LOG_FORM_SET_DETAILS;
-    conf->failed_login_block_timeout = DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT;
-    conf->max_failed_logins = DEFAULT_MAX_FAILED_LOGINS;
     conf->log_login_tracker_details = DEFAULT_LOG_LOGIN_TRACKER_DETAILS;
     conf->log_validate_rule_details = DEFAULT_LOG_VALIDATE_RULE_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
-
-    // XXXXX put the hash into the struct 
+    snprintf(conf->template_path, MAXPATHLEN, "%s", DEFAULT_TEMPLATE_PATH);
 
     char* setting;
 
