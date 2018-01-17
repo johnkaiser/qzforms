@@ -2,7 +2,7 @@ INSERT INTO qz.change_history
 (change_description,note)
 VALUES
 ('Update to SV11',
-'Clearing context parameter is now a list intead of a boolean and other menu fixes.'
+'Menus are in html lists, clearing context parameter is now by variable, and other minor fixes.'
 );
 
  UPDATE qz.constants
@@ -17,13 +17,28 @@ AND host_form_name != 'menu_menu_page';
 -- On menu_item_edit, target_form_name should be a select options 
 -- from the foreign key
 
+-- But First,
+-- If there are any menu items currently pointing nowhere,
+-- they will break the foreign key, so add them.
+
+INSERT INTO qz.form
+(form_name, handler_name, hidden)
+SELECT
+mi.target_form_name "form_name",
+'none' "handler_name",
+'t'::boolean "hidden"
+FROM qz.menu_item mi
+WHERE NOT EXISTS (
+    SELECT 1 FROM qz.form f
+    WHERE mi.target_form_name = f.form_name );
+
+ALTER TABLE qz.menu_item 
+ADD FOREIGN KEY (target_form_name) REFERENCES qz.form (form_name);
+
 INSERT INTO qz.form
 (form_name, handler_name, hidden)
 VALUES
 ('logout', 'logout', 't');
-
-ALTER TABLE qz.menu_item 
-ADD FOREIGN KEY (target_form_name) REFERENCES qz.form (form_name);
 
 -- On menu_item_edit, action should be a select options
 -- from a list
@@ -49,7 +64,7 @@ TO old_clear_context_parameters;
 ALTER TABLE qz.table_action
 ADD COLUMN clear_context_parameters varchar(63)[];
 
--- Set the new column to be all the posible values
+-- Set the new column to be all the possible values
 -- if the  old boolean was true.
 
 UPDATE qz.table_action ta
@@ -97,6 +112,7 @@ WHERE form_name = 'table_action_edit'
 AND action = 'list';
 
 -- modtime should update
+
 UPDATE qz.table_action
 SET sql =
 $TACSSED$ UPDATE qz.css
@@ -109,6 +125,7 @@ WHERE (form_name) IN ('css_edit','js_edit')
 AND action = 'update';
 
 -- menus to lists
+
 UPDATE qz.css
 SET 
    modtime = '2018-01-06 13:49:00',
@@ -207,16 +224,6 @@ div.menu form {
     display: inline;
 }    
 
-input.menu_button {
-    background: white;
-    font-weight: bold;
-}
-
-#qzmenu {
-    padding-bottom: 1ex;
-    border-bottom: 2pt dotted grey;
-}    
-
 .err_msg {
     background: yellow;
     border: 2pt solid red;
@@ -227,4 +234,15 @@ input.menu_button {
 $QZF$
 WHERE filename = 'qzforms.css';
 
+COMMENT ON COLUMN qz.table_action.fieldnames IS
+'The names of the fields passed to the SQL prepared statement.  The names come from the incoming form post data and may or may not match the names used in the table. The order must match the positional parameters in the prepared SQL statement.  An empty cell truncates the data and values after an empty field are lost.';
 
+COMMENT ON COLUMN qz.table_action.clear_context_parameters IS
+'Context parameters allow a form to pass attributes to other forms in the same form_set. Clear_context_parameters will remove the values after the form executes. For example, to clear one attribute in a multi part key.';
+
+COMMENT ON COLUMN qz.prompt_rule.el_class IS
+'An HTML Element class to be appended to any other classes assigned';
+
+-- This will cause any connected clients to drop their cache of
+-- Posgres schema information.
+NOTIFY pg_db_change;

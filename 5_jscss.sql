@@ -134,17 +134,6 @@ th.input_hidden {
 div.menu form {
     display: inline;
 }    
-
-input.menu_button {
-    background: white;
-    font-weight: bold;
-}
-
-#qzmenu {
-    padding-bottom: 1ex;
-    border-bottom: 2pt dotted grey;
-}    
-
 .err_msg {
     background: yellow;
     border: 2pt solid red;
