@@ -614,7 +614,8 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('css_edit', 'update',
     'UPDATE qz.css
     SET mimetype = $1,
-    data = $2
+    data = $2,
+    modtime = now()
     WHERE filename = $3',
 '{mimetype,data,filename}', NULL);
 
@@ -660,7 +661,8 @@ INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('js_edit', 'update',
     'UPDATE qz.js
     SET mimetype = $1,
-    data = $2
+    data = $2,
+    modtime = now()
     WHERE filename = $3',
 '{mimetype,data,filename}', NULL);
 
