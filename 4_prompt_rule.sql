@@ -147,9 +147,9 @@ VALUES
 --  menu_item_edit
 --
 
-INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
-VALUES ('menu_item_edit', 'action', 'input_text',
-'^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
+INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, options)
+VALUES ('menu_item_edit', 'action', 'select_options',
+ '{list,create,insert,edit,update,delete,save,view}');
 
 INSERT INTO qz.prompt_rule (form_name, fieldname, prompt_type, regex_pattern)
 VALUES ('menu_item_edit', 'menu_name', 'input_text',
