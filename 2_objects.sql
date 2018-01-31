@@ -24,9 +24,16 @@ VALUES
 ('menu_mgt', '{menu_name, menu_item_sequence}');
 
 INSERT INTO qz.form(
+   form_name, handler_name, hidden, xml_template, target_div)
+VALUES
+('logout', 'logout', 't', 'login.xml', 'qz'),
+('login',  'login',  't', 'login.xml', 'qz');
+
+INSERT INTO qz.form(
    form_name, handler_name, schema_name, table_name, xml_template, target_div,
    add_description, prompt_container, pkey) 
 VALUES 
+
 ('table_action_edit', 'onetable', 'qz', 'table_action', 'base.xml', 'qz', 
 true, 'fieldset', '{form_name,action}'),
 

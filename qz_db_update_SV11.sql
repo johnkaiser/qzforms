@@ -36,9 +36,10 @@ ALTER TABLE qz.menu_item
 ADD FOREIGN KEY (target_form_name) REFERENCES qz.form (form_name);
 
 INSERT INTO qz.form
-(form_name, handler_name, hidden)
+(form_name, handler_name, hidden, xml_template, target_div)
 VALUES
-('logout', 'logout', 't');
+('logout', 'logout', 't', 'login.xml', 'qz'),
+('login', 'login', 't', 'login.xml', 'qz');
 
 -- On menu_item_edit, action should be a select options
 -- from a list
@@ -109,7 +110,7 @@ SET inline_js = $TAIJS$
 document.addEventListener("DOMContentLoaded",set_action_options, true);
 $TAIJS$
 WHERE form_name = 'table_action_edit'
-AND action = 'list';
+AND (action) IN ('list', 'update');
 
 -- modtime should update
 
@@ -134,6 +135,7 @@ div.menu {
     display: block;
     width: 100%;
     clear: left;
+    padding: 0.5ex;
 }
 ul.menu {
     list-style-type: none;
