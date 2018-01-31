@@ -465,7 +465,7 @@ void session_housekeeping_scanner(void* val, void* data, xmlChar* name){
  */ 
 
 void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions, 
-    struct qz_config* conf){ 
+    struct qz_config* conf, uint64_t thread_state[]){
 
     double start =  gettime();
 
@@ -496,6 +496,25 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
     }
 
     login_tracking_housekeeping(h);
+
+    int k;
+    int active_count = 0;
+    double oldest = DBL_MAX;
+
+    for(k=0; k<conf->number_of_threads; k++){
+        if (thread_state[k] > 0) active_count++;
+        if ((thread_state[k] > 0) && (thread_state[k] < oldest)){
+            oldest = thread_state[k];
+        }
+    }
+    fprintf(h->log,
+        "%f %d %s:%d active threads %d of %d oldest %f "
+        "integrity token %s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        active_count, conf->number_of_threads,
+        (oldest == DBL_MAX) ? 0.0 : oldest,
+        (thread_state[conf->number_of_threads] == conf->integrity_token) ?
+            "valid":"invalid fail");
 
     fprintf(h->log, 
         "%f %d %s:%d housekeeping complete duration %f\n",

@@ -40,6 +40,7 @@ struct thread_launch_data {
     char** envpmain;
     xmlHashTablePtr sessions;
     int* next_id;
+    uint64_t* active;
 
 };
 
@@ -268,6 +269,7 @@ void launch_connection_thread(void* data){
         pthread_mutex_lock(&(thread_dat->accept_mutex));
         int rc = FCGX_Accept_r(&request);
         next_id += 1;
+        *thread_dat->active = gettime();
         pthread_mutex_unlock(&(thread_dat->accept_mutex));
 
         if (rc < 0){
@@ -419,6 +421,7 @@ void launch_connection_thread(void* data){
 
             serve_output(hargs);
             free_handler(hargs);
+            *thread_dat->active = 0;
 
         } // FCGX_Accept >= 0
     } // f(;;)
@@ -529,6 +532,9 @@ int main(int argc, char* argv[], char* envpmain[]){
     pthread_mutex_t accept_mutex =  PTHREAD_MUTEX_INITIALIZER;
     pthread_t threads[conf->number_of_threads];
 
+    uint64_t thread_state[conf->number_of_threads+1];
+    thread_state[conf->number_of_threads] = conf->integrity_token;
+
     int i;
     for(i = 0; i < conf->number_of_threads; i++)
     {
@@ -539,6 +545,7 @@ int main(int argc, char* argv[], char* envpmain[]){
         thread_dat->next_id = &next_id;
         thread_dat->envpmain = envpmain;
         thread_dat->sessions = sessions;
+        thread_dat->active = &(thread_state[i]);
 
         pthread_create(&threads[i], NULL, (void*) launch_connection_thread,
             (void*) thread_dat);
@@ -549,7 +556,7 @@ int main(int argc, char* argv[], char* envpmain[]){
     for(;;){
         sleep(conf->housekeeper_nap_time);
         housekeeper = init_handler(NULL, envpmain, ++next_id, conf);
-        do_housekeeping( housekeeper, sessions, conf );
+        do_housekeeping( housekeeper, sessions, conf, thread_state );
         free_handler(housekeeper);
     }
 

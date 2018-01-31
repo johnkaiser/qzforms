@@ -9,6 +9,7 @@
 #include <fcgi_config.h>
 #include <fcgiapp.h>
 #include <fcntl.h>
+#include <float.h>
 #include <inttypes.h>
 #include <libgen.h>
 #include <libpq-fe.h>
@@ -818,7 +819,7 @@ extern struct form_record* get_posted_form_record(struct handler_args* h);
  *  session.c
  */
 extern void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions, 
-    struct qz_config* conf);
+    struct qz_config* conf, uint64_t thread_state[]);
 
 /*
  *  form_tag_housekeeping
