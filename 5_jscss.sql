@@ -45,6 +45,7 @@ div.menu {
     display: block;
     width: 100%;
     clear: left;
+    padding: 0.5ex;
 }
 ul.menu {
     list-style-type: none;
