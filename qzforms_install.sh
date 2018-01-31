@@ -169,8 +169,10 @@ echo
 echo "You will need to construct a spawn-fcgi command line that matches"
 echo "the options above by editing ${INSTALLDIR}/libexec/qzforms.init or"
 echo "setting the options for your init process."
+echo ""
 echo "${INSTALLDIR}/config/qzforms.conf will control how qzforms talks"
 echo "to PostgreSQL and sets how qzforms itself runs."
+echo ""
 echo "The (SOCKET_ADDR and SOCKET_PORT) or (SOCKET_PATH) in qzforms.init"
 echo "must match the configuration in your web server."
 

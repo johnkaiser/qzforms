@@ -17,7 +17,7 @@ The prerequisites are:
    PCRE for javascript style regex validation
    GCC or Clang
    FastCGI Developement Kit, fcgi on OpenBSD, libfcgi-dev on Debian
-   On Debian, libasprintf-dev for asprintf support
+   On Debian jessie, libasprintf-dev for asprintf support
    LibreSSL or OpenSSL
    spawn-fcgi
    A randomness source, arcrandom, getrandom, or a device file
@@ -67,7 +67,7 @@ There is a minimalist init script qzforms.init.  Put it where it needs
 to go on your system or use it as a starting point for what you need. 
 Consult the spawn-fcgi documentation for further details. qzforms.init
 contains an Options section which will contain some of the same data
-as using in the install script, set the values to match.
+as used in the install script, set the values to match.
 
 Web Server
 
@@ -89,7 +89,7 @@ Use a port number that suits you, or use a unix domain socket.
 For nginx, turn off buffering or large files or datasets will be served chopped. 
 
 For Apache2, inside a VirtualHost add:
-FastCgiExternalServer  "/var/www/html/qz" -host 127.0.0.1:8888
+FastCgiExternalServer  "/var/www/html/qz" -host 127.0.0.1:9074
 
 The path is notable in that it does not exist.
 In this example, /var/www/html is the document root.
