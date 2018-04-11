@@ -390,7 +390,7 @@ struct session_housekeeping_data{
     struct handler_args* hargs;
 };
 
-void session_housekeeping_scanner(void* val, void* data, xmlChar* name){
+void session_housekeeping_scanner(void* val, void* data, const xmlChar* name){
 
     struct session* this_session = val;
     struct session_housekeeping_data* shk_data = data;

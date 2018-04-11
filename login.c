@@ -172,7 +172,7 @@ bool check_login_tracker(struct handler_args* h){
  *
  *  Remove expired login tracking records.
  */
-void login_tracking_scanner(void* payload, void* data, xmlChar* name){
+void login_tracking_scanner(void* payload, void* data, const xmlChar* name){
     struct login_tracker* lt = payload;
     struct handler_args* hargs = data;
 

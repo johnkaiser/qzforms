@@ -601,7 +601,7 @@ extern bool percent_unescape(char*);
  *
  *  For use by xmlHashScan to percent_unescape() all the values
  */
-void percent_unescape_vals(void* val, void* ignore, xmlChar* key);
+void percent_unescape_vals(void* val, void* ignore, const xmlChar* key);
 
 /*
  *  gettime
@@ -986,7 +986,7 @@ extern void decrement_form_set(struct form_record* form_rec);
  *  form_set_housekeeping_scanner
  *  form_set.c
  */
-extern void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name);
+extern void form_set_housekeeping_scanner(void* payload, void* data, const xmlChar* name);
 
 /*
  *  close_all_form_sets
@@ -1071,4 +1071,4 @@ extern bool item_in_list(char* item, char** list);
  *  array_base
  *  utility.c
  */
-extern char* array_base(char* name);
+extern char* array_base(const char* name);

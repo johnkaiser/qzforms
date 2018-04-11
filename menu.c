@@ -391,14 +391,15 @@ void add_menu(struct handler_args* hargs,
  *  Run through the context variables and log them.
  */
 
-void context_variable_logging_scanner(void* payload, void* data, xmlChar* name){
+void context_variable_logging_scanner(void* payload, void* data,
+    const xmlChar* name){
  
-     struct handler_args* hargs = data;
-     char* value = payload;
+    struct handler_args* hargs = data;
+    char* value = payload;
 
-     fprintf(hargs->log, "%f %d %s:%d context_variable=%s value=%s\n",
-         gettime(), hargs->request_id, "add_all_menus", __LINE__,
-         name, value);
+    fprintf(hargs->log, "%f %d %s:%d context_variable=%s value=%s\n",
+        gettime(), hargs->request_id, "add_all_menus", __LINE__,
+        name, value);
 }
 void log_context_variables(struct handler_args* hargs){
  

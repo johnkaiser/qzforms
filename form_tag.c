@@ -112,7 +112,9 @@ struct form_record* register_form(struct handler_args* h,
  *  The context parameter is given in name and payload, the
  *  posted value comes from h->postdata
  */
-void valid_context_parameter_scanner(void* payload, void* data, xmlChar* name){
+void valid_context_parameter_scanner(void* payload, void* data,
+    const xmlChar* name){
+
     char* saved_value = payload;
     struct handler_args* h = data;
 
@@ -350,7 +352,7 @@ void pkey_values_deallocator(void* pkey_value, xmlChar* pkey){
  *
  *  Remove the given form record and clean it up.
  */
-void delete_form_record(void* payload, void* data, xmlChar* name){
+void delete_form_record(void* payload, void* data, const xmlChar* name){
 
     struct form_record* form_rec = payload;
     struct form_tag_housekeeping_data * ft_hk_data = data;
@@ -386,7 +388,7 @@ void delete_form_record(void* payload, void* data, xmlChar* name){
  *  Called for each form tag record.
  *  Look for old stuff and toss it.
  */
-void form_tag_housekeeping_scanner(void* payload, void* data, xmlChar* name){
+void form_tag_housekeeping_scanner(void* payload, void* data, const xmlChar* name){
 
     struct form_record* form_rec = payload;
     struct form_tag_housekeeping_data * ft_hk_data = data;

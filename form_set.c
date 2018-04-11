@@ -300,12 +300,13 @@ void save_context_parameters(struct handler_args* h,
  *  Remove all form sets from the current session.
  */
 
-void close_form_set_scanner(void* payload, void* data, xmlChar* name){
+void close_form_set_scanner(void* payload, void* data, const xmlChar* name){
     struct form_set* fs = payload;
     struct form_tag_housekeeping_data* ft_hk_data = data;
     struct session* session = ft_hk_data->this_session;
     struct handler_args* hargs = ft_hk_data->hargs;
-    char* id = name;
+    char* id;
+    asprintf(&id, "%s", name);
 
     if (fs->context_parameters != NULL){
         xmlHashFree(fs->context_parameters, (xmlHashDeallocator)xmlFree);
@@ -320,6 +321,8 @@ void close_form_set_scanner(void* payload, void* data, xmlChar* name){
             form_set_id);
     }
     xmlHashRemoveEntry(session->form_sets, id, (xmlHashDeallocator)xmlFree);
+
+    free(id);
 }
 
 void close_all_form_sets(struct form_tag_housekeeping_data* ft_hk_data){
@@ -343,7 +346,7 @@ struct audit_details {
     struct handler_args* hargs;
 };
 
-void audit_form_set_scanner(void* payload, void* data, xmlChar* name){
+void audit_form_set_scanner(void* payload, void* data, const xmlChar* name){
 
     struct audit_details* aud_det = data;
     struct form_set* form_set = aud_det->form_set;
@@ -397,7 +400,7 @@ void audit_form_set_scanner(void* payload, void* data, xmlChar* name){
  *  If a config option is set, then audit the reference count.
  */
 
-void form_set_housekeeping_scanner(void* payload, void* data, xmlChar* name){
+void form_set_housekeeping_scanner(void* payload, void* data, const xmlChar* name){
 
     struct form_tag_housekeeping_data* ft_hk_data = data; 
     struct session* session = ft_hk_data->this_session;

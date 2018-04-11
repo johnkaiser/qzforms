@@ -231,7 +231,7 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
  *  Check that postdata matches its regex pattern if it
  *  is defined in the prompt rule and the it fits in maxlength.
  */
-void validate_rule(void* val, void* data, xmlChar* key){
+void validate_rule(void* val, void* data, const xmlChar* key){
     struct handler_args* h = data;
     char* base = NULL;
 
@@ -361,7 +361,7 @@ void validate_rule(void* val, void* data, xmlChar* key){
  *  For each value+primary key record saved in the form record,
  *  check that the value posted, if any, matches.
  */
-void valid_pkey_value_scanner(void* payload, void* data, xmlChar* name){
+void valid_pkey_value_scanner(void* payload, void* data, const xmlChar* name){
     char* saved_value = payload;
     struct handler_args* hargs = data;
 

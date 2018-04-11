@@ -102,11 +102,11 @@ bool percent_unescape(char* buf){
     return true;
 }
 
-void percent_unescape_vals(void* val, void* ignore, xmlChar* key){
+void percent_unescape_vals(void* val, void* ignore, const xmlChar* key){
     percent_unescape(val);
 }
 
-void check_utf8(void* val, void* data, xmlChar* key){
+void check_utf8(void* val, void* data, const xmlChar* key){
     bool* is_valid_utf8 = data;
     
     if ( !xmlCheckUTF8(key) || !xmlCheckUTF8(val) ){

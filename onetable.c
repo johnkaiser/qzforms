@@ -214,11 +214,12 @@ struct context_param_scanner_args {
     xmlNodePtr form;
 };
 
-void context_param_insert_scanner(void* payload, void* data, xmlChar* name){
+void context_param_insert_scanner(void* payload, void* data, const xmlChar* name){
 
     char* param_value =  payload;
     struct context_param_scanner_args* cps_data = data;
-    char* param_name = name;
+    char* param_name;
+    asprintf(&param_name, "%s", name); // name is const but param_name not.
     struct pgtype_datum* pgtype = NULL;
     char**  options = NULL;
 
@@ -232,6 +233,8 @@ void context_param_insert_scanner(void* payload, void* data, xmlChar* name){
 
     add_prompt(cps_data->hargs, cps_data->ta, &input_hidden_rule, pgtype,
         options, NO_ROW_INDEX, cps_data->form, param_name, param_value);
+
+    free(param_name);
 }
 /*
  *  add_insert_button

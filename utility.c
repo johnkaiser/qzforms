@@ -533,7 +533,7 @@ bool item_in_list(char* item, char** list){
  *  the brackets and index.
  *  The result must be freed.
  */
-char* array_base(char* name){
+char* array_base(const char* name){
 
     char* base;
     char ch;

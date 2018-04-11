@@ -32,7 +32,7 @@
 
 #define BUFSIZE (1024)
 
-void open_table_scanner(void* val, void* data, xmlChar* name){
+void open_table_scanner(void* val, void* data, const xmlChar* name){
 
     struct table_action* ta = val;
     xmlNodePtr thead = data;
@@ -51,7 +51,7 @@ void open_table_scanner(void* val, void* data, xmlChar* name){
     return;    
 }
 
-void form_tag_status_scanner(void* val, void* data, xmlChar* name){
+void form_tag_status_scanner(void* val, void* data, const xmlChar* name){
     struct form_record* form_tag = val;
     xmlNodePtr thead = data;
 
@@ -98,7 +98,7 @@ void cntx_param_scanner(void* value, void* data, xmlChar* name){
     free(keqv);
 }
 
-void form_set_scanner(void* val, void* data, xmlChar* name){
+void form_set_scanner(void* val, void* data, const xmlChar* name){
 
     struct form_set* form_set = val;
     xmlNodePtr thead = data;

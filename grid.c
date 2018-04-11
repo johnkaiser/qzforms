@@ -94,10 +94,11 @@ struct table_constant_adder_data {
     xmlNodePtr child_of;
 };
 
-void table_constant_adder(void* val, void* data, xmlChar* name){
+void table_constant_adder(void* val, void* data, const xmlChar* name){
 
     struct table_constant_adder_data* d = data;
-    char* fieldname = name;
+    char* fieldname;
+    asprintf(&fieldname, "%s", name);
     char* fieldvalue = val;
 
     // form_tag does not get carried forward.
@@ -114,6 +115,7 @@ void table_constant_adder(void* val, void* data, xmlChar* name){
     add_prompt(d->h, d->t_action, &p_rule, NULL, NO_OPTIONS, NO_ROW_INDEX,
         d->child_of, fieldname, fieldvalue);
 
+    free(fieldname);
     return;
 }
 
