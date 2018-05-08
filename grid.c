@@ -637,6 +637,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     PGresult* final_rs;
     if (error_exists){
         final_rs = PQexec(h->session->conn, "ROLLBACK");
+        PQclear(final_rs);
     }else{
         final_rs = PQexec(h->session->conn, "COMMIT");
         xmlNodePtr result_node;
@@ -650,6 +651,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             xmlNewProp(result_node, "id", "__GRID_RESULT__");
             free(err_msg);
         }
+        PQclear(final_rs);
     }
 }
 
