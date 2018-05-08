@@ -89,7 +89,9 @@ unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, ui
     bzero(ivec, ivec_hex_len);
     qzrandom128ch(ivec);
 
-    unsigned char* ch_in = (char*)&payload;
+    unsigned char ch_in[16];
+    memcpy(ch_in, &server_token, 8);
+    memcpy(&(ch_in[8]), &payload, 8);
 
     uint64_t data_out;
     unsigned char* ch_out = (char*) &data_out;
@@ -228,9 +230,18 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
         free(crypt_data);
         return 0;
     }
-    memcpy(&payload, ch_out, 8);
-
     DEBUG(stderr, "decrypt update complete (%d)\n", declen);
+
+    uint64_t check_token;
+    memcpy(&check_token, ch_out, 8);
+    if (check_token != server_token){
+        DEBUG(stderr, "token validation failed\n");
+        free(ivec);
+        free(crypt_data);
+        return 0;
+    }
+
+    memcpy(&payload, &(ch_out[8]), 8);
 
     EVP_CIPHER_CTX_free(ctx);
 
@@ -288,7 +299,20 @@ int main(void){
 
     printf("time to make %f, time to validate %f\n", created - start, validated - created );
 
-
+    // Make the etag invalid by shifting bytes
+    etag = make_crypto_etag(key, (uint64_t) 42, payload);
+    printf("valid etag:   %s\n", etag);
+    unsigned char ch;
+    int k;
+    for(k=0; k<6; k++){
+        ch = etag[k];
+        etag[k] = etag[3+k];
+        etag[3+k] = ch;
+    }
+    printf("invalid etag: %s\n", etag);
+    pload = validate_crypto_etag(key, (uint64_t) 42, etag);
+    printf("invalid validate returned\n");
+    printf("payload = %"PRIu64"\n", pload);
     return 0;
 }
 #endif
