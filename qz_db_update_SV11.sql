@@ -245,6 +245,11 @@ COMMENT ON COLUMN qz.table_action.clear_context_parameters IS
 COMMENT ON COLUMN qz.prompt_rule.el_class IS
 'An HTML Element class to be appended to any other classes assigned';
 
+UPDATE qz.table_action
+SET clear_context_parameters = {form_name,handler_name}
+WHERE form_name = 'form'
+AND action = 'list';
+
 -- This will cause any connected clients to drop their cache of
 -- Posgres schema information.
 NOTIFY pg_db_change;
