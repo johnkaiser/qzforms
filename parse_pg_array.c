@@ -69,7 +69,7 @@ bool pg_legal_char(unsigned char ch){
  * {a,,b} error
  * {three,four}
  * {one,"two,bad",   "three}worse"  }
- * {"a}b","c\""} 
+ * {"a}b","c\""}
  *
  *
  *   +----------+-------------+------------+-----------+------------+------------+---------+---------+
@@ -94,7 +94,7 @@ bool pg_legal_char(unsigned char ch){
  *   | escapeq  | inquote     | inquote    | inquote   | inquote    | inquote    | inquote | inquote |
  *   +----------+-------------+------------+-----------+------------+------------+---------+---------+
  *
- *   firstval[1] - first is different from others, it is optional 
+ *   firstval[1] - first is different from others, it is optional
  *   inval[2] - set start ptr
  *   finish[3] - empty array
  *   error[4] - empty values not allowed
@@ -111,7 +111,7 @@ char** parse_pg_array(char* pg_ar){
     if (pg_ar == NULL) return NULL;
     if (pg_ar[0] == '\0') return NULL;
 
-    enum {error, begin, firstval, findval, inval, inquote, escapev, 
+    enum {error, begin, firstval, findval, inval, inquote, escapev,
         escapeq, findcomma, finish} searchstate;
 
     char* ch;
@@ -125,7 +125,7 @@ char** parse_pg_array(char* pg_ar){
     struct strnode base;
     base.str = NULL;
     base.next = NULL;
-
+    char** outbuf = NULL;
     topnode = &base;
 
     char* ar;
@@ -157,7 +157,7 @@ char** parse_pg_array(char* pg_ar){
                     searchstate = error;
 
                 }else if (*ch == '"'){
-                     
+
                     newnode = malloc(sizeof(struct strnode));
                     newnode->str = ch+1;   // the next char starts it
                     newnode->next = NULL;
@@ -179,14 +179,14 @@ char** parse_pg_array(char* pg_ar){
                     searchstate = inval;
 
                 }else if (*ch == '}'){
-                    // An empty array 
+                    // An empty array
                     if (debug)printf("searchstate>%s\n", "finish");
                     searchstate = finish;
 
                 }else if (*ch == ','){
-                    // This is an empty array element {a,,a} 
+                    // This is an empty array element {a,,a}
                     errormsg = "empty array element";
-                    searchstate = error;  
+                    searchstate = error;
 
                 }else if (!isspace(*ch)){
                     errormsg = "unexpected branch encountered in parsing";
@@ -201,7 +201,7 @@ char** parse_pg_array(char* pg_ar){
                     searchstate = error;
 
                 }else if (*ch == '"'){
-                     
+
                     newnode = malloc(sizeof(struct strnode));
                     newnode->str = ch+1;   // the next char starts it
                     newnode->next = NULL;
@@ -269,12 +269,12 @@ char** parse_pg_array(char* pg_ar){
                 if(debug)printf("searchstate>%s\n", "inval");
                 searchstate = inval;
                 break;
-                
+
             case escapeq:
                 if(debug)printf("searchstate>%s\n", "quote");
                 searchstate = inquote;
                 break;
-                
+
             case findcomma:
 
                 if (*ch == ','){
@@ -308,36 +308,36 @@ char** parse_pg_array(char* pg_ar){
     if (searchstate == error){
         if(debug)printf("Error %s\n", errormsg);
         if(!debug)fprintf(stderr, "Error %s\n", errormsg);
-        free(ar);
-        return NULL;
+
+        goto cleanup;
     }
 
     long ptrcnt = 2;
     struct strnode* noderunner;
 
-    for (noderunner = base.next; 
-         noderunner!=NULL; 
+    for (noderunner = base.next;
+         noderunner!=NULL;
          noderunner=noderunner->next){
             if (debug)printf("node-%s\n", noderunner->str);
             ptrcnt++;
     }
-    
+
     long datasize = sizeof(char*)*(ptrcnt+2) + arsize + 2;
 
-    if (datasize > INT_MAX){ 
+    if (datasize > INT_MAX){
         fprintf(stderr, "array too large");
-        free(ar);
-        return NULL;
+
+        goto cleanup;
     }
 
-    char** outbuf = malloc(datasize);
+    outbuf = malloc(datasize);
     if (outbuf == NULL){
         fprintf(stderr,"malloc failed");
-        free(ar);
-        return NULL;
+
+        goto cleanup;
     }
     bzero(outbuf,datasize);
-    
+
     int n=0;
     void* tmp;  // cramming two different types in one buffer
     char* st = tmp = &(outbuf[ptrcnt+1]) ;
@@ -347,23 +347,28 @@ char** parse_pg_array(char* pg_ar){
 
         if (noderunner->str == NULL){
             strsize = 0;
-            *st = '\0'; 
-            outbuf[n] = st;   
+            *st = '\0';
+            outbuf[n] = st;
         }else{
             strsize = strlen(noderunner->str);
-            strncpy(st, noderunner->str, strsize+1); 
-            outbuf[n] = st;   
+            strncpy(st, noderunner->str, strsize+1);
+            outbuf[n] = st;
         }
         outbuf[n+1] = NULL;
         if (debug)printf("added %d [%s]\n", n, st);
-        n++;    
+        n++;
         st += strsize+1;
 
+        noderunner = noderunner->next;
+    }
+
+    cleanup:
+
+    for (noderunner = base.next; noderunner!=NULL; ){
         struct strnode* free_this = noderunner;
         noderunner = noderunner->next;
         free(free_this);
-    } 
-    
+    }
     free(ar);
     return outbuf;
 }
@@ -478,10 +483,10 @@ int main(int argc, char* argv[]){
     char* answer4[] =  {"a","",NULL};
     test_parse( "{a,}", answer4 );
 
-    char* answer5[] =  {"one","two",NULL}; 
+    char* answer5[] =  {"one","two",NULL};
     test_parse( "{ one, two }", answer5 );
-    
-    char* answer6[] =  {"alpha","","gamma",NULL}; 
+
+    char* answer6[] =  {"alpha","","gamma",NULL};
     test_parse( "{ alpha,,gamma}", answer6 );
 
     char* answer7[] = {"one","two","three","four","five","six",NULL};
@@ -515,7 +520,7 @@ int main(int argc, char* argv[]){
 
     char* answer16[] = {};
     test_parse( "", answer16);
-    
+
     char* json_str = pg_ar_to_json(NULL);
     printf("pg_ar_to_json(NULL)=%s\n", json_str);
     free(json_str);
