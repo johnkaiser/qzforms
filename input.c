@@ -265,6 +265,14 @@ void validate_rule(void* val, void* data, const xmlChar* key){
             (rule == NULL || rule->regex_pattern == NULL) ? "none":rule->regex_pattern);
     }
 
+    if (rule == NULL){
+        fprintf(h->log, "%f %d %s:%d prompt rule is null\n",
+            gettime(), h->request_id, __func__, __LINE__);
+
+        free(base);
+        return;
+    }
+
     // does it have a pattern?
     if (rule->comp_regex == NULL){
         free_prompt_rule(h, rule);
