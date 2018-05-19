@@ -261,31 +261,37 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     // Many settings were originally named with the prefix QZ_
     // Allow them for backwards compatibility.
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_TAGGER_SOCKET");
+    if (setting == NULL) setting = getenv("TAGGER_SOCKET");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->tagger_socket_path, MAX_SOCKET_NAME_LEN, "%s", setting);
     }
 
     setting = xmlHashLookup(conf_hash, "NUMBER_OF_USERS");
+    printf("NUMBER_OF_USERS=%s\n", setting);
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_USERS");
+    if (setting == NULL) setting = getenv("NUMBER_OF_USERS");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        unsigned int nbr_users = (unsigned int) 
-            strtol(setting, NULL, 10);
+        unsigned int nbr_users = (unsigned int) strtol(setting, NULL, 10);
 
         conf->number_of_users = nbr_users;
     } 
     
     setting = xmlHashLookup(conf_hash, "LOG_FILENAME"); 
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_LOG_FILENAME");
+    if (setting == NULL) setting = getenv("LOG_FILENAME");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->logfile_name, MAXPATHLEN, "%s", setting);
     }
     
     setting = xmlHashLookup(conf_hash, "TEMPLATE_PATH");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_TEMPLATE_PATH");
+    if (setting == NULL) setting = getenv("TEMPLATE_PATH");
     snprintf(conf->template_path, MAXPATHLEN, "%s", 
         ((setting != NULL) && (strlen(setting) > 0)) ?  
             setting:DEFAULT_TEMPLATE_PATH );
 
+    // SERVER_TOKEN and SERVER_KEY can not be set from environment
+    // variables. That would be an unmiticated security disaster.
     setting = xmlHashLookup(conf_hash, "SERVER_TOKEN");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SERVER_TOKEN");
     if ((setting != NULL) && (strlen(setting) > 0)){
@@ -299,7 +305,10 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "SESSION_INACTIVITY_TIMEOUT");
-    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SESSION_INACTIVITY_TIMEOUT");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, 
+        "QZ_SESSION_INACTIVITY_TIMEOUT");
+
+    if (setting == NULL) setting = getenv("SESSION_INACTIVITY_TIMEOUT");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int inactivity_timeout = (unsigned int) 
             strtol(setting, NULL, 10);
@@ -308,25 +317,35 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
 
     setting = xmlHashLookup(conf_hash, "FORM_DURATION");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_FORM_DURATION");
+    if (setting == NULL) setting = getenv("FORM_DURATION");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int form_duration = (unsigned int) 
             strtol(setting, NULL, 10);
         conf->form_duration = form_duration;
     }
+
     setting = xmlHashLookup(conf_hash, "HOUSEKEEPER_NAP_TIME");
-    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_HOUSEKEEPER_NAP_TIME");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, 
+        "QZ_HOUSEKEEPER_NAP_TIME");
+
+    if (setting == NULL) setting = getenv("HOUSEKEEPER_NAP_TIME");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int housekeeper_nap_time = (unsigned int)
             strtol(setting, NULL, 10);
         conf->housekeeper_nap_time = housekeeper_nap_time;
     }    
+
     setting = xmlHashLookup(conf_hash, "AUDIT_FORM_SET_REF_COUNT");
+    if (setting == NULL) setting = getenv("AUDIT_FORM_SET_REF_COUNT");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->audit_form_set_ref_count = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "NUMBER_OF_THREADS");
-    if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_THREADS");
+    if (setting == NULL) setting = xmlHashLookup(conf_hash, 
+        "QZ_NUMBER_OF_THREADS");
+
+    if (setting == NULL) setting = getenv("NUMBER_OF_THREADS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int number_of_threads = (unsigned int)
             strtol(setting, NULL, 10);
@@ -334,6 +353,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "MAX_LOG_FILE_SIZE");
+    if (setting == NULL) setting = getenv("MAX_LOG_FILE_SIZE");
     if ((setting != NULL) && (strlen(setting) > 0)){
         uint64_t max_log_file_size = (uint64_t)
             strtoull(setting, NULL, 10);
@@ -341,6 +361,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "MAX_LOG_FILE_COUNT");
+    if (setting == NULL) setting = getenv("MAX_LOG_FILE_COUNT");
     if ((setting != NULL) && (strlen(setting) > 0)){
         uint8_t max_log_file_count = (uint8_t)
             strtoull(setting, NULL, 10);
@@ -348,31 +369,37 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "LOG_ID_INDEX_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_ID_INDEX_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_id_index_details = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "LOG_TABLE_ACTION_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_TABLE_ACTION_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_table_action_details = is_true(setting);
     }
     
     setting = xmlHashLookup(conf_hash, "LOG_FORM_TAG_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_FORM_TAG_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_form_tag_details = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "LOG_FORM_SET_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_FORM_SET_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_form_set_details = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "LOG_VALIDATE_RULE_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_VALIDATE_RULE_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_validate_rule_details = is_true(setting);
     }
 
     setting = xmlHashLookup(conf_hash, "FAILED_LOGIN_BLOCK_TIMEOUT");
+    if (setting == NULL) setting = getenv("FAILED_LOGIN_BLOCK_TIMEOUT");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int block_timeout = (unsigned int)
             strtol(setting, NULL, 10);
@@ -380,6 +407,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "MAX_FAILED_LOGINS");
+    if (setting == NULL) setting = getenv("MAX_FAILED_LOGINS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         unsigned int failed_logins = (unsigned int)
             strtol(setting, NULL, 10);
@@ -387,6 +415,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "LOG_LOGIN_TRACKER_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_LOGIN_TRACKER_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_login_tracker_details = is_true(setting);
     }
@@ -429,6 +458,16 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         }
     }
 
+    char* PGUSER = getenv("PGUSER");
+    char* PGPASSWORD = getenv("PGPASSWORD");
+
+    if ( (PGUSER != NULL) || (PGPASSWORD != NULL) ){
+        fprintf(stderr, "Neither PGUSER nor  PGPASSWORD "
+            "environment variables may be set\n");
+
+        exit(54);
+    }
+
     conf->integrity_token = qzrandom64();
 }
 
@@ -440,6 +479,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
 struct qz_config* init_config(void){
 
     char* config_file = getenv("QZ_CONFIG_FILENAME");
+    
     if (config_file == NULL){
         config_file = DEFAULT_CONFIG_FILE;
     }
@@ -450,40 +490,48 @@ struct qz_config* init_config(void){
 
     struct qz_config* conf = calloc(1, sizeof(struct qz_config));
 
-    if (stat(config_file, &sb) == 0){
-        int conf_fd;
-        conf_fd = open(config_file, O_RDONLY, 0);
-        if (conf_fd > 0){
-            ssize_t bytesread;
-            config_file_buf = malloc(sb.st_size+1);
-            bytesread = read(conf_fd, config_file_buf, sb.st_size);
-            if (bytesread == sb.st_size){
-                config_file_buf[bytesread] = '\0';
-
+    if (strlen(config_file) > 0){
+        if (stat(config_file, &sb) == 0){ 
+            int conf_fd = -1;
+    
+            conf_fd = open(config_file, O_RDONLY, 0);
+            if (conf_fd > 0){
+                ssize_t bytesread;
+                config_file_buf = malloc(sb.st_size+1);
+                bytesread = read(conf_fd, config_file_buf, sb.st_size);
+                if (bytesread == sb.st_size){
+                    config_file_buf[bytesread] = '\0';
+    
+                }else{
+                    // bytes read != file size.
+                    perror("Short read on config file");
+                    exit(33);
+                }    
                 conf_hash = parse_config(config_file_buf);
 
                 if (conf_hash == NULL){
                     fprintf(stderr, "Parsing config file %s failed near line %d, %s\n",
                         config_file, error_line, parse_error);
+
                     exit (32);
                 }
-                set_config(conf, conf_hash);
+
+
             }else{
-                // bytes read != file size.
-                perror("Short read on config file");
-                exit(33);
+                perror("open on config file failed");
+                exit(34);
             }    
-            free(config_file_buf);
         }else{
-            perror("open on config file failed");
-            exit(34);
-        }    
-    }else{
-        // stat on config file name has failed.
-        perror("No configuration file");
-        exit(35);
-    }    
-    
+            // stat on config file name has failed.
+            perror("No configuration file");
+            exit(35);
+        }
+    } 
+
+
+    set_config(conf, conf_hash);
+    free(config_file_buf);
+
     return conf;
 }
 
