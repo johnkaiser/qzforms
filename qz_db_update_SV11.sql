@@ -35,11 +35,13 @@ WHERE NOT EXISTS (
 ALTER TABLE qz.menu_item 
 ADD FOREIGN KEY (target_form_name) REFERENCES qz.form (form_name);
 
+-- form name logout may already exist, dupe key error OK.
 INSERT INTO qz.form
 (form_name, handler_name, hidden, xml_template, target_div)
 VALUES
 ('logout', 'logout', 't', 'login.xml', 'qz'),
-('login', 'login', 't', 'login.xml', 'qz');
+('login', 'login', 't', 'login.xml', 'qz')
+ON CONFLICT (form_name) DO NOTHING;
 
 -- On menu_item_edit, action should be a select options
 -- from a list
@@ -246,7 +248,7 @@ COMMENT ON COLUMN qz.prompt_rule.el_class IS
 'An HTML Element class to be appended to any other classes assigned';
 
 UPDATE qz.table_action
-SET clear_context_parameters = {form_name,handler_name}
+SET clear_context_parameters = '{form_name,handler_name}'
 WHERE form_name = 'form'
 AND action = 'list';
 
