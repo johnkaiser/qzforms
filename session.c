@@ -388,6 +388,8 @@ struct session_housekeeping_data{
     int session_inactivity_timeout;
     xmlHashTablePtr sessions;
     struct handler_args* hargs;
+    unsigned int logged_in;
+    unsigned int logged_out;
 };
 
 void session_housekeeping_scanner(void* val, void* data, const xmlChar* name){
@@ -395,6 +397,12 @@ void session_housekeeping_scanner(void* val, void* data, const xmlChar* name){
     struct session* this_session = val;
     struct session_housekeeping_data* shk_data = data;
     bool deleted = false;
+
+    if (this_session->is_logged_in){
+        shk_data->logged_in++;
+    }else{
+        shk_data->logged_out++;
+    }
 
     // Do a non blocking mutex and skip if locked.
     if (pthread_mutex_trylock(&(this_session->session_lock)) == 0){
@@ -473,6 +481,8 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         .session_inactivity_timeout = conf->session_inactivity_timeout,
         .sessions = sessions,
         .hargs = h,
+        .logged_in = 0,
+        .logged_out = 0,
     };
     
     fprintf(h->log, 
@@ -515,6 +525,11 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         (oldest == DBL_MAX) ? 0.0 : oldest,
         (thread_state[conf->number_of_threads] == conf->integrity_token) ?
             "valid":"invalid fail");
+
+    fprintf(h->log,
+        "%f %d %s:%d sessions logged in %u not logged in %u\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        data.logged_in, data.logged_out);
 
     fprintf(h->log, 
         "%f %d %s:%d housekeeping complete duration %f\n",

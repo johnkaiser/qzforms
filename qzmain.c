@@ -547,6 +547,8 @@ int main(int argc, char* argv[], char* envpmain[]){
         thread_dat->sessions = sessions;
         thread_dat->active = &(thread_state[i]);
 
+        thread_state[i] = 0;
+
         pthread_create(&threads[i], NULL, (void*) launch_connection_thread,
             (void*) thread_dat);
     }
