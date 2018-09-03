@@ -324,6 +324,7 @@ void refresh_form_tag(struct handler_args* h){
     content_type(h, "application/json");
 
     for(k=0; ;k++){
+
         asprintf(&form_id_key, "form_id[%d]", k);
         form_id_value = xmlHashLookup(h->postdata, form_id_key);
 
@@ -333,8 +334,13 @@ void refresh_form_tag(struct handler_args* h){
         if (has_data(form_id_value) && has_data(form_tag_value)){
             refresh_one_tag(h, form_id_value, form_tag_value);
 
+            free(form_id_key);
+            free(form_tag_key);
+
             if (h->error_exists) break;
         }else{
+            free(form_id_key);
+            free(form_id_key);
             break;
         }
     }

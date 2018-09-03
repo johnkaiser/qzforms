@@ -214,7 +214,7 @@ struct context_param_scanner_args {
     xmlNodePtr form;
 };
 
-void context_param_insert_scanner(void* payload, void* data, const xmlChar* name){
+void context_param_insert_scanner(void* payload, void* data, const unsigned char* name){
 
     char* param_value =  payload;
     struct context_param_scanner_args* cps_data = data;
@@ -314,14 +314,15 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
 
             fvalue = xmlHashLookup(h->current_form_set->context_parameters,
                 fname);
-
-            if (has_data(fvalue)) continue; // skip the next add_prompt
         }
 
-        add_prompt(h, create_ta, rule, pgtype, options, NO_ROW_INDEX, form,
-            fname, fvalue);
-
+        if ( ! has_data(fvalue)){
+            // as noted above, only add those not in a context parameter
+            add_prompt(h, create_ta, rule, pgtype, options, NO_ROW_INDEX, form,
+                fname, fvalue);
+        }
         free_prompt_rule(h, rule);
+        free(options);
     }
 
     xmlNewProp(form, "method", "post");

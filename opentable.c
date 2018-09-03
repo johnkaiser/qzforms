@@ -52,7 +52,7 @@ void init_open_table(struct handler_args* h){
     sv_ver[0] = SCHEMA_VER;
     sv_ver[1] = NULL;
 
-    PQprepare(h->session->conn, "schema_version",
+    PGresult* sv_rs = PQprepare(h->session->conn, "schema_version",
         schema_version_query, 0, NULL);
 
     rs = PQexecPrepared(h->session->conn, "schema_version", 1,
@@ -80,6 +80,7 @@ void init_open_table(struct handler_args* h){
         free(sv_ver_err_msg);
         sv_ver_err_msg = NULL;
     }
+    PQclear(sv_rs);
     PQclear(rs);
 
     // fetch_table_action

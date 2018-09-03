@@ -189,6 +189,7 @@ void add_row_form_data(xmlNodePtr add_row_form,
 
     xmlNewProp(input_el, "prompt_rule", add_el_args_esc);
 
+    free(el_name);
     free(add_el_args);
     free(add_el_args_esc);
 
@@ -238,6 +239,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             nfields);
 
         error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
+	PQclear(grid_edit_rs);
         return;
     }
 
@@ -518,6 +520,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
        free_prompt_rule(h, p_rules[col]);
        free(option_ar[col]);
    }
+   PQclear(grid_edit_rs);
 }
 
 /*
@@ -559,7 +562,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     save_context_parameters(h, NULL, grid_save_rs, 0);
 
     // BEGIN
-    PQexec(h->session->conn, "BEGIN");
+    PGresult* begin_rs = PQexec(h->session->conn, "BEGIN");
     xmlNodePtr dl = xmlNewChild(divqz, NULL, "dl", NULL);
 
     int k = 0;
@@ -610,6 +613,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             if (grid_row_rs != NULL){
                 if (PQresultStatus(grid_row_rs) == PGRES_COMMAND_OK){
                     xmlNewTextChild(dl, NULL, "dd", "OK");
+		    PQclear(begin_rs);
                     PQclear(grid_row_rs);
                     grid_row_rs = NULL;
                 }else{
@@ -619,9 +623,13 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
                     free(err_msg);
                     xmlNewTextChild(dl, NULL, "dd", "ROLLBACK");
                     error_exists = true;
+		    PQclear(begin_rs);
+                    PQclear(grid_row_rs);
+                    grid_row_rs = NULL;
                     break;
                 }
             }else if ((value[0] != 'E') && (value[0] != 'X')){// E X not errors.
+                // grid_row_rs is null
                 error_exists = true;
                 fprintf(h->log, "%f %d %s:%d grid_row_rs unexpectedly null\n",
                     gettime(), h->request_id, __func__, __LINE__);
@@ -653,6 +661,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         }
         PQclear(final_rs);
     }
+    PQclear(grid_save_rs);
 }
 
 void grid(struct handler_args* h){

@@ -131,7 +131,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
     char* form_name, char* fieldname){
 
     double start = gettime();
-    bool log_errors = false;
+    bool log_errors = true;
 
     char* paramValues[] = {form_name, fieldname, NULL};
 
@@ -201,7 +201,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
  
         rule->result = rs;
 
-        fprintf(h->log, "%f %d %s:%d fetch_prompt_rule (%s,%s) in %f\n",
+        fprintf(h->log, "%f %d %s:%d (%s,%s) in %f\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 form_name, fieldname, gettime() - start);
 
@@ -215,7 +215,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
                 PQcmdStatus(rs),
                 PQresultErrorMessage(rs));
         }
-        PQclear(rs);
+	PQclear(rs);
         return default_prompt_rule(h, form_name, fieldname);
     }    
 }
@@ -227,6 +227,10 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
  */
 void free_prompt_rule(struct handler_args* h, 
     struct prompt_rule* rule){
+
+    fprintf(h->log, "%f %d %s:%d (%s,%s)\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        rule->form_name, rule->fieldname);
 
     if (rule == NULL) return;
 
@@ -1036,6 +1040,7 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      if (readonly[0] != '\0') free(readonly);
      if (pattern[0] != '\0') free(pattern);
      if (rows[0] != '\0') free(rows);
+     if (cols[0] != '\0') free(cols);
      if (size[0] != '\0') free(size);
      if (maxlength[0] != '\0') free(maxlength);
      if (tabindex[0] != '\0') free(tabindex);

@@ -157,10 +157,17 @@ void etag_header(struct handler_args* h, uint64_t payload){
 
     char etag_buf[64];
     make_etag(etag_buf, h->session->tagger_socket_path, payload);
-    if (strlen(etag_buf)==49){
+
+    if (strlen(etag_buf) == 49){
        snprintf(etag_header->str, 64, "etag: \"%s\"", etag_buf);
        etag_header->next = h->headers;
        h->headers = etag_header;
+    }else{
+       fprintf(h->log, "%f %d %s:%d fail make_etag strlen %d payload %s\n",
+           gettime(), h->request_id, __func__, __LINE__,
+           strlen(etag_buf), (payload==0) ? "is zero":"is not zero");
+
+       free(etag_header);
     }
 }
 

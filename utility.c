@@ -346,6 +346,7 @@ char* base64_encode(char* astr){
     char* str_encoded = calloc(1, nbytes+2);
     BIO_read(bio, str_encoded, nbytes);
     BIO_free(bio);
+    BIO_free(b64);
     return str_encoded;
 }
 

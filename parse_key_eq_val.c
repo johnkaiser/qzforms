@@ -318,10 +318,11 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
 
 #ifdef PARSE_KEY_EQ_VAL_MAIN
 
+void error_page( struct handler_args* hargs, int status_code, const char* msg ){
+    printf("error_page status=%d msg=%s\n", status_code, msg);
+}
 void ht_scanner(void* val, void* ignore, xmlChar* key){
-    
     printf( "key=[%s], val=[%s]\n", key, (char*) val );
-
 }
 int main(int argc, char* argv[]){
 
@@ -332,7 +333,9 @@ int main(int argc, char* argv[]){
         .request_id = 0
     }; 
     char fieldsep = '&';
-    char* somedata = "name=Xavier+Xantico&verdict=Yes&colour=Blue&happy=sad&Utf%F6r=Send";
+    // invalid utf8 data:
+    //char* somedata = "name=Xavier+Xantico&verdict=Yes&colour=Blue&happy=sad&Utf%F6r=Send";
+    char* somedata = "name=Xavier+Xantico&verdict=Yes&colour=Blue&happy=sad&action=Send";
     char* testdata;
     xmlHashTablePtr ht = xmlHashCreate(50);
 
