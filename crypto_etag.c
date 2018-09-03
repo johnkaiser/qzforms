@@ -93,8 +93,7 @@ unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, ui
     memcpy(ch_in, &server_token, 8);
     memcpy(&(ch_in[8]), &payload, 8);
 
-    uint64_t data_out;
-    unsigned char* ch_out = (char*) &data_out;
+    unsigned char ch_out[CRYPT_DATA_LEN+1];
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
@@ -284,6 +283,10 @@ int main(void){
 
     char* etag = make_crypto_etag(key, (uint64_t) 42, payload);
 
+    if (etag == NULL){
+        printf("make_crypto_etag returned null\n");
+        exit(1);
+    }
     printf("etag: %s\n", etag);
     printf("etag length is %zu\n", strlen(etag));
 
@@ -300,6 +303,7 @@ int main(void){
     printf("time to make %f, time to validate %f\n", created - start, validated - created );
 
     // Make the etag invalid by shifting bytes
+    printf("\nmake it fail with bad data\n");
     etag = make_crypto_etag(key, (uint64_t) 42, payload);
     printf("valid etag:   %s\n", etag);
     unsigned char ch;
