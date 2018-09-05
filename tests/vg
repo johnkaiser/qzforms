@@ -1,1 +1,0 @@
-valgrind --trace-children=yes --leak-check=full --show-leak-kinds=all --log-file=logs/valgrind.out /usr/bin/spawn-fcgi -n -a 127.0.0.1 -p 9074 -P run/qzforms.pid  -- libexec/qzforms.fcgi
