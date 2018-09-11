@@ -58,7 +58,10 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom64.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
-	form_tag.c prompt_rule.c grid.c form_set.c logview.py
+	form_tag.c prompt_rule.c grid.c form_set.c logview.py \
+	tests/vg tests/delete_simplelist.py tests/create_simplegrid.py \
+	tests/qztest.py tests/create_simplelist.py tests/delete_simplegrid.py
+
 
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \

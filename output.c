@@ -163,7 +163,7 @@ void etag_header(struct handler_args* h, uint64_t payload){
        etag_header->next = h->headers;
        h->headers = etag_header;
     }else{
-       fprintf(h->log, "%f %d %s:%d fail make_etag strlen %d payload %s\n",
+       fprintf(h->log, "%f %d %s:%d fail make_etag strlen %lu payload %s\n",
            gettime(), h->request_id, __func__, __LINE__,
            strlen(etag_buf), (payload==0) ? "is zero":"is not zero");
 
