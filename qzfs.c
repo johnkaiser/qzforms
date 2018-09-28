@@ -30,6 +30,40 @@
 
 #include "qz.h"
 
+
+/*
+ *  etag_header
+ *
+ *  Add an etag header with the given value of payload
+ *  encoded in the etag string.
+ */
+
+void etag_header(struct handler_args* h, char* payload){
+
+    char padded_payload[17];
+    bzero(padded_payload, 17);
+    snprintf(padded_payload, 17, "%s", payload);
+
+    struct strbuf* etag_header = new_strbuf(NULL, 128);
+
+    char etag_buf[98];
+
+    make_etag(etag_buf, h->conf->tagger_socket_path, h->session->etag_token,
+        padded_payload);
+
+    if (strlen(etag_buf) == 97){
+        snprintf(etag_header->str, 128, "etag: \"%s\"", etag_buf);
+        etag_header->next = h->headers;
+        h->headers = etag_header;
+    }else{
+       fprintf(h->log, "%f %d %s:%d fail make_etag strlen %lu payload %s\n",
+           gettime(), h->request_id, __func__, __LINE__,
+           strlen(etag_buf), (payload[0]=='\0') ? "is zero":"is not zero");
+
+       free(etag_header);
+    }
+}
+
 /*
  *  qzfs
  *
@@ -39,12 +73,12 @@
  */
 void qzfs(struct handler_args* h){
 
-  
+
     //  The URL will be /qz/which_table/get/which_name
     //                  /0 /1          /2  /3
     //  which_table is a form_name on a table_action.
-    //  "get" is the action in table_action.  
-    //  which_name is in the primary key for the table. 
+    //  "get" is the action in table_action.
+    //  which_name is in the primary key for the table.
     //  This is a read only fs, use a form to update.
     //  table_action(which_table, get) must exist.
     //  table_action(which_table, etag_value) must exist,
@@ -52,7 +86,7 @@ void qzfs(struct handler_args* h){
 
     //  The following fields are used from the saved select
     //    mime_type - a string like "text/html"
-    //    etag - a string of an unsigned 64 bit int 
+    //    etag - a string of an unsigned 64 bit int
     //    data - the contents being served
 
     //  The table_action will be "text" and/or "etag_value"
@@ -60,39 +94,39 @@ void qzfs(struct handler_args* h){
 
     char* which_table = get_uri_part(h, QZ_URI_FORM_NAME);
     if (which_table == NULL){
-       error_page(h, 404, "Not on file"); 
+       error_page(h, 404, "Not on file");
        return;
     }
 
     char* which_name = get_uri_part(h, QZ_URI_REQUEST_DATA);
     if (which_name == NULL){
-       error_page(h, 404, "Not on file"); 
+       error_page(h, 404, "Not on file");
        return;
     }
 
     // This must come before cache validation to catch invalid names.
     struct table_action* ta = open_table(h,  which_table, "get");
     if (ta == NULL){
-       error_page(h, 404, "Not on file"); 
+       error_page(h, 404, "Not on file");
        return;
     }
 
     // But wait, maybe the cache is valid.
-    uint64_t payload = 0;
+    char payload[16];
     char* http_if_none_match =
         FCGX_GetParam("HTTP_IF_NONE_MATCH", h->envpfcgi);
 
     if (http_if_none_match != NULL){
 
        // payload from the client is compared to the result of a table_action
-        payload = validate_etag(h->session->tagger_socket_path, 
-            http_if_none_match);
+        validate_etag(payload, h->conf->tagger_socket_path,
+            h->session->etag_token, http_if_none_match);
 
         fprintf(h->log, "%f %d %s:%d etag name %s payload is %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             which_name, (payload > 0)  ? "OK" : "invalid"  );
 
-        if (payload > 0){
+        if (payload[0] != '\0'){
             struct table_action* etag_value_ta;
             etag_value_ta = open_table(h,  get_uri_part(h, 1), "etag_value");
 
@@ -100,13 +134,12 @@ void qzfs(struct handler_args* h){
             etag_params[0] = which_name;
             etag_params[1] = NULL;
             PGresult* etag_rs = perform_action(h, etag_value_ta, etag_params);
-            if (PQresultStatus(etag_rs) == PGRES_TUPLES_OK){ 
+            if (PQresultStatus(etag_rs) == PGRES_TUPLES_OK){
 
                 // XXXXX possibly check the pg type
                 char* pg_etag_str = PQgetvalue(etag_rs,0,0);
-                uint64_t pg_etag_int = strtoll(pg_etag_str, NULL, 10);
-                
-                if ((pg_etag_int > 0) && (pg_etag_int == payload)){
+
+                if (strncmp(pg_etag_str, payload, 16) == 0){
 
                     // OK then, the cache is current
                     fprintf(h->log, "%f %d %s:%d etag validated for %s\n",
@@ -123,11 +156,11 @@ void qzfs(struct handler_args* h){
                 // a new page can be generated.
 
                 char* error_msg = nlfree_error_msg(etag_rs);
-                fprintf(h->log, "%f %d %s:%d fail etag_value %s,%s \n", 
-                    gettime(), h->request_id, __func__, __LINE__, 
+                fprintf(h->log, "%f %d %s:%d fail etag_value %s,%s \n",
+                    gettime(), h->request_id, __func__, __LINE__,
                     PQresStatus( PQresultStatus(etag_rs) ),
                     error_msg);
-                
+
                 free(error_msg);
             }
             PQclear(etag_rs);
@@ -143,7 +176,7 @@ void qzfs(struct handler_args* h){
 
     PGresult* rs = perform_action(h, ta, paramdata);
     if ((PQresultStatus(rs) != PGRES_TUPLES_OK) || (PQntuples(rs) != 1)){
-       error_page(h, 404, "Not on file"); 
+       error_page(h, 404, "Not on file");
        PQclear(rs);
        return;
     }
@@ -155,20 +188,16 @@ void qzfs(struct handler_args* h){
 
     // Set the outgoing etag header.
     char* etag_str = PQgetvalue(rs, 0, PQfnumber(rs, "etag"));
-    uint64_t etag_val=0;
-    if ((etag_str != NULL) && (strlen(etag_str)>0)){
-        etag_val = strtoull(etag_str, NULL, 10);
-        if (etag_val > 0){
-            // etag_header calls make_etag
-            etag_header(h, etag_val);   
-        }
+    if (has_data(etag_str)){
+        // etag_header calls make_etag
+        etag_header(h, etag_str);
     }
 
     // It.
-    h->data = new_strbuf( PQgetvalue(rs, 0, PQfnumber(rs, "data")),0); 
+    h->data = new_strbuf( PQgetvalue(rs, 0, PQfnumber(rs, "data")),0);
 
     fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d\n",
-        gettime(), h->request_id, __func__, __LINE__, 
+        gettime(), h->request_id, __func__, __LINE__,
         which_name, PQgetlength(rs, 0, PQfnumber(rs, "data")));
 
 

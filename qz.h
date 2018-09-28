@@ -68,7 +68,7 @@
 
 // This length includes the ending null.
 // This is the same as tagger.c TAG_MAX_LENGTH
-#define SESSION_KEY_LENGTH 66
+#define SESSION_KEY_LENGTH 98
 
 #define PG_NAMEDATALEN 63
 #define NAME_RANDOMNESS 16
@@ -106,7 +106,7 @@ enum prompt_container_type {no_container, fieldset};
 enum precheck_status {notchecked,failed,passed};
 
 struct handler_args {
-    char session_key[SESSION_KEY_LENGTH];
+    char session_key[16];
     struct session* session;
     FCGX_Request *request;
     FCGX_Stream *in;
@@ -144,9 +144,8 @@ struct handler{
 };
 
 struct session{
-    unsigned char session_id[9];
+    unsigned char session_id[16];
     int zero;
-    char full_tag[SESSION_KEY_LENGTH+2];
     char user[MAX_USER_NAME_LENGTH+2];
     pthread_mutex_t session_lock;
     bool is_logged_in;
@@ -158,8 +157,8 @@ struct session{
     xmlHashTablePtr pgtype_datum;
     xmlHashTablePtr form_tags;
     xmlHashTablePtr form_sets;
-    // XXXXXXX duplicated in config, eliminate?
-    char tagger_socket_path[MAXPATHLEN+1]; 
+    uint64_t form_tag_token;
+    uint64_t etag_token;
     uint64_t integrity_token;
 };
  
@@ -290,8 +289,7 @@ struct prompt_rule{
 };
 
 struct form_record{
-    xmlChar form_id[9];
-    char full_tag[ETAG_MAX_LENGTH+3]; // 2 for quotes + 1 for \0
+    xmlChar form_id[16];
     bool is_valid;
     time_t created;
     time_t expires;
@@ -436,6 +434,13 @@ extern char** str_to_array(char* str, char split);
  */
 extern xmlNodePtr qzGetElementByID(struct handler_args*, xmlChar*); 
 
+/*
+ *  init_session_token
+ *  session.c
+ *
+ *  Set a random uint64_t for all session tags.
+ */
+extern void init_session_token(void);
 
 /*
  *  get_session_state
@@ -445,6 +450,17 @@ extern xmlNodePtr qzGetElementByID(struct handler_args*, xmlChar*);
  */
 extern enum session_state 
     get_session_state (struct handler_args*);
+
+/*
+ *  load_session_key
+ *
+ *  Decrypts the session cookie.
+ *  Sets session_key in handler args.
+ *  Returns true/false if the session key is possibly valid.
+ *  Does not actually validate the session, just determines
+ *  that the token could be valid.
+ */
+extern bool load_session_key(struct handler_args* hargs, char* session_cookie);
 
 /*
  *  session_from_hargs
@@ -512,15 +528,6 @@ extern void content_type(struct handler_args* h, char* mime_type);
  */
 extern void expires(struct handler_args*, time_t);
  
-/*
- *  etag_header
- *  output.c
- *
- *  Turn a number into a crypto etag and add that to 
- *  the list of headers sent with the page.
- */
-extern void etag_header(struct handler_args* h, uint64_t payload);
-
 /* 
  *  parse_cookie
  *  cookie.c

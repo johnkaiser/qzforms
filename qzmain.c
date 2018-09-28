@@ -72,7 +72,6 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
     char* ck;
     struct handler_args* hargs;
-    uint64_t session_payload = 0;
 
     if ( (hargs = calloc(1, sizeof(struct handler_args))) == NULL ){
        FCGX_FPrintF(request->err, "calloc failed in init_handler");
@@ -134,18 +133,18 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
             ;
     }
 
+    bool session_possibly_valid = false;
+
     if ( (ck = FCGX_GetParam("HTTP_COOKIE", hargs->envpfcgi)) != NULL ){
         parse_cookie(hargs, ck);
 
-        char* session_key = xmlHashLookup(hargs->cookiesin, "session_key");
-        if (session_key != NULL){
+        char* session_cookie = xmlHashLookup(hargs->cookiesin, "session_key");
+        if (session_cookie != NULL){
             // Just check that it could be valid.
             // Don't actually check that it is in sessions and is valid.
             // Content parsing is skipped if this is zero.
-            session_payload = validate_etag(conf->tagger_socket_path,
-                session_key);
 
-            snprintf(hargs->session_key, SESSION_KEY_LENGTH, "%s", session_key);
+            session_possibly_valid = load_session_key(hargs, session_cookie);
         }
 
         fprintf(hargs->log, "%f %d %s:%d cookiesin OK\n",
@@ -162,7 +161,8 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         content_length = atoi( content_length_str );
     }
 
-    if ((content_length > 0) && (session_payload > 0)) {
+    // Don't even try to handle the post data unless the session key passes
+    if ((content_length > 0) && (session_possibly_valid)) {
         char* buf;
         int bytes_read;
         buf = calloc(1, content_length+2);
@@ -488,21 +488,25 @@ int main(int argc, char* argv[], char* envpmain[]){
     signal( SIGTERM, cleanup );
 
     // Do a tag test here and log it
-    char tagbuf[50];
-    uint64_t tagvalue_in, tagvalue_out;
-    tagvalue_in = 0x42;
+    char tagbuf[SESSION_KEY_LENGTH];
+    uint64_t domain_token = 42;
+    char tagvalue_in[16] = "123456789abcdef\0";
+    char tagvalue_out[16];
 
-    make_etag(tagbuf, conf->tagger_socket_path, tagvalue_in);
+    make_etag(tagbuf, conf->tagger_socket_path, domain_token, tagvalue_in);
 
     fprintf(log, "%f %d %s:%d tagger test %s\n",
         gettime(), next_id, __func__, __LINE__, tagbuf);
 
-    tagvalue_out = validate_etag(conf->tagger_socket_path, tagbuf);
+    validate_etag(tagvalue_out, conf->tagger_socket_path, domain_token, tagbuf);
+
+    bool tags_match = strncmp(tagvalue_in, tagvalue_out,16) == 0;
 
     fprintf(log, "%f %d %s:%d validate_etag %s\n",
         gettime(), next_id, __func__, __LINE__,
-        (tagvalue_in == tagvalue_out) ? "OK":"fail" );
-    if (tagvalue_in != tagvalue_out){
+        (tags_match) ? "OK":"fail");
+
+    if ( ! tags_match ){
         // failed that test
         exit(15);
     }
@@ -520,6 +524,7 @@ int main(int argc, char* argv[], char* envpmain[]){
         gettime(), next_id, __func__, __LINE__,
         conf->number_of_threads);
 
+    init_session_token();
     xmlHashTablePtr sessions = xmlHashCreate(conf->number_of_users);
     if (sessions == NULL){
         fprintf(stderr, "xmlHashCreate failed with an argument of %d\n",

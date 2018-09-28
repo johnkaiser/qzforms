@@ -42,13 +42,13 @@
  *
  *
  *  If QZ_ARC4RANDOM is set, then arc4random_buf will be called
- *  from stdlib.h. 
+ *  from stdlib.h.
  *
  *  If QZ_RAND_DEV is a character device file, then it is set
  *  in the application as the source of randomness.
  *
  *  arc4random is recommended if available.  A device file will work
- *  just fine.  
+ *  just fine.
  *
  *  John Kaiser
  *  2013-11-11
@@ -65,14 +65,14 @@
 
 /**
  **  arc4random library call
- ** 
+ **
  **/
 #ifdef QZ_ARC4RANDOM
 
 #include <stdlib.h>
 
     void qzrandom64_init(void){ return; }
-    
+
     uint64_t qzrandom64(void){
         uint64_t rnbr;
         arc4random_buf(&rnbr, sizeof(rnbr));
@@ -110,12 +110,12 @@
             return qzrandom64();
         }
     }
-         
+
 #endif
 
 /**
  ** A named device file
- ** 
+ **
  **/
 
 #ifdef QZ_RAND_DEV
@@ -126,7 +126,7 @@
 #include <stdlib.h>
 
     int randdev_fd;
-    
+
     void qzrandom64_init(void){
        randdev_fd = open(QZ_RAND_DEV, O_RDONLY, 0);
        if (randdev_fd < 0){
@@ -135,12 +135,12 @@
        }
        return;
     }
-    
+
     uint64_t qzrandom64(void){
-    
+
         uint64_t rnbr;
         ssize_t bytesread;
-    
+
         bytesread = read(randdev_fd, &rnbr, 8);
         if (bytesread != 8){
             perror(QZ_RAND_DEV);
@@ -166,7 +166,7 @@ bool is_null_free(uint64_t rnbr){
         if ((rnbr & mask) == 0) valid = false;
         mask = mask<<8;
     }
-    
+
     return valid;
 }
 
@@ -182,63 +182,56 @@ bool is_null_free(uint64_t rnbr){
  *  If buf is not null, then stuff it in buf, which must be
  *  at least 9 bytes, the last for the ending null.
  *  Always return it.
- */  
+ */
 uint64_t qzrandom64ch(char* buf){
 
     uint64_t rnbr = 0;
-    
-    do{ 
+
+    do{
         rnbr = qzrandom64();
         if (buf != NULL){
             memcpy(buf, &rnbr, 8);
             buf[8]='\0';
-        }    
+        }
     } while ( !is_null_free(rnbr) );
-    
+
     return rnbr;
 }
 
 /*
- *  qzrandom128ch
+ *  qzrandomch
  *
- * Similar to qzrandom64ch, except in a 16 bytes.
- * The first 16 bytes are random not \0 chars
- * returned as a struct with an array.
- * If buf is not null, then it is assumed to be
- * at least 17 bytes long, with the same value
- * written to buf as returned.
- * The last byte is always \0.
+ *  Fill up buf with bytes number of characters,
+ *  making sure that each byte is not zero,
+ *  optionally setting the last byte to zero.
  */
+void qzrandomch(char* buf, uint8_t bytes, enum last_char_rule rule){
 
-struct rand128 qzrandom128ch(char* buf){
+    unsigned int bt;
+    unsigned int src=sizeof(uint64_t);
+    char rchar[sizeof(uint64_t)];
+    uint64_t num;
 
-    struct rand128 data;
-    uint64_t rnbr = 0;
+    bt = 0;
+    while (bt < bytes){
 
-    do{
-        rnbr = qzrandom64();
-    } while ( ! is_null_free(rnbr) );
-
-    memcpy(data.rnbr, &rnbr, 8);
-
-    do{
-        rnbr = qzrandom64();
-    } while ( ! is_null_free(rnbr) );
-
-    memcpy(data.rnbr + 1, &rnbr, 8);
-
-    if (buf != NULL){
-        memcpy(buf, data.rnbr, 16);
-        buf[16] = '\0';
+        if (src >= sizeof(uint64_t)){
+            src=0;
+            num = qzrandom64();
+            memcpy(rchar, &num, sizeof(uint64_t));
+        }
+        if (rchar[src] != '\0'){
+            buf[bt] = rchar[src];
+            bt++;
+        }
+        src++;
     }
-
-    return data;
+    if (rule == last_is_null) buf[bytes-1] = '\0';
 }
-
 /*
  * gen_random_key
  *
- * Fill the buffer with 63 chars that represent a 
+ * Fill the buffer with 63 chars that represent a
  * real big random number.
  */
 void gen_random_key(char keybuf[], int key_length ){
@@ -257,7 +250,7 @@ void gen_random_key(char keybuf[], int key_length ){
     rnbr = qzrandom64();
 
     for (j=0; j<key_length; j++){
-      if (rch >= 8){ 
+      if (rch >= 8){
         rnbr = qzrandom64();
         rch = 0;
         }
@@ -274,7 +267,7 @@ void gen_random_key(char keybuf[], int key_length ){
 
 /*
  *  qzprobability
- * 
+ *
  *  Return a float between 0 and 1.
  */
 float qzprobability(void){
@@ -288,6 +281,7 @@ float qzprobability(void){
 
 #include <stdio.h>
 #include <sys/time.h>
+#include "hex_to_uchar.h"
 
 double timeval_diff(struct timeval* starttv, struct timeval* fintv){
 
@@ -313,13 +307,13 @@ int main(void){
     gettimeofday(&fin_init, NULL);
 
     for(j=0; j<rounds; j++){
-        rnd = qzrandom64(); 
+        rnd = qzrandom64();
     }
     gettimeofday(&complete, NULL);
 
     printf("init time %f\n", timeval_diff(&start_init, &fin_init));
 
-    printf("run time for %d rounds %f\n", 
+    printf("run time for %d rounds %f\n",
         rounds,
         timeval_diff(&fin_init, &complete)
     );
@@ -328,12 +322,12 @@ int main(void){
     uint64_t rv, rvc;
     rv = qzrandom64ch(ar);
 
-    memcpy(arc, &rv, 8); 
+    memcpy(arc, &rv, 8);
     arc[8] = '\0';
 
     memcpy(&rvc, ar, 8);
 
-    printf("qzrandom64ch=%"PRIu64"=%"PRIu64"\n", rv, rvc);
+    printf("check qzrandom64ch=%"PRIu64"=%"PRIu64"\n", rv, rvc);
 
     for(j=0; j<8; j++){
       printf("%u:", ar[j]);
@@ -362,26 +356,32 @@ int main(void){
     }
     if (chfilter_ok){
         printf("qzrandom64ch is null free %d times\n", j);
-    }else{    
+    }else{
         printf("fail\n");
-    }    
+    }
 
 
     for (j=0; j<100; j++){
         printf("p=%f\n", qzprobability());
     }
 
-    struct rand128 rd;
     unsigned char chd[16];
-    int i;
+    unsigned char* hex;
 
-    for (j=0; j<100; j++){
-        rd = qzrandom128ch(chd);
-        for(i=0; i<2; i++){
-            printf("%016"PRIX64, rd.rnbr[i]);
-        }
-        printf("\n");
+    struct timeval start_qzrandomch;
+    struct timeval fin_qzrandomch;
+    gettimeofday(&start_qzrandomch, NULL);
+
+    for (j=0; j<1000; j++){
+        qzrandomch(chd, 16, last_is_null);
+        hex = uchar_to_hex(chd, 16);
+        printf("%3d %s\n", j, hex);
+        free(hex);
     }
+    gettimeofday(&fin_qzrandomch, NULL);
+    printf("run time for %d rounds of qzrandomch 128 bits %f\n",
+        1000, timeval_diff(&start_qzrandomch, &fin_qzrandomch)
+    );
 
     return 0;
 }

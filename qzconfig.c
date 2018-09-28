@@ -291,7 +291,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
             setting:DEFAULT_TEMPLATE_PATH );
 
     // SERVER_TOKEN and SERVER_KEY can not be set from environment
-    // variables. That would be an unmiticated security disaster.
+    // variables. That would be an unmitigated security disaster.
     setting = xmlHashLookup(conf_hash, "SERVER_TOKEN");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SERVER_TOKEN");
     if ((setting != NULL) && (strlen(setting) > 0)){
@@ -531,6 +531,7 @@ struct qz_config* init_config(void){
 
     set_config(conf, conf_hash);
     free(config_file_buf);
+    xmlHashFree(conf_hash, NULL);
 
     return conf;
 }

@@ -137,40 +137,6 @@ void expires(struct handler_args* h, time_t expires_t){
     h->headers = expires_buf;
 }
 
-
-/*
- *  etag_header
- *
- *  Add an etag header with the given value of payload
- *  encoded in the etag string.
- */
-
-void etag_header(struct handler_args* h, uint64_t payload){
-    
-    if (payload == 0) return;
-
-    // the line will be like:
-    // etag: "626d480193b5c9d6.8b4aeb4b01d2df4b663167b3a184db84"
-    // 4 + 1 + 1 + 1 + 49 + 1 + null = 58 chars, 64 is gratuitous
-
-    struct strbuf* etag_header = new_strbuf(NULL, 64);
-
-    char etag_buf[64];
-    make_etag(etag_buf, h->session->tagger_socket_path, payload);
-
-    if (strlen(etag_buf) == 49){
-       snprintf(etag_header->str, 64, "etag: \"%s\"", etag_buf);
-       etag_header->next = h->headers;
-       h->headers = etag_header;
-    }else{
-       fprintf(h->log, "%f %d %s:%d fail make_etag strlen %lu payload %s\n",
-           gettime(), h->request_id, __func__, __LINE__,
-           strlen(etag_buf), (payload==0) ? "is zero":"is not zero");
-
-       free(etag_header);
-    }
-}
-
 /*
  *  error_page
  *  

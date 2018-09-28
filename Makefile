@@ -10,7 +10,7 @@
 ## Use a device file (or perhaps a unix domain socket). 
 ## QZRANDOM=-DQZ_RAND_DEV=\"/dev/urandom\"
 
-## Choose either gcc or clang for the compiler
+## Optionally choose either gcc or clang for the compiler
 ## CC=clang
 ## CC=gcc
 
@@ -38,7 +38,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=10
+SCHEMA_VERSION=11
 
 OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
@@ -58,23 +58,23 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom64.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
-	form_tag.c prompt_rule.c grid.c form_set.c logview.py \
-	tests/vg tests/delete_simplelist.py tests/create_simplegrid.py \
-	tests/qztest.py tests/create_simplelist.py tests/delete_simplegrid.py
-
+	form_tag.c prompt_rule.c grid.c form_set.c logview.py
 
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 7_jscss_data.sql 8_menu.sql \
 	9_functions.sql  pgtype_datum.sql comment.sql 
 
-SQLUTIL= qzforms_examples.sql qz_db_update_SV3.sql qz_db_update_SV4.sql \
+SQLUTIL=qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
 	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql \
 	qz_db_update_SV11.sql
 
-EXAMPLES=examples/release_checklist.sql examples/release_checklist_data.sql \
-	examples/stuff_and_gridle.sql examples/todo.sql examples/todo_data.sql
+EXAMPLES=examples/release_checklist.sql \
+	examples/release_checklist_data.sql \
+	examples/stuff_and_gridle.sql \
+	examples/todo.sql \
+	examples/todo_data.sql
 
 JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/add_input_radio.js js/add_input_text.js js/add_prompt.js \
@@ -82,11 +82,14 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/change_status.js js/form_refresh.js js/form_refresh_init.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
-	js/set_action_options.js
+	js/set_action_options.js js/dollarquote
 
-DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html 
+DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
-all: qzforms.fcgi qz_db_install_SV$(SCHEMA_VERSION).sql qzforms_examples.sql
+# The random test is first so make fails early without randomness source
+all: qzrandom64_test qzforms.fcgi \
+	qz_db_install_SV$(SCHEMA_VERSION).sql \
+	qzforms_examples.sql
 
 qzforms.fcgi: $(OBJ) qzmain.o
 	$(CC)   -o qzforms.fcgi $(OBJ) qzmain.o \
@@ -96,7 +99,8 @@ qzforms.fcgi: $(OBJ) qzmain.o
 		-lpq
 
 qzmain.o: qzmain.c qz.h
-	$(CC) $(CFLAGS)  -DQZVER="$(VERSION)" -DSCHEMA_VER=$(SCHEMA_VERSION) -c qzmain.c
+	$(CC) $(CFLAGS)  -DQZVER="$(VERSION)" -DSCHEMA_VER=$(SCHEMA_VERSION) \
+	-c qzmain.c
 
 qzhandlers.o: qzhandlers.c qz.h
 	$(CC) $(CFLAGS) -c qzhandlers.c
@@ -161,7 +165,8 @@ status.o: status.c qz.h
 opentable.o: opentable.c qz.h
 	$(CC) $(CFLAGS) -DSCHEMA_VER=\"$(SCHEMA_VERSION)\" -c opentable.c
 
-opentable_test: opentable.c parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools.o
+opentable_test: opentable.c \
+	parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools.o
 	$(CC) $(CFLAGS) $(LFLAGS) \
 	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
 	-L$(XMLLIBDIR) \
@@ -175,7 +180,7 @@ opentable_test: opentable.c parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools
 	-o opentable_test
 
 pgtools.o: pgtools.c qz.h
-	$(CC) $(CFLAGS) -L$(PGLIBDIR) -c pgtools.c 
+	$(CC) $(CFLAGS) -c pgtools.c
 
 parse_pg_array.o: parse_pg_array.c
 	$(CC) $(CFLAGS) -c parse_pg_array.c 
@@ -196,8 +201,10 @@ strbufs.o: strbufs.c qz.h
 qzrandom64.o: qzrandom64.c qzrandom64.h 
 	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom64.c
 
-qzrandom64_test: qzrandom64.c qzrandom64.h
-	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DR64_MAIN  qzrandom64.c -o qzrandom64_test
+qzrandom64_test: qzrandom64.c qzrandom64.h hex_to_uchar.o
+	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DR64_MAIN  qzrandom64.c \
+	hex_to_uchar.o \
+	-o qzrandom64_test
 
 hex_to_uchar.o: hex_to_uchar.c
 	$(CC) $(CFLAGS) -c hex_to_uchar.c
@@ -209,17 +216,17 @@ hex_to_uchar_test: hex_to_uchar.c gettime.o
 crypto_etag.o: crypto_etag.c crypto_etag.h
 	$(CC) $(CFLAGS) -c crypto_etag.c
 
-crypto_etag_test: crypto_etag.c qzrandom64.o hex_to_uchar.o gettime.o
-	$(CC) $(CFLAGS) -DCRYPTO_ETAG_MAIN  crypto_etag.c qzrandom64.o hex_to_uchar.o \
-		gettime.o -lcrypto -o crypto_etag_test
+crypto_etag_test: crypto_etag.c crypto_etag.h qzrandom64.o hex_to_uchar.o gettime.o
+	$(CC) $(CFLAGS) -DCRYPTO_ETAG_MAIN  crypto_etag.c qzrandom64.o \
+	hex_to_uchar.o  gettime.o -lcrypto -o crypto_etag_test
 
 tagger.o:tagger.c
 	$(CC) $(CFLAGS) -c tagger.c
 
 # launch tagger process and test against it.
-tagger_test: tagger.c qzrandom64.o crypto_etag.o hex_to_uchar.o qzconfig.o
+tagger_test: tagger.c qzrandom64.o crypto_etag.o hex_to_uchar.o qzconfig.o gettime.o
 	$(CC) -Wall -g -lcrypto  -DTAGGER_MAIN tagger.c \
-		qzrandom64.o crypto_etag.o qzconfig.o hex_to_uchar.o \
+		qzrandom64.o crypto_etag.o qzconfig.o hex_to_uchar.o gettime.o \
 		$(XMLCFLAGS) $(XMLLIBDIR)\
 		-o tagger_test
 

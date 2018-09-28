@@ -30,19 +30,18 @@
  
 /*  
  *  A crytpo_etag looks like this:
- *  013efa48188c5ad9692474d746d94f6c.c9d0522c78525077402b755f8bcd0c14
+ *  8fa2f2ac3953ae0fee15caaf21f1ba23.71c43fa9af8536ae238627f44a15a9d25c1a460a2b55cebf5ec91a6ad150ed58
  *
  *  The part before the dot is the initialization vector.
- *  The second part is two aes encrypted 64 bit
- *  unsigned integers.  The first is the server token,
- *  and is a constant and verifies the etag originated
- *  from this server.  The second is the payload.  It
- *  is provided by the calling program and is returned
- *  if the server token validates.  A zero payload
- *  is a failure.  Failures are logged to stderr.
- *
- *  John Kaiser
- *  2013-10-30
+ *  The second part is 32 bytes of aes encrypted characters
+ *  in three fields.
+ *  The first is 8 byte server token, and is a constant that
+ *  verifies the etag originated from this server.
+ *  The second 8 bytes is the domain token and is constant
+ *  for each use of the tag. It prevents some replay attacks.
+ *  The final 16 bytes is the payload provided by the calling
+ *  program and is returned if the server token validates.
+ *  A zero payload is a failure.  Failures are logged to stderr.
  */
 
 #include <stdio.h>
@@ -58,42 +57,64 @@
 #include "qzrandom64.h"
 #include "crypto_etag.h"
 
+extern double gettime(void);
+
+static bool debug = true;
 #define DEBUG if (debug) fprintf
-
-
-#ifdef CRYPTO_ETAG_MAIN
-bool debug = true;
-#endif
 
 /*
  *  make_crypto_etag
  *
  *  Return a text string that is a hex char array 
- *  0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef
+ *  0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
  * 
  *  The first part is random 128 bits.
  *  The second part is aes encrypted,
  *  a 64 bit constant, server_token, to prove validity,
- *  a 64 bit non-zero payload.
+ *  a 64 bit domain token, to prove its purpose
+ *  a 128 bit non-zero payload.
  *
  *  The result must be freed.
  */
 
-unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, uint64_t payload){
+static int request_id;
+
+unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token,
+    uint64_t domain_token, unsigned char payload[16]){
+
+    request_id++;
+    debug = true;
+
+    FILE* errlog = NULL;
+    if (debug){
+        errlog = fopen("errlog", "a");
+    }
+    DEBUG (errlog, "%f %d %s:%d domain_token=%"PRIu64" payload=%s\n",
+        gettime(), request_id, __func__, __LINE__,
+        domain_token, payload);
 
     // Never create a 0 payload, a zero payload is always an error.
-    if (payload == 0) return NULL;
+    bool all_zeros = true;
+    int i;
+    for (i=0; i<16; i++){
+        if (payload[i] != 0) all_zeros = false;
+    }
+    if (all_zeros) return NULL;
 
-    int ivec_hex_len = (IVEC_LEN+1)*2;
+    // the domain token can not be zero either
+    if (domain_token == 0) return NULL;
+
+    int ivec_hex_len = (IVEC_LEN+1)*2; // twice the length for hex.
     unsigned char ivec[ivec_hex_len];
     bzero(ivec, ivec_hex_len);
-    qzrandom128ch(ivec);
+    qzrandomch(ivec, 16, last_not_null);
 
-    unsigned char ch_in[16];
+    unsigned char ch_in[32];
     memcpy(ch_in, &server_token, 8);
-    memcpy(&(ch_in[8]), &payload, 8);
+    memcpy(&(ch_in[8]), &domain_token, 8);
+    memcpy(&(ch_in[16]), payload, 16);
 
-    unsigned char ch_out[CRYPT_DATA_LEN+1];
+    unsigned char ch_out[CRYPT_DATA_LEN];
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
@@ -102,16 +123,23 @@ unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, ui
 
     rc = EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL,  key, ivec);
     if (rc != 1){
-        DEBUG(stderr, "EVP_EncryptInit failed\n");
+
+        DEBUG(errlog, "%f %d %s:%d EVP_EncryptInit failed\n",
+            gettime(), request_id, __func__, __LINE__);
+
         return NULL;
     }
     rc = EVP_EncryptUpdate(ctx, ch_out, &enclen, ch_in, CRYPT_DATA_LEN);
     if (rc != 1){
-        DEBUG(stderr, "EVP_EncryptUpdate failed\n");
+
+        DEBUG(errlog, "%f %d %s:%d EVP_EncryptUpdate failed\n",
+            gettime(), request_id, __func__, __LINE__);
+
         return NULL;
     }
 
-    DEBUG(stderr, "EVP_EncryptUpdate (%d)\n", enclen);
+    DEBUG(errlog, "%f %d %s:%d EVP_EncryptUpdate enclen=(%d)\n",
+        gettime(), request_id, __func__, __LINE__, enclen);
 
     EVP_CIPHER_CTX_free(ctx);
 
@@ -123,7 +151,7 @@ unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, ui
 
     free(iv_hex);
     free(data_hex);
-
+    if (debug) fclose(errlog);
     return etag;
 }
 
@@ -133,28 +161,39 @@ unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token, ui
  *  Decrypt the etag, check if the server token matches, 
  *  if so return the payload, otherwise return 0 for
  *  any kind of error.  0 is never a valid payload.
- *
- *  An etag looks like this:
- *  0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef
- *
  */
-uint64_t
+
+struct cryptotag
 validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
 
-    uint64_t payload = 0;
+    FILE* errlog = NULL;
+    if (debug){
+        errlog = fopen("errlog", "a");
+    }
+
+    struct cryptotag ctag;
+    struct cryptotag errortag;
+    bzero(&errortag, sizeof(struct cryptotag));
     int rc;
 
-    DEBUG(stderr, "validate_crypto_etag\n");
+    DEBUG(errlog, "%f %d %s:%d validate_crypto_etag %s\n",
+        gettime(), request_id, __func__, __LINE__, etag);
 
     if (strlen(etag) != ETAG_STR_LEN){
-        DEBUG(stderr, "invalid etag not %d chars (%zu)\n", ETAG_STR_LEN,
-            strlen(etag));
-        return 0;
+
+        DEBUG(errlog, "%f %d %s:%d invalid etag not %d chars (%zu)\n",
+            gettime(), request_id, __func__, __LINE__,
+            ETAG_STR_LEN, strlen(etag));
+
+        return errortag;
     }
 
     if (etag[(IVEC_LEN*2)] != '.'){
-        DEBUG(stderr, "invalid etag misplaced period\n");
-        return 0;
+
+        DEBUG(errlog, "%f %d %s:%d invalid etag misplaced period\n",
+            gettime(), request_id, __func__, __LINE__);
+
+        return errortag;
     }
     etag[(IVEC_LEN*2)] = '\0';
     char* hex_ivec = etag;
@@ -164,93 +203,139 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
     // ease my paranoia
     //
     if (strlen(hex_ivec) != (IVEC_LEN*2)){
-        DEBUG(stderr, "invalid etag ivec not %d chars\n", (IVEC_LEN*2));
-        return 0;
+
+        DEBUG(errlog, "%f %d %s:%d invalid etag ivec not %d chars\n",
+            gettime(), request_id, __func__, __LINE__, (IVEC_LEN*2));
+
+        return errortag;
     }
     int c;
     for(c=0; c<(IVEC_LEN*2); c++){
         if (isxdigit(hex_ivec[c]) == 0){
-            DEBUG(stderr, "non hex digit in ivec\n");
-            return 0;
+
+            DEBUG(errlog, "%f %d %s:%d non hex digit in ivec\n",
+            gettime(), request_id, __func__, __LINE__);
+
+            return errortag;
         }
     }
     if (strlen(hex_data) != (CRYPT_DATA_LEN*2)){
-        DEBUG(stderr, "invalid etag hex_data not %d chars\n", (CRYPT_DATA_LEN*2));
-        return 0;
+
+        DEBUG(errlog, "%f %d %s:%d invalid etag hex_data not %d chars\n",
+
+            gettime(), request_id, __func__, __LINE__,
+            (CRYPT_DATA_LEN*2));
+
+        return errortag;
     }
     for(c=0; c<(CRYPT_DATA_LEN*2); c++){
         if (isxdigit(hex_data[c]) == 0){
-            DEBUG(stderr, "non hex digit in hex_data\n");
-            return 0;
+
+            DEBUG(errlog, "%f %d %s:%d non hex digit in hex_data\n",
+                gettime(), request_id, __func__, __LINE__);
+
+            return errortag;
         }
     }
 
-    DEBUG(stderr, "passed tests\n");
+    DEBUG(errlog, "%f %d %s:%d passed tests\n",
+        gettime(), request_id, __func__, __LINE__);
 
     unsigned char* ivec = hex_to_uchar(hex_ivec);
 
     if (ivec == NULL){ 
-        DEBUG(stderr, "ivec is null\n");
-        return 0;
+
+        DEBUG(errlog, "%f %d %s:%d ivec is null\n",
+            gettime(), request_id, __func__, __LINE__);
+
+        return errortag;
     } // ivec must now be freed
 
     unsigned char* crypt_data = hex_to_uchar(hex_data);
     if (crypt_data == NULL) {
+
+        DEBUG(errlog, "%f %d %s:%d crypt_data is null\n",
+            gettime(), request_id, __func__, __LINE__);
+
         free(ivec);
-        DEBUG(stderr, "crypt_data is null\n");
-        free(ivec);
-        return 0;
+        return errortag;
     } // crypt_data must now be freed
 
-    DEBUG(stderr, "strlen(hex_data)=%zu\n", strlen(hex_data));
-    DEBUG(stderr, "hex_to_uchar complete\n");
+    DEBUG(errlog, "%f %d %s:%d strlen(hex_data)=%zu\n",
+        gettime(), request_id, __func__, __LINE__, strlen(hex_data));
+
+    DEBUG(errlog, "%f %d %s:%d hex_to_uchar complete\n",
+        gettime(), request_id, __func__, __LINE__);
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
-    DEBUG(stderr, "cipher context init complete\n");
+    DEBUG(errlog, "%f %d %s:%d cipher context init complete\n",
+        gettime(), request_id, __func__, __LINE__);
 
     rc = EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, ivec);
     if (rc != 1){
-        DEBUG(stderr, "EVP_DecryptInit failed\n");
+
+        DEBUG(errlog, "%f %d %s:%d EVP_DecryptInit failed\n",
+            gettime(), request_id, __func__, __LINE__);
+
         free(ivec);
         free(crypt_data);
-        return 0;
+        return errortag;
     }
-    DEBUG(stderr, "decrypt init complete\n");
+
+    DEBUG(errlog, "%f %d %s:%d decrypt init complete\n",
+        gettime(), request_id, __func__, __LINE__);
 
     int declen;
-    //char* ch_out = (char *)  &payload;
     char ch_out[CRYPT_DATA_LEN*2];
 
     rc = EVP_DecryptUpdate(ctx, ch_out, &declen, crypt_data, (CRYPT_DATA_LEN+1));
     if (rc != 1){
-        DEBUG(stderr, "EVP_DecryptUpdate failed\n");
+
+        DEBUG(errlog, "%f %d %s:%d EVP_DecryptUpdate failed\n",
+                gettime(), request_id, __func__, __LINE__);
+
         free(ivec);
         free(crypt_data);
-        return 0;
+        return errortag;
     }
-    DEBUG(stderr, "decrypt update complete (%d)\n", declen);
+
+    DEBUG(errlog, "%f %d %s:%d decrypt update complete (%d)\n",
+        gettime(), request_id, __func__, __LINE__, declen);
 
     uint64_t check_token;
     memcpy(&check_token, ch_out, 8);
     if (check_token != server_token){
-        DEBUG(stderr, "token validation failed\n");
+
+        DEBUG(errlog, "%f %d %s:%d token validation failed\n",
+            gettime(), request_id, __func__, __LINE__);
+
         free(ivec);
         free(crypt_data);
-        return 0;
+        return errortag;
     }
 
-    memcpy(&payload, &(ch_out[8]), 8);
+    // domain token
+    memcpy(&(ctag.domain_token), &(ch_out[8]), 8);
+    memcpy(&(ctag.payload), &(ch_out[16]), 16);
+
+    DEBUG(errlog, "%f %d %s:%d ctag.domain_token=%"PRIu64" ctag.payload=%s\n",
+        gettime(), request_id, __func__, __LINE__,
+        ctag.domain_token, ctag.payload);
 
     EVP_CIPHER_CTX_free(ctx);
 
-    DEBUG(stderr, "payload val set\n");
+    DEBUG(errlog, "%f %d %s:%d payload val set\n",
+        gettime(), request_id, __func__, __LINE__);
+
     free(ivec);
     free(crypt_data);
 
-    DEBUG(stderr, "free complete\n");
-    DEBUG(stderr, "validate payload = %"PRIu64"\n", payload);
-    return payload;
+    DEBUG(errlog, "%f %d %s:%d free complete\n",
+        gettime(), request_id, __func__, __LINE__);
+    if (debug) fclose(errlog);
+
+    return ctag;
 }
 
 #ifdef CRYPTO_ETAG_MAIN
@@ -268,6 +353,7 @@ void print_uchar(unsigned char* uch, int len){
 
 int main(void){
 
+    debug = false;
     unsigned char* key = hex_to_uchar("013efa48188c5ad9692474d746d94f6c");
 
     // unsigned char* testdata = "739dd9415d2469b5d44af51e9762a058";
@@ -276,47 +362,44 @@ int main(void){
     bzero(testcrypt,35);
     bzero(testout,35);
 
-    uint64_t payload;
-    payload = 420;
+    unsigned char payload[16] = "This is stupid.";
+    printf("payload=%s\n", payload);
 
     double start = gettime();
 
-    char* etag = make_crypto_etag(key, (uint64_t) 42, payload);
+    char* etag = make_crypto_etag(key, (uint64_t) 42, (uint64_t) 420, payload);
 
-    if (etag == NULL){
-        printf("make_crypto_etag returned null\n");
-        exit(1);
-    }
     printf("etag: %s\n", etag);
     printf("etag length is %zu\n", strlen(etag));
 
     double created = gettime();
 
-    uint64_t pload = validate_crypto_etag(key, (uint64_t) 42, etag);
+    struct cryptotag ctag  = validate_crypto_etag(key, (uint64_t) 42, etag);
 
     double validated = gettime();
 
     // validate_crypto_etag(payload, key, 42, etag);
     printf("validate returned\n");
-    printf("payload = %"PRIu64"\n", pload);
+    printf("domain token %"PRIu64"\n", ctag.domain_token);
+    printf("payload = %s\n", ctag.payload);
 
     printf("time to make %f, time to validate %f\n", created - start, validated - created );
 
     // Make the etag invalid by shifting bytes
-    printf("\nmake it fail with bad data\n");
-    etag = make_crypto_etag(key, (uint64_t) 42, payload);
-    printf("valid etag:   %s\n", etag);
-    unsigned char ch;
-    int k;
-    for(k=0; k<6; k++){
-        ch = etag[k];
-        etag[k] = etag[3+k];
-        etag[3+k] = ch;
-    }
-    printf("invalid etag: %s\n", etag);
-    pload = validate_crypto_etag(key, (uint64_t) 42, etag);
-    printf("invalid validate returned\n");
-    printf("payload = %"PRIu64"\n", pload);
+    //printf("make it fail with bad data\n");
+    //etag = make_crypto_etag(key, (uint64_t) 42, payload);
+    //printf("valid etag:   %s\n", etag);
+    //unsigned char ch;
+    //int k;
+    //for(k=0; k<6; k++){
+    //    ch = etag[k];
+    //    etag[k] = etag[3+k];
+    //    etag[3+k] = ch;
+    //}
+    //printf("invalid etag: %s\n", etag);
+    //pload = validate_crypto_etag(key, (uint64_t) 42, etag);
+    //printf("invalid validate returned\n");
+    //printf("payload = %"PRIu64"\n", pload);
     return 0;
 }
 #endif

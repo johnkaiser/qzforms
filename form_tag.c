@@ -29,6 +29,7 @@
  */ 
  
 #include "qz.h"
+#include "hex_to_uchar.h"
 
 
 /*
@@ -50,7 +51,7 @@ struct form_record* register_form(struct handler_args* h,
 
     struct form_record* form_rec = calloc(1, form_rec_record_size);
     
-    uint64_t form_id = qzrandom64ch(form_rec->form_id);
+    qzrandomch(form_rec->form_id, 16, last_is_null);
 
     time_t valid_duration = h->conf->form_duration;
 
@@ -76,13 +77,13 @@ struct form_record* register_form(struct handler_args* h,
     xmlNewProp(tag_node, "name", "form_tag");
     xmlNewProp(tag_node, "refresh", "1");
     xmlChar tagbuf[ETAG_MAX_LENGTH];
-    make_etag(tagbuf, h->session->tagger_socket_path, form_id);
+
+    make_etag(tagbuf, h->conf->tagger_socket_path, h->session->form_tag_token,
+        form_rec->form_id);
+
     xmlNewProp(tag_node, "value", tagbuf);
 
-    snprintf(form_rec->full_tag, SESSION_KEY_LENGTH, "%s", tagbuf);
-
     // add an expires attribute
-
     char* expires_buf;
     asprintf(&expires_buf, "%"PRId64, (int64_t)form_rec->expires);
     xmlNewProp(form_node, "expires", expires_buf);
@@ -97,9 +98,13 @@ struct form_record* register_form(struct handler_args* h,
     }    
 
     if (h->conf->log_form_tag_details){
-        fprintf(h->log, "%f %d %s:%d form_id = %"PRIx64"\n",
+        char* hex_form_id = uchar_to_hex(form_rec->form_id, 16);
+
+        fprintf(h->log, "%f %d %s:%d form_id = %s\n",
             gettime(), h->request_id, __func__, __LINE__,
-            form_id);
+            hex_form_id);
+
+        free(hex_form_id);
     }
     return form_rec;
 }
@@ -158,14 +163,15 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     if (uri_part_n_is(h, QZ_URI_FORM_NAME, "refresh")){
 
         char* form_tag_zero;
-        uint64_t tag_value;
+        char payload[16];
 
         form_tag_zero = xmlHashLookup(h->postdata, "form_tag[0]" );
         if (form_tag_zero != NULL){
-            tag_value = validate_etag(h->session->tagger_socket_path,
-                form_tag_zero);
 
-            if (tag_value > 0) return true;
+            validate_etag(payload, h->conf->tagger_socket_path,
+                h->session->form_tag_token, form_tag_zero);
+
+            if (strlen(payload) == 15) return true;
         }
         return false;
     }
@@ -257,8 +263,7 @@ bool post_contains_valid_form_tag(struct handler_args* h){
  */
 void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
 
-    uint64_t payload_int;
-    xmlChar payload_str[9];
+    xmlChar payload[16];
     struct form_record* this_form;
     char* result = NULL;
     char comma = ',';
@@ -269,10 +274,11 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
         comma = ' ';
     }
 
-    payload_int = validate_etag(h->session->tagger_socket_path, form_tag);
+    validate_etag(payload, h->conf->tagger_socket_path,
+        h->session->form_tag_token, form_tag);
 
     // An invalid tag is never OK.
-    if (payload_int == 0){
+    if (strlen(payload)  != 15){
         fprintf(h->log, "%f %d %s:%d fail invalid form tag\n",
             gettime(), h->request_id, __func__, __LINE__);
 
@@ -280,11 +286,8 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
         return;
     }
 
-    memcpy(payload_str, &payload_int, 8);
-    payload_str[8] = '\0';
-
     this_form = (struct form_record*) xmlHashLookup(h->session->form_tags,
-        payload_str);
+        payload);
 
     if (this_form == NULL){
        asprintf(&result, "%c {%s:%d}", comma, form_id, 0);
@@ -487,23 +490,18 @@ struct form_record* get_posted_form_record(struct handler_args* h){
         return NULL;
     }    
  
-    // I need a null after the payload so the integer can be
-    // interpeted as a string for xml hash use.
-    uint64_t payload_int;
-    xmlChar payload_str[9];
-    bzero(payload_str,9);
+    xmlChar payload[16];
+    validate_etag(payload, h->conf->tagger_socket_path,
+        h->session->form_tag_token, form_tag);
 
-    payload_int = validate_etag(h->session->tagger_socket_path, form_tag);
-
-    if (payload_int == 0){
+    if (strlen(payload) != 15){
         fprintf(h->log, "%f %d %s:%d form_tag validation failed\n", 
            gettime(), h->request_id, __func__, __LINE__); 
 
         return NULL;
     }
-    memcpy(payload_str, &payload_int, 8);
     struct form_record* this_form;
-    this_form = xmlHashLookup(h->session->form_tags, payload_str);
+    this_form = xmlHashLookup(h->session->form_tags, payload);
 
     if (this_form == NULL){ 
         fprintf(h->log, "%f %d %s:%d fail form record not found "
@@ -516,7 +514,7 @@ struct form_record* get_posted_form_record(struct handler_args* h){
     // If the token fails to match then throw a hard error
     // and kill the session.
     if (this_form->session_integrity_token != h->session->integrity_token){
-        fprintf(h->log, 
+        fprintf(h->log,
             "%f %d %s:%d fail form record integrity token invalid\n",
             gettime(), h->request_id, __func__, __LINE__);
 
@@ -526,31 +524,17 @@ struct form_record* get_posted_form_record(struct handler_args* h){
         return NULL;
     }
 
-    // The full_tag attribute contains the text of the tag saved by
-    // register_form. It must match the form tag from post data.
-    if (strncmp(form_tag, this_form->full_tag, SESSION_KEY_LENGTH) != 0){
-        fprintf(h->log, "%f %d %s:%d fail form tag submitted validates, "
-            "but does not match saved form_tag %s this_form->full_tag %s\n",
-            gettime(), h->request_id, __func__, __LINE__,
-            form_tag, this_form->full_tag);
-
-        error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
-        h->session->is_logged_in = false;
-
-        return NULL;
-    }
-
-    if ( (this_form->form_set != NULL) && 
+    if ( (this_form->form_set != NULL) &&
         (! form_set_is_valid(h, this_form->form_set))){
 
-        fprintf(h->log, 
+        fprintf(h->log,
                 "%f %d %s:%d fail form set integrity token check invalid\n",
             gettime(), h->request_id, __func__, __LINE__);
-        
+
         error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
         h->session->is_logged_in = false;
         return NULL;
-    }        
+    }
 
     return this_form;
 }
