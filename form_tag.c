@@ -343,7 +343,7 @@ void refresh_form_tag(struct handler_args* h){
             if (h->error_exists) break;
         }else{
             free(form_id_key);
-            free(form_id_key);
+            free(form_tag_key);
             break;
         }
     }
