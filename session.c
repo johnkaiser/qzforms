@@ -472,7 +472,7 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         "%f %d %s:%d starting housekeeping\n",
         gettime(), h->request_id, __func__, __LINE__);
 
-    xmlHashScan(sessions, session_housekeeping_scanner, &data);
+    xmlHashScan(sessions, (void*) session_housekeeping_scanner, &data);
 
     struct stat logsb;
     if (stat(conf->logfile_name, &logsb) == 0){

@@ -266,7 +266,7 @@ void qz_status(struct handler_args* h){
     xmlNewTextChild(ot_tr, NULL, "th", "etag");
 
     xmlNodePtr ot_tbody = xmlNewChild(ot_table, NULL, "tbody", NULL);
-    xmlHashScan(h->session->opentables, open_table_scanner, ot_tbody);
+    xmlHashScan(h->session->opentables, (void*) open_table_scanner, ot_tbody);
 
     // form tags 
     xmlNodePtr ft_table = xmlNewChild(divqz, NULL, "table", NULL);
@@ -284,7 +284,8 @@ void qz_status(struct handler_args* h){
     xmlNewTextChild(ft_tr, NULL, "th", "form_set");
 
     xmlNodePtr ft_tbody = xmlNewChild(ft_table, NULL, "tbody", NULL);
-    xmlHashScan(h->session->form_tags, form_tag_status_scanner, ft_tbody);
+    xmlHashScan(h->session->form_tags, (void*) form_tag_status_scanner,
+        ft_tbody);
 
     // form sets 
     xmlNodePtr fs_table = xmlNewChild(divqz, NULL, "table", NULL);
@@ -300,7 +301,7 @@ void qz_status(struct handler_args* h){
     xmlNewTextChild(fs_tr, NULL, "th", "context parameters");
 
     xmlNodePtr fs_tbody = xmlNewChild(fs_table, NULL, "tbody", NULL);
-    xmlHashScan(h->session->form_sets, form_set_scanner, fs_tbody);
+    xmlHashScan(h->session->form_sets, (void*) form_set_scanner, fs_tbody);
     
     return;
 }

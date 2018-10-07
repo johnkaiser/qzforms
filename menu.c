@@ -411,8 +411,8 @@ void log_context_variables(struct handler_args* hargs){
              xmlHashSize(hargs->current_form_set->context_parameters));
          
          xmlHashScan(hargs->current_form_set->context_parameters, 
-             context_variable_logging_scanner,
-             hargs);
+             (void*) context_variable_logging_scanner, hargs);
+
      }else{
          fprintf(hargs->log, "%f %d %s:%d form_set or form_set->"
              "context_parameters is null\n",

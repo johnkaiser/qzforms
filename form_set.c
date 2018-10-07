@@ -329,7 +329,7 @@ void close_all_form_sets(struct form_tag_housekeeping_data* ft_hk_data){
     if (ft_hk_data->this_session->form_sets != NULL){
 
         xmlHashScan(ft_hk_data->this_session->form_sets,
-            close_form_set_scanner, (void*)ft_hk_data);
+            (void*) close_form_set_scanner, (void*)ft_hk_data);
     }
 }
 
@@ -419,7 +419,8 @@ void form_set_housekeeping_scanner(void* payload, void* data, const xmlChar* nam
         };
     
         form_set->audit_count = 0;
-        xmlHashScan(session->form_tags, audit_form_set_scanner, &aud_det);
+        xmlHashScan(session->form_tags, (void*) audit_form_set_scanner,
+            &aud_det);
     
         uint64_t fsid;
         memcpy(&fsid, form_set->id, 8);

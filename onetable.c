@@ -274,7 +274,7 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
             };
 
             xmlHashScan(h->current_form_set->context_parameters,
-                context_param_insert_scanner, &cps_args);
+                (void*) context_param_insert_scanner, &cps_args);
     }
 
     // For each attribute in fieldnames not also in context parameters

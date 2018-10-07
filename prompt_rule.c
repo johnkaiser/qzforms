@@ -215,7 +215,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
                 PQcmdStatus(rs),
                 PQresultErrorMessage(rs));
         }
-	PQclear(rs);
+        PQclear(rs);
         return default_prompt_rule(h, form_name, fieldname);
     }    
 }

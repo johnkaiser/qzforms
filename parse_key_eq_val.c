@@ -294,12 +294,12 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
     }
 
     if (unescape){
-        xmlHashScan(pt, percent_unescape_vals, NULL);
+        xmlHashScan(pt, (void*) percent_unescape_vals, NULL);
     }
 
     // Validate the utf-8 encoding
     bool is_valid_utf8 = true;
-    xmlHashScan(pt, check_utf8, &is_valid_utf8);
+    xmlHashScan(pt, (void*) check_utf8, &is_valid_utf8);
 
     if (!is_valid_utf8){
 

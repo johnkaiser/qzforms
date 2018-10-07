@@ -395,7 +395,7 @@ bool check_postdata(struct handler_args* h){
 
     /* utf8 checking is done in parse_key_eq_val */
 
-    xmlHashScan(h->postdata, validate_rule, h);
+    xmlHashScan(h->postdata, (void*) validate_rule, h);
 
     if (h->regex_check == failed){
         return false;
@@ -405,7 +405,7 @@ bool check_postdata(struct handler_args* h){
 
     struct form_record* form_rec = get_posted_form_record(h);
     if ((form_rec != NULL) && (form_rec->pkey_values != NULL)){
-        xmlHashScan(form_rec->pkey_values, valid_pkey_value_scanner, h);
+        xmlHashScan(form_rec->pkey_values, (void*) valid_pkey_value_scanner, h);
 
         if (h->pkey_check == failed){
             error_page(h, SC_BAD_REQUEST, "Primary key validation failed");

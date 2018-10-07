@@ -206,7 +206,7 @@ void login_tracking_housekeeping(struct handler_args* hargs){
 
     pthread_mutex_lock(&login_tracker_mutex);
 
-    xmlHashScan(failed_login_tracker, login_tracking_scanner, hargs);
+    xmlHashScan(failed_login_tracker, (void*) login_tracking_scanner, hargs);
 
     pthread_mutex_unlock(&login_tracker_mutex);
 

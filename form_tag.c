@@ -245,7 +245,7 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     // Verify the posted values match the form set for any context parameters.
     if (this_form->form_set != NULL){
         xmlHashScan(h->posted_form->form_set->context_parameters,
-            valid_context_parameter_scanner, h);
+            (void*) valid_context_parameter_scanner, h);
     }
 
     fprintf(h->log, "%f %d %s:%d form tag OK form_action=%s\n", 
@@ -448,10 +448,10 @@ void form_tag_housekeeping(struct handler_args* hargs,
     };
 
     // hash scan args: xmlHashTablePtr, scanner function, blind data 
-    xmlHashScan(this_session->form_tags, form_tag_housekeeping_scanner,
+    xmlHashScan(this_session->form_tags, (void*) form_tag_housekeeping_scanner,
         &ft_hk_data);
 
-    xmlHashScan(this_session->form_sets, form_set_housekeeping_scanner, 
+    xmlHashScan(this_session->form_sets, (void*) form_set_housekeeping_scanner,
        &ft_hk_data);
 }
 
@@ -469,7 +469,8 @@ void close_all_form_tags(struct handler_args* hargs,
             .hargs = hargs
      };
 
-    xmlHashScan(this_session->form_tags, delete_form_record, &ft_hk_data);
+    xmlHashScan(this_session->form_tags, (void*) delete_form_record,
+        &ft_hk_data);
 }
 
 /*

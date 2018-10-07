@@ -239,7 +239,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             nfields);
 
         error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
-	PQclear(grid_edit_rs);
+        PQclear(grid_edit_rs);
         return;
     }
 
@@ -374,7 +374,7 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         .child_of = form
     };
 
-    xmlHashScan(h->postdata, table_constant_adder, &data);
+    xmlHashScan(h->postdata, (void*) table_constant_adder, &data);
 
     // Build an html table with a cell for each attribute.
 
@@ -613,7 +613,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             if (grid_row_rs != NULL){
                 if (PQresultStatus(grid_row_rs) == PGRES_COMMAND_OK){
                     xmlNewTextChild(dl, NULL, "dd", "OK");
-		    PQclear(begin_rs);
+                    PQclear(begin_rs);
                     PQclear(grid_row_rs);
                     grid_row_rs = NULL;
                 }else{
@@ -623,7 +623,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
                     free(err_msg);
                     xmlNewTextChild(dl, NULL, "dd", "ROLLBACK");
                     error_exists = true;
-		    PQclear(begin_rs);
+                    PQclear(begin_rs);
                     PQclear(grid_row_rs);
                     grid_row_rs = NULL;
                     break;
