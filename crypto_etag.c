@@ -59,7 +59,7 @@
 
 extern double gettime(void);
 
-static bool debug = true;
+static bool debug = false;
 #define DEBUG if (debug) fprintf
 
 /*
