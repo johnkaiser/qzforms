@@ -1052,10 +1052,6 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
          }else{
              paramdata[k] = element;
          }
-
-         fprintf(h->log, "%f %d %s:%d matched param %s length %zu\n",
-            gettime(), h->request_id, __func__, __LINE__,
-            ta->fieldnames[k], strlen(element));
     }
     paramdata[ ta->nbr_params ] = NULL;
 
