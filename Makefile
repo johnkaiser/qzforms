@@ -60,7 +60,6 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
 	form_tag.c prompt_rule.c grid.c form_set.c logview.py
 
-
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 7_jscss_data.sql 8_menu.sql \
 	9_functions.sql  pgtype_datum.sql comment.sql 
@@ -85,6 +84,10 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/set_action_options.js js/dollarquote
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
+
+TESTS=tests/delete_simplelist.py tests/create_simplegrid.py \
+	tests/qztest.py tests/create_simplelist.py tests/delete_simplegrid.py \
+	tests/vg
 
 # The random test is first so make fails early without randomness source
 all: qzrandom64_test qzforms.fcgi \
@@ -340,9 +343,8 @@ qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
 
 tar:
 	tar -cz -s '|^|qzforms-$(VERSION)/|' -f qzforms-$(VERSION).tgz \
-    $(FILES) $(SQL) $(SQLUTIL) $(DOCS) $(JS) $(EXAMPLES)
+    $(FILES) $(SQL) $(SQLUTIL) $(DOCS) $(JS) $(EXAMPLES) $(TESTS)
 
-# XXXXX add all the tests
 clean:
 	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array \
 	testopentable qzrandom64_test crypto_etag_test test_prompt_rule \

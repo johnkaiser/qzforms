@@ -456,6 +456,8 @@ void validate_login( struct handler_args* h  ){
         char* login_target = build_path(uri_parts);
         location(h, login_target);
         free(login_target);
+        PQfinish(h->session->conn);
+        h->session->conn = NULL;
     }
 
     return;

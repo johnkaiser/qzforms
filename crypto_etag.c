@@ -83,7 +83,7 @@ unsigned char* make_crypto_etag(unsigned char key[16], uint64_t server_token,
     uint64_t domain_token, unsigned char payload[16]){
 
     request_id++;
-    debug = true;
+    debug = false;
 
     FILE* errlog = NULL;
     if (debug){
