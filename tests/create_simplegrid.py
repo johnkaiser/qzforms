@@ -157,13 +157,11 @@ def add_page_css(f):
     print "add_page_css"
     new_page_click(f, 'page_css')
 
-    f.find_element_by_id('page_css_add_row').click()
-    sleep(0.1)
-
+    f.find_element_by_xpath('//button[text()="Add Row"]').click()
     f.find_element_by_id('sequence[0]').send_keys('1')
     action =  Select(f.find_element_by_id('filename[0]'))
     action.select_by_visible_text('qzforms.css')
-    f.find_element_by_id('page_css_add_row').click()
+
     new_page_click(f, 'Save')
 
     return
