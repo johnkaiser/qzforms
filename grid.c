@@ -96,13 +96,13 @@ struct table_constant_adder_data {
 
 void table_constant_adder(void* val, void* data, const xmlChar* name){
 
+    // form_tag does not get carried forward.
+    if (strcmp(name, "form_tag") == 0) return;
+
     struct table_constant_adder_data* d = data;
     char* fieldname;
     asprintf(&fieldname, "%s", name);
     char* fieldvalue = val;
-
-    // form_tag does not get carried forward.
-    if (strcmp(fieldname, "form_tag") == 0) return;
 
     struct prompt_rule p_rule = {
         .form_name = d->form_name,
@@ -613,7 +613,6 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             if (grid_row_rs != NULL){
                 if (PQresultStatus(grid_row_rs) == PGRES_COMMAND_OK){
                     xmlNewTextChild(dl, NULL, "dd", "OK");
-                    PQclear(begin_rs);
                     PQclear(grid_row_rs);
                     grid_row_rs = NULL;
                 }else{
@@ -623,7 +622,6 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
                     free(err_msg);
                     xmlNewTextChild(dl, NULL, "dd", "ROLLBACK");
                     error_exists = true;
-                    PQclear(begin_rs);
                     PQclear(grid_row_rs);
                     grid_row_rs = NULL;
                     break;
@@ -661,6 +659,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         }
         PQclear(final_rs);
     }
+    PQclear(begin_rs);
     PQclear(grid_save_rs);
 }
 

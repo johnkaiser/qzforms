@@ -588,6 +588,7 @@ xmlNodePtr add_input_text(struct prompt_add_args* args){
         if (args->rule->size > 0){
             asprintf(&buf, "%d", args->rule->size);
             xmlNewProp(input, "size", buf);
+            free(buf);
         }
 
         if (args->rule->maxlength > 0){

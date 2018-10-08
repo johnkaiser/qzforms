@@ -216,6 +216,7 @@ void qz_status(struct handler_args* h){
         "change_history");
     PGresult* chg_hist_rs = perform_post_action(h, change_history_ta);
     rs_to_table(divqz, chg_hist_rs, "change_history");
+    PQclear(chg_hist_rs);
 
     // show pg_stat_activity from postgresql
     struct table_action* stat_ta = open_table(h, "status", "pg_stat_activity");
