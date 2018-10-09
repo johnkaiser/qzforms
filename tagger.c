@@ -245,7 +245,7 @@ void tagger_serve(struct qz_config* conf, bool debug){
                     ctag = validate_crypto_etag(server_key, server_token,
                         &(inbuf[1]));
 
-                    write(incoming, &payload, sizeof(payload));
+                    write(incoming, &ctag, sizeof(ctag));
 
                     DEBUG(log, "%f %d %s:%d skipping quotes\n",
                         gettime(), request_id, __func__, __LINE__);
