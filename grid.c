@@ -209,9 +209,11 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, grid_edit_ta->target_div)) == NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
             gettime(), h->request_id, __func__, __LINE__,
             grid_edit_ta->target_div);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST,  "id element not found");
         return;
@@ -219,24 +221,30 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
 
     add_helpful_text(h, grid_edit_ta);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
         form_name, "edit");
+    pthread_mutex_unlock(&log_mutex);
 
     PGresult* grid_edit_rs = perform_post_action(h, grid_edit_ta);
 
     if (grid_edit_rs == NULL) {
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
     }
     int nfields = PQnfields(grid_edit_rs);
     if (nfields < 1){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail grid edit called with nfields=%d\n",
             gettime(), h->request_id, __func__, __LINE__,
             nfields);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         PQclear(grid_edit_rs);
@@ -488,9 +496,11 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             char* fvalue = PQgetvalue(grid_edit_rs, row, col);
 
             if (p_rules[col] == NULL){
+                pthread_mutex_lock(&log_mutex);
                 fprintf(h->log, "%f %d %s:%d grid p_rule %s is null\n",
                     gettime(), h->request_id, __func__, __LINE__,
                     fname);
+                pthread_mutex_unlock(&log_mutex);
             }
 
             add_prompt(h, grid_edit_ta, p_rules[col], pgtypes[col], option_ar[col],
@@ -536,23 +546,29 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
 
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, grid_save_ta->target_div)) == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
             gettime(), h->request_id, __func__, __LINE__,
             grid_save_ta->target_div);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST,  "id element not found");
         return;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
         form_name, "edit");
+    pthread_mutex_unlock(&log_mutex);
 
     PGresult* grid_save_rs = perform_post_action(h, grid_save_ta);
 
     if (grid_save_rs == NULL) {
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
@@ -629,8 +645,10 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
             }else if ((value[0] != 'E') && (value[0] != 'X')){// E X not errors.
                 // grid_row_rs is null
                 error_exists = true;
+                pthread_mutex_lock(&log_mutex);
                 fprintf(h->log, "%f %d %s:%d grid_row_rs unexpectedly null\n",
                     gettime(), h->request_id, __func__, __LINE__);
+                pthread_mutex_unlock(&log_mutex);
 
                 break;
             }
@@ -682,8 +700,10 @@ void grid(struct handler_args* h){
     xmlNodePtr root_el;
     if ((root_el = xmlDocGetRootElement(h->doc)) == NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail xml root element not found\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST,  "xml document open failure");
         return;
@@ -698,8 +718,10 @@ void grid(struct handler_args* h){
 
     }else{
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d unknown action (%s) \n",
             gettime(), h->request_id, __func__, __LINE__, action);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h,400, "unknown action");
     }

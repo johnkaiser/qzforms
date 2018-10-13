@@ -44,8 +44,10 @@ struct stack_node {
 
 void build_index(struct handler_args* h){
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d start build_index\n",
         gettime(), h->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     if (h->doc == NULL) return;
 
@@ -76,9 +78,11 @@ void build_index(struct handler_args* h){
         this_id = xmlGetProp(cur, "id");
 
         if (h->conf->log_id_index_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log,  "%f %d %s:%d on node %s id %s\n",
                  gettime(), h->request_id, __func__, __LINE__,
                  cur->name, this_id);
+            pthread_mutex_unlock(&log_mutex);
         }
         if (this_id != NULL){
             check = xmlHashLookup(h->id_index, this_id);
@@ -165,14 +169,18 @@ void add_to_id_index(struct handler_args* h, xmlNodePtr the_node){
  */  
 void doc_from_file( struct handler_args* h, char* requested_docname ){
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d start doc_from_file %s\n", 
         gettime(), h->request_id, __func__, __LINE__,
         requested_docname); 
+    pthread_mutex_unlock(&log_mutex);
 
     if (h->doc != NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d danger %s\n", 
             gettime(), h->request_id, __func__, __LINE__,
             "doc_from_file called with h->doc defined");
+        pthread_mutex_unlock(&log_mutex);
     }
 
     char* docname; 
@@ -220,8 +228,10 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
         add_listener(h, NULL, "onLoad", form_refresh);
         free(form_refresh);
     }
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d doc_from_file complete\n", 
         gettime(), h->request_id, __func__, __LINE__); 
+    pthread_mutex_unlock(&log_mutex);
 }
 
 
@@ -240,9 +250,11 @@ void validate_rule(void* val, void* data, const xmlChar* key){
     size_t key_length = strlen(key);
 
     if (h->conf->log_validate_rule_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d key %s val length %"PRId64"\n",
             gettime(), h->request_id, __func__, __LINE__,
             key, (int64_t) subject_length);
+        pthread_mutex_unlock(&log_mutex);
     }
     if (subject_length == 0) return;
     if (key_length == 0) return;
@@ -258,16 +270,20 @@ void validate_rule(void* val, void* data, const xmlChar* key){
     struct prompt_rule* rule = fetch_prompt_rule(h, form_name, base);
 
     if (h->conf->log_validate_rule_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d base:%s %s regex:%s\n",
             gettime(), h->request_id, __func__, __LINE__,
             base,
             (rule == NULL) ? "no rule":"rule found",
             (rule == NULL || rule->regex_pattern == NULL) ? "none":rule->regex_pattern);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     if (rule == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d prompt rule is null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         free(base);
         return;
@@ -311,18 +327,22 @@ void validate_rule(void* val, void* data, const xmlChar* key){
 
         strbuf_append(h->data, new_strbuf(error_msg,0));
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d "
             "fail attribute \"%s\" regex_pattern %s rc=%d\n\n",
             gettime(), h->request_id, __func__, __LINE__,
             rule->fieldname, rule->regex_pattern, rc);
+        pthread_mutex_unlock(&log_mutex);
 
         free(error_msg);
 
     }else{ // match passed
 
         if (h->conf->log_validate_rule_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d regex_pattern passed for %s\n",
                 gettime(), h->request_id, __func__, __LINE__, key);
+            pthread_mutex_unlock(&log_mutex);
         }
     }
 
@@ -351,10 +371,12 @@ void validate_rule(void* val, void* data, const xmlChar* key){
 
             strbuf_append(h->data, new_strbuf(length_error,0));
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d key %s value length %"PRIu64
                 " exceeds maxlength %d\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 key, (uint64_t)val_length, rule->maxlength);
+            pthread_mutex_unlock(&log_mutex);
 
             free(length_error);
         }
@@ -378,9 +400,11 @@ void valid_pkey_value_scanner(void* payload, void* data, const xmlChar* name){
     if (has_data(posted_value) && (strcmp(saved_value, posted_value) != 0)){
         hargs->pkey_check = failed;
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail primary key validation key=%s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             name);
+        pthread_mutex_unlock(&log_mutex);
     }
 }
 
@@ -460,10 +484,12 @@ void save_pkey_values(struct handler_args* h,
 
 #ifdef ID_INDEX_TEST
 
+pthread_mutex_t log_mutex;
 
 int main(void){
 
     // setup a fake environment
+    pthread_mutex_init(&log_mutex,NULL);
     qzrandom64_init();
     struct qz_config* conf = init_config();
 

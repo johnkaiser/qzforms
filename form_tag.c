@@ -100,9 +100,11 @@ struct form_record* register_form(struct handler_args* h,
     if (h->conf->log_form_tag_details){
         char* hex_form_id = uchar_to_hex(form_rec->form_id, 16);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d form_id = %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             hex_form_id);
+        pthread_mutex_unlock(&log_mutex);
 
         free(hex_form_id);
     }
@@ -127,20 +129,24 @@ void valid_context_parameter_scanner(void* payload, void* data,
 
     if (has_data(saved_value) && has_data(submitted_value)){
         if (strcmp(saved_value, submitted_value) != 0){
-           h->posted_form->form_set->is_valid = false;
-           error_page(h, SC_BAD_REQUEST, "Invalid Data");
+            h->posted_form->form_set->is_valid = false;
+            error_page(h, SC_BAD_REQUEST, "Invalid Data");
 
-           if (h->conf->log_form_set_details){
-               fprintf(h->log, "%f %d %s:%d fail form set context parameter "
-                   "\"%s\" changed from %s to %s\n",
-                   gettime(), h->request_id, __func__, __LINE__,
-                   name, saved_value, submitted_value);
+            if (h->conf->log_form_set_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d fail form set context parameter "
+                    "\"%s\" changed from %s to %s\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    name, saved_value, submitted_value);
+                pthread_mutex_unlock(&log_mutex);
 
-           }else{
-               fprintf(h->log, "%f %d %s:%d fail form set context parameter "
-                   "\"%s\" changed\n",
-                   gettime(), h->request_id, __func__, __LINE__,
-                   name);
+            }else{
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d fail form set context parameter "
+                    "\"%s\" changed\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    name);
+                pthread_mutex_unlock(&log_mutex);
           }
         }
     }
@@ -182,10 +188,12 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     if (this_form == NULL) return false;
 
     if ( ! this_form->is_valid){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail form record flagged as invalid "
            "form_action=%s\n", 
            gettime(), h->request_id, __func__, __LINE__,
            this_form->form_action); 
+        pthread_mutex_unlock(&log_mutex);
 
         return false;
     }    
@@ -204,6 +212,7 @@ bool post_contains_valid_form_tag(struct handler_args* h){
         if (strncmp(this_form->form_action, request_url,
             form_action_length) != 0){
         
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, 
                "%f %d %s:%d %s %s %s %s %s %s\n",
                 gettime(), h->request_id, __func__, __LINE__,
@@ -214,6 +223,7 @@ bool post_contains_valid_form_tag(struct handler_args* h){
                 "and is not refresh",
                  get_uri_part(h, QZ_URI_FORM_NAME)
                 ); 
+            pthread_mutex_unlock(&log_mutex);
 
             return false;
         }   
@@ -224,10 +234,12 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     }
 
     if (this_form->expires < time(NULL)){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail form expired at %"PRId64" "
            "form_action=%s\n",
            gettime(), h->request_id, __func__, __LINE__,
            (int64_t)this_form->expires, this_form->form_action);
+        pthread_mutex_unlock(&log_mutex);
 
         return false;   
     }
@@ -236,10 +248,12 @@ bool post_contains_valid_form_tag(struct handler_args* h){
     h->posted_form = this_form;
     if (h->posted_form->form_set != NULL){
         struct form_set* fs = h->posted_form->form_set;
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d form_set->name=%s sec_token_ok=%c\n",
            gettime(), h->request_id, __func__, __LINE__,
            fs->name,  (fs->integrity_token == h->session->integrity_token) ?
                't':'f' );
+        pthread_mutex_unlock(&log_mutex);
     }
 
     // Verify the posted values match the form set for any context parameters.
@@ -248,9 +262,11 @@ bool post_contains_valid_form_tag(struct handler_args* h){
             (void*) valid_context_parameter_scanner, h);
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d form tag OK form_action=%s\n", 
         gettime(), h->request_id, __func__, __LINE__,
         this_form->form_action); 
+    pthread_mutex_unlock(&log_mutex);
         
     return true;
 }
@@ -279,8 +295,10 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
 
     // An invalid tag is never OK.
     if (strlen(payload)  != 15){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail invalid form tag\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Invalid form tag submitted to refresh");
         return;
@@ -367,8 +385,10 @@ void delete_form_record(void* payload, void* data, const xmlChar* name){
     struct form_tag_housekeeping_data * ft_hk_data = data;
 
     if (form_rec == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(ft_hk_data->hargs->log, "%f %d %s:%d form_rec is null\n", 
             gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return;
     }
@@ -376,9 +396,11 @@ void delete_form_record(void* payload, void* data, const xmlChar* name){
     memcpy(&form_id, form_rec->form_id, 8);
 
     if (ft_hk_data->hargs->conf->log_form_tag_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(ft_hk_data->hargs->log, "%f %d %s:%d removing form tag %"PRIx64"\n",
             gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
             form_id);
+        pthread_mutex_unlock(&log_mutex);
     }
     decrement_form_set(form_rec);
 
@@ -403,19 +425,23 @@ void form_tag_housekeeping_scanner(void* payload, void* data, const xmlChar* nam
     struct form_tag_housekeeping_data * ft_hk_data = data;
 
     if (form_rec == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(ft_hk_data->hargs->log, "%f %d %s:%d "
             "unexpected null form_tag name=%s\n",
             gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
             name);
+        pthread_mutex_unlock(&log_mutex);
     }else{
         uint64_t form_id;
         memcpy(&form_id, form_rec->form_id, 8);
 
         if (ft_hk_data->hargs->conf->log_form_tag_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(ft_hk_data->hargs->log, "%f %d %s:%d "
                 "checking form_id=%"PRIx64" %s %ld\n",
                 gettime(), ft_hk_data->hargs->request_id, __func__, __LINE__,
                 form_id, "expires in", (long) (time(NULL) - form_rec->expires) );
+            pthread_mutex_unlock(&log_mutex);
         }
 
         // Allow twice the duration before removing
@@ -485,8 +511,10 @@ struct form_record* get_posted_form_record(struct handler_args* h){
 
     char* form_tag = xmlHashLookup(h->postdata, "form_tag");
     if (form_tag == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail form_tag not found in post data\n", 
            gettime(), h->request_id, __func__, __LINE__); 
+        pthread_mutex_unlock(&log_mutex);
  
         return NULL;
     }    
@@ -496,8 +524,10 @@ struct form_record* get_posted_form_record(struct handler_args* h){
         h->session->form_tag_token, form_tag);
 
     if (strlen(payload) != 15){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d form_tag validation failed\n", 
            gettime(), h->request_id, __func__, __LINE__); 
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
@@ -505,9 +535,11 @@ struct form_record* get_posted_form_record(struct handler_args* h){
     this_form = xmlHashLookup(h->session->form_tags, payload);
 
     if (this_form == NULL){ 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail form record not found "
            "in hash table\n",
            gettime(), h->request_id, __func__, __LINE__); 
+        pthread_mutex_unlock(&log_mutex);
          
         return NULL;
     } 
@@ -515,9 +547,11 @@ struct form_record* get_posted_form_record(struct handler_args* h){
     // If the token fails to match then throw a hard error
     // and kill the session.
     if (this_form->session_integrity_token != h->session->integrity_token){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log,
             "%f %d %s:%d fail form record integrity token invalid\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
         h->session->is_logged_in = false;
@@ -528,9 +562,11 @@ struct form_record* get_posted_form_record(struct handler_args* h){
     if ( (this_form->form_set != NULL) &&
         (! form_set_is_valid(h, this_form->form_set))){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log,
-                "%f %d %s:%d fail form set integrity token check invalid\n",
+            "%f %d %s:%d fail form set integrity token check invalid\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_INTERNAL_SERVER_ERROR, "Bad Token");
         h->session->is_logged_in = false;

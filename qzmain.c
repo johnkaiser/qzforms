@@ -31,6 +31,7 @@
 #include "qz.h"
 
 pid_t tagger_pid = 0;
+pthread_mutex_t log_mutex;
 
 struct thread_launch_data {
 
@@ -92,9 +93,11 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
 
     if (request != NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d begin init_handler %s\n",
             hargs->starttime, request_id, __func__, __LINE__,
             FCGX_GetParam("REQUEST_URI",request->envp));
+        pthread_mutex_unlock(&log_mutex);
 
         // not the housekeeper
         hargs->request = request;
@@ -105,9 +108,11 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->uri_parts = str_to_array(
             FCGX_GetParam("REQUEST_URI",request->envp), '/');
     }else{
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d init_handler %s\n",
             hargs->starttime, request_id, __func__, __LINE__,
             "housekeeper");
+        pthread_mutex_unlock(&log_mutex);
 
         // is the housekeeper
         hargs->request = NULL;
@@ -147,12 +152,16 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
             session_possibly_valid = load_session_key(hargs, session_cookie);
         }
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d cookiesin OK\n",
             gettime(), request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }else{
         hargs->cookiesin = NULL;
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d cookiesin is null\n",
             gettime(), request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     char* content_length_str = FCGX_GetParam("CONTENT_LENGTH", hargs->envpfcgi);
@@ -170,10 +179,13 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->postbuf = buf;
 
         if (bytes_read != content_length){
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d fail "
                 "content_length=%d bytesread=%d\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 content_length, bytes_read);
+            pthread_mutex_unlock(&log_mutex);
+
             // According to the fcgi spec, this
             // must be an abort on this condition.
             error_page(hargs, SC_BAD_REQUEST, "content length read error");
@@ -181,15 +193,19 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
 
         // parse_post
         if ( ! hargs->error_exists ){ // possibly set by error_page() above
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d parse_post called with %zu %s\n",
-            gettime(), hargs->request_id, __func__, __LINE__,
-            strlen(hargs->postbuf), "bytes");
+                gettime(), hargs->request_id, __func__, __LINE__,
+                strlen(hargs->postbuf), "bytes");
+            pthread_mutex_unlock(&log_mutex);
 
             hargs->postdata = parse_key_eq_val(hargs, hargs->postbuf, '&',true);
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d parse_post complete %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 (hargs->postdata == NULL) ? hargs->postbuf : "success" );
+            pthread_mutex_unlock(&log_mutex);
         }
     }else{
         hargs->postdata = NULL;
@@ -233,10 +249,14 @@ void free_handler(struct handler_args* handler){
 
         FCGX_Finish_r(handler->request);
 
-        if (handler->log!=NULL) fprintf(handler->log, "%f %d %s:%d %s %f\n",
-            gettime(), handler->request_id, __func__, __LINE__,
-            "free_handler - request duration ",
-            gettime() - start);
+        if (handler->log!=NULL){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(handler->log, "%f %d %s:%d %s %f\n",
+                gettime(), handler->request_id, __func__, __LINE__,
+                "free_handler - request duration ",
+                gettime() - start);
+            pthread_mutex_unlock(&log_mutex);
+        }
 
         fflush(handler->log);
         fclose(handler->log);
@@ -257,8 +277,10 @@ void launch_connection_thread(void* data){
     FCGX_Request request;
     if (FCGX_InitRequest(&request, 0, 0) != 0){
         FILE* log = fopen(thread_dat->conf->logfile_name, "a");
+        pthread_mutex_lock(&log_mutex);
         fprintf(log,"%f %d %s:%d FCGX_InitRequest failed in thread %d\n",
             gettime(), 0, __func__, __LINE__, thread_dat->thread_id );
+        pthread_mutex_unlock(&log_mutex);
 
         fclose(log);
         return;
@@ -280,10 +302,12 @@ void launch_connection_thread(void* data){
             strerror_r(this_error, errbuf, BUFLEN);
 
             FILE* log = fopen(thread_dat->conf->logfile_name, "a");
+            pthread_mutex_lock(&log_mutex);
             fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d "
                 "error=%s\n",
                 gettime(), next_id, __func__, __LINE__,
                 thread_dat->thread_id, rc, errbuf);
+            pthread_mutex_unlock(&log_mutex);
 
             fclose(log);
 
@@ -294,10 +318,12 @@ void launch_connection_thread(void* data){
             if (request.out == NULL){
 
                 FILE* log = fopen(thread_dat->conf->logfile_name, "a");
+                pthread_mutex_lock(&log_mutex);
                 fprintf(log, "%f %d %s:%d request with null output\n",
                     gettime(), next_id, __func__, __LINE__);
 
                 fclose(log);
+                pthread_mutex_unlock(&log_mutex);
                 continue;
             }
 
@@ -532,6 +558,9 @@ int main(int argc, char* argv[], char* envpmain[]){
         exit(16);
     }
     fflush(log);
+
+    // Log writes past this point must use mutex.
+    pthread_mutex_init(&log_mutex, NULL);
 
     struct thread_launch_data* thread_dat;
     pthread_mutex_t accept_mutex =  PTHREAD_MUTEX_INITIALIZER;

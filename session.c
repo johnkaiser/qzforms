@@ -78,55 +78,71 @@ get_session_state(struct handler_args* h){
     }
 
     if ( h->cookiesin == NULL ){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d no_session-cookies is null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return no_session;
     }
 
     if (strlen(h->session_key) == 0){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d no_session-session key is null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return no_session;
     }
 
     if (h->session == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d no_session-hashlookup returned null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return no_session;
     }
 
     if (!(h->session->is_logged_in)){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d session no-login-is_logged_in is false\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return session_no_login;
     }
 
     if (h->session->conn == NULL ){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d logged_out-conn is null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return logged_out;
     }
 
     if ( PQstatus(h->session->conn) == CONNECTION_OK ){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d logged_in-CONNECTION_OK user:%s\n",
             gettime(), h->request_id, __func__, __LINE__, h->session->user);
+        pthread_mutex_unlock(&log_mutex);
 
         return logged_in;
     }
 
     if ( PQstatus(h->session->conn) == CONNECTION_BAD ){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d logged_out-CONNECTION_BAD user:%s\n",
             gettime(), h->request_id, __func__, __LINE__, h->session->user);
+        pthread_mutex_unlock(&log_mutex);
 
         return logged_out;
     }
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d logged_out\n",
         gettime(), h->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     return logged_out;
 }
@@ -154,9 +170,11 @@ setup_session(struct handler_args* hargs,
     test_for_session = xmlHashLookup(sessions, this_session->session_id);
 
     if (test_for_session != NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d collision in session identifiers - %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             "terminating application now");
+        pthread_mutex_unlock(&log_mutex);
 
        FCGX_FPrintF(hargs->err,
            "collision in session identifiers - ending program now\n");
@@ -165,9 +183,11 @@ setup_session(struct handler_args* hargs,
     }
 
     if (pthread_mutex_init( &(this_session->session_lock), NULL) != 0){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d mutex_init failed\n",
             gettime(), hargs->request_id, __func__, __LINE__);
         fflush(hargs->log);
+        pthread_mutex_unlock(&log_mutex);
         free(this_session);
         return;
     }
@@ -208,8 +228,10 @@ setup_session(struct handler_args* hargs,
 
     hargs->session = this_session;
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d setup_session complete\n",
         gettime(), hargs->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     return;
 }
@@ -249,8 +271,10 @@ session_from_hargs(struct handler_args* hargs,
 
     if (strlen(hargs->session_key) != 15){ // redundant check
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d session key not validated\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
@@ -259,8 +283,10 @@ session_from_hargs(struct handler_args* hargs,
 
     if (this_session==NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d null session from hash lookup\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
@@ -272,15 +298,19 @@ session_from_hargs(struct handler_args* hargs,
 
         close_session(hargs, this_session);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log,"%f %d %s:%d session closed for bad integrity token",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d user=%s\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         this_session->user);
+    pthread_mutex_unlock(&log_mutex);
 
     return this_session;
 }
@@ -309,9 +339,11 @@ void close_session(struct handler_args* hargs, struct session* this_session){
         this_session->logged_out_time = time(NULL);
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d Closing session for %s\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         this_session->user);
+    pthread_mutex_unlock(&log_mutex);
 
     if (this_session->pgtype_datum != NULL){
         close_all_pgtype_datums(this_session);
@@ -346,11 +378,13 @@ void close_session(struct handler_args* hargs, struct session* this_session){
     }else{
         if (this_session->opentables != NULL){
             // PG session ended, but local data needs cleanup
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d %s %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 "clearing opentables on bad connection for",
                 this_session->user);
             fflush(hargs->log);
+            pthread_mutex_unlock(&log_mutex);
 
             xmlHashFree(this_session->opentables,
                 (xmlHashDeallocator) free_table_scanner);
@@ -404,20 +438,24 @@ void session_housekeeping_scanner(void* val, void* data, const xmlChar* name){
                 shk_data->session_inactivity_timeout)){
 
                      // Logged in but timed out
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(shk_data->hargs->log,
                         "%f %d %s:%d closing session on timeout for user %s\n",
                         gettime(), shk_data->hargs->request_id, __func__,
                         __LINE__, this_session->user);
+                    pthread_mutex_unlock(&log_mutex);
 
                     close_session(shk_data->hargs, this_session);
             }else{
 
                  // Logged in and active, work on expired forms
 
+                pthread_mutex_lock(&log_mutex);
                 fprintf(shk_data->hargs->log,
                     "%f %d %s:%d starting form_tag_housekeeping for user %s\n",
                     gettime(), shk_data->hargs->request_id, __func__, __LINE__,
                     this_session->user);
+                pthread_mutex_unlock(&log_mutex);
 
                 form_tag_housekeeping(shk_data->hargs, this_session);
             }
@@ -468,20 +506,24 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         .logged_out = 0,
     };
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log,
         "%f %d %s:%d starting housekeeping\n",
         gettime(), h->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     xmlHashScan(sessions, (void*) session_housekeeping_scanner, &data);
 
     struct stat logsb;
     if (stat(conf->logfile_name, &logsb) == 0){
-        if ((conf->max_log_file_size > 0) && 
+        if ((conf->max_log_file_size > 0) &&
             (S_ISREG(logsb.st_mode)) &&
             (logsb.st_size > conf->max_log_file_size)){
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d rotating logs\n",
                 gettime(), h->request_id, __func__, __LINE__);
+            pthread_mutex_unlock(&log_mutex);
 
             log_file_rotation(conf);
 
@@ -500,6 +542,7 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
             oldest = thread_state[k];
         }
     }
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log,
         "%f %d %s:%d active threads %d of %d oldest %f "
         "integrity token %s\n",
@@ -518,12 +561,14 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
         "%f %d %s:%d housekeeping complete duration %f\n",
         gettime(), h->request_id, __func__, __LINE__,
         gettime() - start);
+    pthread_mutex_unlock(&log_mutex);
 }
 
 #ifdef SESSION_MAIN
 #define NBRTESTS 5
 
 pid_t tagger_pid = 0;
+pthread_mutex_t log_mutex;
 
 void cleanup(sig){
 
@@ -537,10 +582,22 @@ void cleanup(sig){
     exit(0);
 }
 
+char* PQstatus_text(const PGconn *conn){
+
+    static char connection_ok[]  = "CONNECTION_OK";
+    static char connection_bad[] = "CONNECTION_BAD";
+    static char wtf[] = "WTF?!";
+
+    if (PQstatus(conn) == CONNECTION_OK) return connection_ok;
+    if (PQstatus(conn) == CONNECTION_BAD) return connection_bad;
+    return wtf;
+}
+
 int main(int argc, char* argv[]){
 
+     pthread_mutex_init(&log_mutex,NULL);
      struct qz_config* conf = init_config();
-
+     init_session_token();
      tagger_pid = tagger_init(conf, argv);
      printf( "tagger_pid = %d\n", tagger_pid);
      signal( SIGTERM, cleanup );
@@ -552,36 +609,61 @@ int main(int argc, char* argv[]){
 
      const char* kw[] = { "host", "dbname", "user", "password",
          "application_name", NULL };
-     const char* vals[] = { "localhost", "info", "qz", "42", "qztest", NULL };
+     const char* vals[] = { "127.0.0.1", "testqz", "qz", "42", "qztest", NULL };
 
      const char* parts[] = { "qz", "one", "two", "three",  NULL };
 
      for(j=0; j<NBRTESTS; j++){
          fprintf(stderr, "setup_session %d\n", j);
-         hargs[j].log = fopen("testsession.log", "w");
+         hargs[j].log = fopen("testsession.log", "a");
          hargs[j].conf = conf;
          hargs[j].uri_parts = parts;
+         hargs[j].request_id = j;
 
          setup_session(&(hargs[j]), ht, conf);
          hargs[j].uri_parts = NULL;
      }
 
-     s = session_from_hargs(&hargs[NBRTESTS-1], ht, conf);
-     s->is_logged_in = true;
-     s->logged_in_time = time(NULL);
+     int test;
+     test = 0;
+     //s = session_from_hargs(&hargs[test], ht, conf);
+     s = hargs[test].session;
+     if (s != NULL){
+         s->is_logged_in = true;
+         s->logged_in_time = time(NULL);
+     }else{
+         printf("session %d  is NULL\n", test);
+     }
 
-     s = session_from_hargs(&hargs[NBRTESTS-2], ht, conf);
-     s->is_logged_in = true;
-     s->logged_in_time = time(NULL);
-     s->conn = PQconnectdbParams(kw, vals, 0);
+     test = 1;
+     //s = session_from_hargs(&hargs[test], ht, conf);
+     s = hargs[test].session;
+     if (s != NULL){
+         s->is_logged_in = true;
+         s->logged_in_time = time(NULL);
+         s->conn = PQconnectdbParams(kw, vals, 0);
+         printf("session: %d PQstatus: %s PQerrorMessage: %s\n", test,
+             PQstatus_text(s->conn), PQerrorMessage(s->conn));
+     }else{
+         printf("session %d  is NULL\n", test);
+     }
 
-     s = session_from_hargs(&hargs[NBRTESTS-3], ht, conf);
-     s->is_logged_in = false;
-     s->logged_in_time = time(NULL);
-     s->conn = PQconnectdbParams(kw, vals, 0);
+     test = 2;
+     //s = session_from_hargs(&hargs[test], ht, conf);
+     s = hargs[test].session;
+     if (s != NULL){
+         s->is_logged_in = false;
+         s->logged_in_time = time(NULL);
+         s->conn = PQconnectdbParams(kw, vals, 0);
+         printf("session: %d PQstatus: %s PQerrorMessage: %s\n", test,
+             PQstatus_text(s->conn), PQerrorMessage(s->conn));
+     }else{
+         printf("session %d  is NULL\n", test);
+     }
 
      for(j=0; j<NBRTESTS; j++){
-         s = session_from_hargs(&hargs[j], ht, conf);
+         //s = session_from_hargs(&hargs[j], ht, conf);
+         s = hargs[test].session;
          printf("session_state[%d]:     %s\n", j,
              state_text( get_session_state(&(hargs[j])) ));
          //fclose( hargs[j].log );
@@ -591,7 +673,7 @@ int main(int argc, char* argv[]){
      printf("fin\n");
 
      for(j=0; j<100; j++){
-         if (s->conn != NULL){
+         if ((s != NULL) &&  (s->conn != NULL)){
              PQfinish(s->conn);
              s->conn = NULL;
          }

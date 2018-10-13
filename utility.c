@@ -69,10 +69,12 @@ char* get_uri_part(struct handler_args* h, u_int position){
         if (strlen( h->uri_parts[ position ] ) <= MAX_SEGMENT_LENGTH ){ 
             return h->uri_parts[ position ];
         }else{ 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fail URI segment %d exceeds "
                 "MAX_SEGMENT_LENGTH\n", 
                 gettime(), h->request_id, __func__, __LINE__,
                 position);
+            pthread_mutex_unlock(&log_mutex);
 
             return NULL;
         }
@@ -110,8 +112,10 @@ void location(struct handler_args* h, char* new_url){
     add_header(h, "Status", "302");
     FCGX_SetExitStatus(SC_FOUND, h->out);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d location: %s\n", 
         gettime(), h->request_id, __func__, __LINE__, new_url);
+    pthread_mutex_unlock(&log_mutex);
     return;
 }
 
@@ -210,8 +214,10 @@ void add_jscss_links(struct handler_args* h){
     if (h->doc == NULL) return;
     if (h->page_ta  == NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d page_ta is null\n", 
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     
         return;
     }
@@ -219,8 +225,10 @@ void add_jscss_links(struct handler_args* h){
     xmlNodePtr head = qzGetElementByID(h, "__HEAD__");
     if (head == NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d failed to find head for script\n", 
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return;
     }
@@ -242,16 +250,20 @@ void add_jscss_links(struct handler_args* h){
             script_el = xmlNewTextChild(head, NULL, "script", "\n");
             xmlNewProp(script_el, "src", script);
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d add script %s\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 script);
+            pthread_mutex_unlock(&log_mutex);
 
             free(script);
             script = NULL;
         }
     }else{
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d  js_filenames is null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     if (h->page_ta->css_filenames != NULL){
@@ -270,16 +282,20 @@ void add_jscss_links(struct handler_args* h){
             xmlNewProp(link_el, "rel", "stylesheet");
             xmlNewProp(link_el, "href", link);
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d add stylesheet %s\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 link);
+            pthread_mutex_unlock(&log_mutex);
 
             free(link);
             link = NULL;
         }
     }else{
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d  css_filenames is null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     if (has_data(h->page_ta->inline_js)){
@@ -431,9 +447,11 @@ void log_file_rotation(struct qz_config* conf){
                
                 if (unlink(smallest) != 0){
                     FILE* log = fopen(conf->logfile_name, "a");
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(log, "%f %d %s:%d fail on unlink %s errno=%d\n",
                         gettime(), 0, __func__, __LINE__,
                         smallest, errno);
+                    pthread_mutex_unlock(&log_mutex);
 
                     fclose(log);
                 }
@@ -443,10 +461,12 @@ void log_file_rotation(struct qz_config* conf){
         }
     }else{
         // This is an improbable error
-       FILE* log = fopen(conf->logfile_name, "a"); 
-       fprintf(log, "%f %d %s:%d %s\n", 
-          gettime(), 0, __func__, __LINE__,
-          "failed to parse log file name into directory and file name");
+        FILE* log = fopen(conf->logfile_name, "a");
+        pthread_mutex_lock(&log_mutex);
+        fprintf(log, "%f %d %s:%d %s\n",
+            gettime(), 0, __func__, __LINE__,
+            "failed to parse log file name into directory and file name");
+        pthread_mutex_unlock(&log_mutex);
 
        fclose(log);
     }
@@ -567,11 +587,14 @@ char* array_base(const char* name){
 }
 
 #ifdef ARRAY_BASE_TEST
+pthread_mutex_t log_mutex;
+
 int main(void){
 
     char* test[] = {"test[1]", "X[2]", "[3]", "test4]", "test5",
         "test[[6]", "test[7][x]", "test[]", NULL};
     char* base;
+    pthread_mutex_init(&log_mutex,NULL);
 
     int n;
     for (n=0; test[n] != NULL; n++){

@@ -165,10 +165,12 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
                 &error, &erroffset, NULL);
 
             if (rule->comp_regex == NULL){
+                pthread_mutex_lock(&log_mutex);
                 fprintf(h->log, "%f %d %s:%d "
                     "regex compile failed form %s field %s offset %d: %s\n",
                     gettime(), h->request_id, __func__, __LINE__,
                     form_name, fieldname, erroffset, error);
+                pthread_mutex_unlock(&log_mutex);
             }
         }
 
@@ -201,19 +203,23 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
  
         rule->result = rs;
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d (%s,%s) in %f\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 form_name, fieldname, gettime() - start);
+        pthread_mutex_unlock(&log_mutex);
 
         return rule;
     }else{
         if (log_errors){
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fetch_prompt_rules"
                 "resStatus:%s cmdStatus:%s ErrorMessage:%s\n", 
                 gettime(), h->request_id, __func__, __LINE__,
                 PQresStatus(PQresultStatus(rs)),
                 PQcmdStatus(rs),
                 PQresultErrorMessage(rs));
+            pthread_mutex_unlock(&log_mutex);
         }
         PQclear(rs);
         return default_prompt_rule(h, form_name, fieldname);
@@ -228,9 +234,11 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
 void free_prompt_rule(struct handler_args* h, 
     struct prompt_rule* rule){
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d (%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
         rule->form_name, rule->fieldname);
+    pthread_mutex_unlock(&log_mutex);
 
     if (rule == NULL) return;
 
@@ -295,9 +303,11 @@ bool truthishness(struct handler_args* h, char* str){
    }
 
    // fail massively 
+   pthread_mutex_lock(&log_mutex);
    fprintf(h->log, "%f %d %s:%d fail, truthishness of %s "
         "could not be determined\n",
         gettime(), h->request_id, __func__, __LINE__, str);
+   pthread_mutex_unlock(&log_mutex);
 
    return false;
 }
@@ -634,9 +644,11 @@ xmlNodePtr add_select_options(struct prompt_add_args* args){
     
     if (args->options == NULL){
          //log it and error out
+        pthread_mutex_lock(&log_mutex);
         fprintf(args->hargs->log, "%f %d %s:%d fail, options not found "
             "- set prompt rule options\n",
             gettime(), args->hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return select;
     }
@@ -695,9 +707,11 @@ xmlNodePtr add_select_fkey(struct prompt_add_args* args){
 
 
     if (args->pgtype == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(args->hargs->log, "%f %d %s:%d fail, "
             "no pgtype record available\n", 
             gettime(), args->hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         // Add a text input instead.      
         return add_input_text(args);
@@ -705,11 +719,13 @@ xmlNodePtr add_select_fkey(struct prompt_add_args* args){
 
     if (! args->pgtype->has_fkey){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(args->hargs->log, "%f %d %s:%d fail, "
             "select_fkey called for non foreign key field %s.%s %s\n",
             gettime(), args->hargs->request_id, __func__, __LINE__,
             args->pgtype->table_schema, args->pgtype->table_name,
             args->pgtype->column_name);
+        pthread_mutex_unlock(&log_mutex);
 
         // Add a text input instead.      
         return add_input_text(args);
@@ -732,11 +748,13 @@ xmlNodePtr add_input_radio(struct prompt_add_args* args){
     char* id_buf;
     
     if (args->options == NULL){
-         fprintf(args->hargs->log, "%f %d %s:%d fail, "
+        pthread_mutex_lock(&log_mutex);
+        fprintf(args->hargs->log, "%f %d %s:%d fail, "
             "radio button requires options. "
             "form_name=%s fieldname=%s\n",
             gettime(), args->hargs->request_id, __func__, __LINE__, 
             args->rule->form_name, args->rule->fieldname);
+        pthread_mutex_unlock(&log_mutex);
  
         return NULL;
     }    
@@ -1193,9 +1211,12 @@ void add_prompt(struct handler_args* hargs,
         args->rule->prompt_type);
 
     if (prompt == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail prompt type not found %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             args->rule->prompt_type);
+        pthread_mutex_unlock(&log_mutex);
+
         error_page(hargs, SC_INTERNAL_SERVER_ERROR, "Prompt Type not found");
 
         return;
@@ -1380,9 +1401,11 @@ char**  fetch_options(
         // Use the option list specified.
         new_options = parse_pg_array(p_rule->options);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d prompt rule options %s\n", 
             gettime(), h->request_id, __func__, __LINE__,
             p_rule->options);
+        pthread_mutex_unlock(&log_mutex);
  
 
     }else if ((pgtype != NULL) && 
@@ -1391,25 +1414,31 @@ char**  fetch_options(
 
         new_options = parse_pg_array(pgtype->enum_labels);
         
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d pgtype enum %s\n", 
             gettime(), h->request_id, __func__, __LINE__,
             pgtype->enum_labels);
+        pthread_mutex_unlock(&log_mutex);
 
     }else if ((pgtype != NULL) && (pgtype->is_boolean)){  
         new_options = parse_pg_array(boolean_options);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d boolean %s\n", 
             gettime(), h->request_id, __func__, __LINE__,
             boolean_options);
+        pthread_mutex_unlock(&log_mutex);
 
     }else if ((pgtype != NULL) && (pgtype->has_fkey) && (p_rule != NULL)){
         if (strcmp("select_fkey", p_rule->prompt_type) == 0){
             new_options = foreign_key_list(h, pgtype);
         
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fkey %s\n", 
                 gettime(), h->request_id, __func__, __LINE__,
                     ((new_options != NULL) && (new_options[0] != '\0')) ?
                         "OK":"foreign_key_list fail");
+            pthread_mutex_unlock(&log_mutex);
         }
     }
 
@@ -1418,6 +1447,8 @@ char**  fetch_options(
 
 
 #ifdef PROMPT_RULE_MAIN
+
+pthread_mutex_t log_mutex;
 
 void free_test_handler(struct handler_args* handler){
     if (handler != NULL){
@@ -1442,10 +1473,14 @@ void free_test_handler(struct handler_args* handler){
 
         // FCGX_Finish_r(handler->request);
 
-        if (handler->log!=NULL) fprintf(handler->log, "%f %d %s:%d %s %f\n",
-            gettime(), handler->request_id, __func__, __LINE__,
-            "free_handler - request duration ",
-            gettime() - start);
+        if (handler->log!=NULL) {
+            pthread_mutex_lock(&log_mutex);
+            fprintf(handler->log, "%f %d %s:%d %s %f\n",
+                gettime(), handler->request_id, __func__, __LINE__,
+                "free_handler - request duration ",
+                gettime() - start);
+            pthread_mutex_unlock(&log_mutex);
+        }
 
         fflush(handler->log);
         fclose(handler->log);
@@ -1491,6 +1526,7 @@ int main(int argc, char* argv[]){
     // setup a fake environment
 
     qzrandom64_init();
+    pthread_mutex_init(&log_mutex,NULL);
 
     struct handler_args hargs = (struct handler_args){
        .request_id = 1,

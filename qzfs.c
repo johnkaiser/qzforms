@@ -56,9 +56,11 @@ void etag_header(struct handler_args* h, char* payload){
         etag_header->next = h->headers;
         h->headers = etag_header;
     }else{
-       fprintf(h->log, "%f %d %s:%d fail make_etag strlen %lu payload %s\n",
-           gettime(), h->request_id, __func__, __LINE__,
-           strlen(etag_buf), (payload[0]=='\0') ? "is zero":"is not zero");
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail make_etag strlen %lu payload %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            strlen(etag_buf), (payload[0]=='\0') ? "is zero":"is not zero");
+        pthread_mutex_unlock(&log_mutex);
 
        free(etag_header);
     }
@@ -122,9 +124,11 @@ void qzfs(struct handler_args* h){
         validate_etag(payload, h->conf->tagger_socket_path,
             h->session->etag_token, http_if_none_match);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d etag name %s payload is %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             which_name, (payload > 0)  ? "OK" : "invalid"  );
+        pthread_mutex_unlock(&log_mutex);
 
         if (payload[0] != '\0'){
             struct table_action* etag_value_ta;
@@ -142,9 +146,11 @@ void qzfs(struct handler_args* h){
                 if (strncmp(pg_etag_str, payload, 16) == 0){
 
                     // OK then, the cache is current
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(h->log, "%f %d %s:%d etag validated for %s\n",
                         gettime(), h->request_id, __func__, __LINE__,
                         which_name);
+                    pthread_mutex_unlock(&log_mutex);
 
                     error_page(h, SC_NOT_MODIFIED, NULL);
                     PQclear(etag_rs);
@@ -156,10 +162,12 @@ void qzfs(struct handler_args* h){
                 // a new page can be generated.
 
                 char* error_msg = nlfree_error_msg(etag_rs);
+                pthread_mutex_lock(&log_mutex);
                 fprintf(h->log, "%f %d %s:%d fail etag_value %s,%s \n",
                     gettime(), h->request_id, __func__, __LINE__,
                     PQresStatus( PQresultStatus(etag_rs) ),
                     error_msg);
+                pthread_mutex_unlock(&log_mutex);
 
                 free(error_msg);
             }
@@ -196,9 +204,11 @@ void qzfs(struct handler_args* h){
     // It.
     h->data = new_strbuf( PQgetvalue(rs, 0, PQfnumber(rs, "data")),0);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
         which_name, PQgetlength(rs, 0, PQfnumber(rs, "data")));
+    pthread_mutex_unlock(&log_mutex);
 
 
     free(a_name);

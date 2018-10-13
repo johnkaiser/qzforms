@@ -105,6 +105,8 @@ select_options=13, select_fkey=14, textarea=15, text_array=16};
 enum prompt_container_type {no_container, fieldset};
 enum precheck_status {notchecked,failed,passed};
 
+extern pthread_mutex_t log_mutex;
+
 struct handler_args {
     char session_key[16];
     struct session* session;

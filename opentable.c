@@ -62,21 +62,27 @@ void init_open_table(struct handler_args* h){
         char* does_match = PQgetvalue(rs, 0, 2);
         if ( does_match[0] == 't'){
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d schema_version %s matches\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 SCHEMA_VER);
+            pthread_mutex_unlock(&log_mutex);
 
         }else{
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fail schema_version mismatch "
                 "program expected %s but database is %s\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 SCHEMA_VER, PQgetvalue(rs, 0, 0));
+            pthread_mutex_unlock(&log_mutex);
         }
     }else{
         char* sv_ver_err_msg = nlfree_error_msg(rs);
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail schema_version mismatch check %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             sv_ver_err_msg);
+        pthread_mutex_unlock(&log_mutex);
         free(sv_ver_err_msg);
         sv_ver_err_msg = NULL;
     }
@@ -113,9 +119,11 @@ void init_open_table(struct handler_args* h){
     rs = PQprepare(h->session->conn, "fetch_table_action", fetch_table_action, 0, NULL);
 
     char* error_msg = nlfree_error_msg(rs);
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d %s %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         "fetch_table_action", PQresStatus(PQresultStatus(rs)), error_msg);
+    pthread_mutex_unlock(&log_mutex);
     free(error_msg);
     error_msg = NULL;
     PQclear(rs);
@@ -138,6 +146,7 @@ void init_open_table(struct handler_args* h){
     rs = PQprepare(h->session->conn, "fetch_datum",  fetch_datum, 0, NULL);
 
     error_msg = nlfree_error_msg(rs);
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log,
         "%f %d %s:%d fetch_datum resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -145,6 +154,7 @@ void init_open_table(struct handler_args* h){
         PQcmdStatus(rs),
         (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
         error_msg);
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
     error_msg = NULL;
@@ -162,6 +172,7 @@ void init_open_table(struct handler_args* h){
 
     error_msg = nlfree_error_msg(rs);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d fetch_table_action_etag "
         "resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -169,6 +180,7 @@ void init_open_table(struct handler_args* h){
         PQcmdStatus(rs),
         (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
         error_msg);
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
     error_msg = NULL;
@@ -192,6 +204,7 @@ void init_open_table(struct handler_args* h){
 
     error_msg = nlfree_error_msg(rs);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d fetch_rule"
         "resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -199,6 +212,7 @@ void init_open_table(struct handler_args* h){
         PQcmdStatus(rs),
         (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
         error_msg);
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
     error_msg = NULL;
@@ -215,6 +229,8 @@ void init_open_table(struct handler_args* h){
 void log_table_action_details(struct handler_args* h,
     struct table_action* ta){
     int k;
+
+    pthread_mutex_lock(&log_mutex);
 
     fprintf(h->log, "%f %d %s:%d form_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -323,6 +339,8 @@ void log_table_action_details(struct handler_args* h,
     fprintf(h->log, "%f %d %s:%d integrity_token=%"PRIx64"\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->integrity_token);
+
+    pthread_mutex_unlock(&log_mutex);
 }
 
 /*
@@ -341,20 +359,26 @@ void init_table_entry(struct handler_args* hargs,
     static char base_xml_template[] = "base.xml";
     static char default_prompt_container[] = "fieldset";
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d %s(%s,%s)\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         "start init_table_entry", form_name, action);
+    pthread_mutex_unlock(&log_mutex);
 
     if (form_name == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail, form_name is null\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return;
     }
 
     if (action == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail, action is null\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         return;
     }
@@ -405,33 +429,39 @@ void init_table_entry(struct handler_args* hargs,
     if (hargs->conf->log_table_action_details){
         char* error_msg = nlfree_error_msg(rs_table_action);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d rs_table_action(%s, %s) = %s,%s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             paramValues[0],
             paramValues[1],
             PQresStatus( PQresultStatus(rs_table_action) ),
             PQresultErrorMessage(rs_table_action));
+        pthread_mutex_unlock(&log_mutex);
 
         free(error_msg);
     }
 
     if (PQntuples(rs_table_action) == 0){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d %s (%s, %s) %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             "warning, requested table_action tuple",
             paramValues[0],
             paramValues[1],
             "does not exist.");
+        pthread_mutex_unlock(&log_mutex);
 
         PQclear(rs_table_action);
         return;
     }
 
     if (PQntuples(rs_table_action) > 1){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log,
             "%f %d %s:%d fail, %d rows, but there should be only 1.\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             PQntuples(rs_table_action));
+        pthread_mutex_unlock(&log_mutex);
 
         PQclear(rs_table_action);
         return;
@@ -444,8 +474,10 @@ void init_table_entry(struct handler_args* hargs,
         PQfnumber(rs_table_action, "sql"));
 
     if (sql == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail, null sql statement\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         PQclear(rs_table_action);
         return;
@@ -530,9 +562,11 @@ void init_table_entry(struct handler_args* hargs,
     rs_prep = PQprepare(hargs->session->conn, prepared_name, sql, 0, NULL);
 
     if (hargs->conf->log_table_action_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d rs_prep = %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             PQresStatus( PQresultStatus(rs_prep)));
+        pthread_mutex_unlock(&log_mutex);
     }
 
     if ( !(PQresultStatus(rs_prep) == PGRES_TUPLES_OK)
@@ -692,9 +726,11 @@ void init_table_entry(struct handler_args* hargs,
         new_table_action->action,
         new_table_action) != 0){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             "Hash table add entry failed");
+        pthread_mutex_unlock(&log_mutex);
     }
 
     PQclear(rs_table_action);
@@ -704,9 +740,11 @@ void init_table_entry(struct handler_args* hargs,
 
        log_table_action_details(hargs, new_table_action);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log,
             "%f %d %s:%d init_table_entry complete\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
     }
     return;
@@ -769,18 +807,22 @@ struct table_action*  open_table(struct handler_args* h,
                 // is always discarded.
                 if ((pg_etag != 0) && (pg_etag == table_action_ptr->etag)){
                      // OK - It's the current version
+                     pthread_mutex_lock(&log_mutex);
                      fprintf(h->log, "%f %d %s:%d table action %s %s cache OK\n",
                         gettime(), h->request_id, __func__, __LINE__,
                         form_name, action);
+                     pthread_mutex_unlock(&log_mutex);
 
                      if (table_action_ptr->integrity_token !=
                          h->session->integrity_token){
 
                          // This condition is double plus ungood.
+                         pthread_mutex_lock(&log_mutex);
                          fprintf(h->log,
                              "%f %d %s:%d table action failed integrity token"
                              " check.\n",
                              gettime(), h->request_id, __func__, __LINE__);
+                         pthread_mutex_unlock(&log_mutex);
 
                          close_table(h, form_name, action);
                          // Going down hard.  The session data is corrupted.
@@ -797,10 +839,12 @@ struct table_action*  open_table(struct handler_args* h,
                 }else{
                      // No good, the thing has been replaced
                      // Clear out the old and fetch the new
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(h->log,
                         "%f %d %s:%d table action %s %s cache invalid\n",
                         gettime(), h->request_id, __func__, __LINE__,
                         form_name, action);
+                    pthread_mutex_unlock(&log_mutex);
 
                     close_table(h, form_name, action);
                 }
@@ -819,9 +863,11 @@ struct table_action*  open_table(struct handler_args* h,
     if (table_action_ptr != NULL) return table_action_ptr;
 
     // Well then fail
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d open_table (%s, %s) not found\n",
         gettime(), h->request_id, __func__, __LINE__,
         form_name, action);
+    pthread_mutex_unlock(&log_mutex);
 
     return NULL;
 }
@@ -911,15 +957,20 @@ PGresult* perform_post_row_action(struct handler_args* h,
 
     if (ta==NULL) return NULL;
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d %s %s row=%d nbr_params=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
         "perform_post_row_action started",
         ta->prepare_name, row, ta->nbr_params);
+    pthread_mutex_unlock(&log_mutex);
 
     if ((ta->nbr_params > 0) && (h->postdata == NULL)){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             "perform_post_action called with null data");
+        pthread_mutex_unlock(&log_mutex);
+
         return NULL;
     }
 
@@ -944,9 +995,11 @@ PGresult* perform_post_row_action(struct handler_args* h,
         if (paramdata[k] == NULL){  //still? then error out
             free(paramdata);
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fail param %s not found\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 fieldname);
+            pthread_mutex_unlock(&log_mutex);
 
             free(fieldname);
             error_page(h, SC_BAD_REQUEST, "missing parameter");
@@ -963,9 +1016,11 @@ PGresult* perform_post_row_action(struct handler_args* h,
 
     char* error_msg = nlfree_error_msg(rs);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_post_row_action completed %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)), error_msg);
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
     free(paramdata);
@@ -988,15 +1043,20 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
 
     if (ta==NULL) return NULL;
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d %s %s nbr_params=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
         "perform_post_action started",
         ta->prepare_name, ta->nbr_params);
+    pthread_mutex_unlock(&log_mutex);
 
     if ((ta->nbr_params > 0) && (h->postdata == NULL)){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             "perform_post_action called with null data");
+        pthread_mutex_unlock(&log_mutex);
+
         return NULL;
     }
 
@@ -1004,21 +1064,21 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
     bool free_array[2+ta->nbr_params];
 
     for(k=0; k < ta->nbr_params; k++){
-         element = xmlHashLookup(h->postdata, ta->fieldnames[k]);
-         free_array[k] = false;  // unless changed later
+        element = xmlHashLookup(h->postdata, ta->fieldnames[k]);
+        free_array[k] = false;  // unless changed later
 
-         if (element == NULL){
-             // This can happen if the form does not send data that
-             // matches the stored procedure, but it can also happen
-             // if the field is an array and the elements need to be
-             // joined together. ( ar = {ar[0],ar[1],...} )
-             // If it is an array, the prompt_rule->prompt_type is
-             // text_array.
-             struct prompt_rule* this_rule;
-             this_rule = fetch_prompt_rule(h, ta->form_name,
+        if (element == NULL){
+            // This can happen if the form does not send data that
+            // matches the stored procedure, but it can also happen
+            // if the field is an array and the elements need to be
+            // joined together. ( ar = {ar[0],ar[1],...} )
+            // If it is an array, the prompt_rule->prompt_type is
+            // text_array.
+            struct prompt_rule* this_rule;
+            this_rule = fetch_prompt_rule(h, ta->form_name,
                  ta->fieldnames[k]);
 
-             if ( (this_rule != NULL) &&
+            if ( (this_rule != NULL) &&
                   (this_rule->prompt_type != NULL) &&
                   (strncmp(this_rule->prompt_type, "text_array",
                       strlen("text_array")) == 0)){
@@ -1028,30 +1088,34 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
 
                  if (element != NULL){
                      free_array[k] = true;
+                     pthread_mutex_lock(&log_mutex);
                      fprintf(h->log, "%f %d %s:%d pgarray %s\n",
                          gettime(), h->request_id, __func__, __LINE__,
                          element);
+                     pthread_mutex_unlock(&log_mutex);
                   }
-             }
-             free_prompt_rule(h, this_rule);
+            }
+            free_prompt_rule(h, this_rule);
 
-         }
+        }
 
-         if (element == NULL){ // still
-             fprintf(h->log, "%f %d %s:%d %s %s\n",
+        if (element == NULL){ // still
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d %s %s\n",
                  gettime(), h->request_id, __func__, __LINE__,
                  "perform_post_action failed to find field",
                  ta->fieldnames[k]);
+            pthread_mutex_unlock(&log_mutex);
 
-             free(paramdata);
-             return NULL;
-         }
-         if (strlen(element) == 0){
-             free(element); // An empty string
-             paramdata[k] = NULL;
-         }else{
-             paramdata[k] = element;
-         }
+            free(paramdata);
+            return NULL;
+        }
+        if (strlen(element) == 0){
+            free(element); // An empty string
+            paramdata[k] = NULL;
+        }else{
+            paramdata[k] = element;
+        }
     }
     paramdata[ ta->nbr_params ] = NULL;
 
@@ -1065,9 +1129,11 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
 
     char* error_msg = nlfree_error_msg(rs);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_post_action completed %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)), error_msg);
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
 
@@ -1085,16 +1151,20 @@ PGresult* perform_action(struct handler_args* h, struct table_action* ta,
     char** data){
 
     if (ta == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             "perform_action called with null table_action");
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         "perform_action started", ta->prepare_name);
+    pthread_mutex_unlock(&log_mutex);
 
     fflush(h->log);
     PGresult* rs;
@@ -1103,9 +1173,11 @@ PGresult* perform_action(struct handler_args* h, struct table_action* ta,
 
     char* error_msg = nlfree_error_msg(rs);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_action completed %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)), PQresultErrorMessage(rs));
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
     return rs;
@@ -1130,9 +1202,11 @@ void close_table(struct handler_args* h, char* form_name, char* action){
         action);
 
     if (table_action_ptr==NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d  close_table failed on %s, %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             form_name, action);
+        pthread_mutex_unlock(&log_mutex);
 
         return;
     }
@@ -1151,10 +1225,12 @@ void close_table(struct handler_args* h, char* form_name, char* action){
     rs = PQexec(h->session->conn, cmd_buf);
 
     if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d  %s failed %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             cmd_buf,
             PQresStatus(PQresultStatus(rs)));
+        pthread_mutex_unlock(&log_mutex);
     }
     free(cmd_buf);
     PQclear(rs);
@@ -1163,9 +1239,11 @@ void close_table(struct handler_args* h, char* form_name, char* action){
     if (xmlHashRemoveEntry2(h->session->opentables, form_name, action,
         NULL) != 0){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d  xmlHashRemoveEntry2 %s, %s failed\n",
             gettime(), h->request_id, __func__, __LINE__,
             form_name, action);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     // free the node
@@ -1211,8 +1289,12 @@ void close_all_tables(struct handler_args* h, struct session* this_session){
 
 #ifdef OPENTABLE_TEST
 
+pthread_mutex_t log_mutex;
+
 void print_table_action(struct handler_args* h, char* name,
     struct table_action* ta){
+
+    pthread_mutex_init(&log_mutex,NULL);
 
     if (h == NULL){
         fprintf(stderr, "print_table_action called with null handler\n");
@@ -1244,10 +1326,14 @@ int main(int argc, char* argv[]){
     printf("%s\n", argv[0]);
 
     printf("setup a fake environment\n");
+    qzrandom64_init();
+    struct qz_config* conf = init_config();
+
 
     struct handler_args hargs;
     struct handler_args* h = &hargs;
     hargs.log = stdout;
+    hargs.conf = conf;
 
     init_handler_hash();
     init_prompt_type_hash();

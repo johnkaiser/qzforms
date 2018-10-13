@@ -155,6 +155,8 @@ unsigned char* uchar_to_hex(unsigned char* instr, unsigned long uchar_length){
 
 #ifdef HEX_TO_UCHAR_MAIN 
 
+#include <pthread.h>
+
 extern double gettime(void);
 
 int main(void){

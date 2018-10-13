@@ -340,7 +340,10 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
 
 #ifdef CRYPTO_ETAG_MAIN
 
+#include <pthread.h>
+
 extern double gettime(void);
+pthread_mutex_t log_mutex;
 
 void print_uchar(unsigned char* uch, int len){
     int n;
@@ -354,6 +357,7 @@ void print_uchar(unsigned char* uch, int len){
 int main(void){
 
     debug = false;
+    pthread_mutex_init(&log_mutex, NULL);
     unsigned char* key = hex_to_uchar("013efa48188c5ad9692474d746d94f6c");
 
     // unsigned char* testdata = "739dd9415d2469b5d44af51e9762a058";

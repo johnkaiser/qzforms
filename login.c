@@ -83,11 +83,13 @@ void record_login_attempt(struct handler_args* hargs, char* remote,
     }
 
     if (hargs->conf->log_login_tracker_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d host %s %s last attempt %f "
             "failed count %d success count %d\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             remote, (success_or_fail) ? "success":"fail",
             previous_attempt, lt->failed, lt->success);
+        pthread_mutex_unlock(&log_mutex);
     }
     pthread_mutex_unlock(&login_tracker_mutex);
 }
@@ -113,8 +115,10 @@ bool check_login_tracker(struct handler_args* h){
         // This means there have been no failed logins
 
         if (h->conf->log_login_tracker_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d host %s no tracker record\n",
             gettime(), h->request_id, __func__, __LINE__, remote);
+            pthread_mutex_unlock(&log_mutex);
         }
         pthread_mutex_unlock(&login_tracker_mutex);
         return true;
@@ -124,8 +128,10 @@ bool check_login_tracker(struct handler_args* h){
         // Someone has logged in from this address, so OK
 
         if (h->conf->log_login_tracker_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d host %s previous login OK\n",
-            gettime(), h->request_id, __func__, __LINE__, remote);
+                gettime(), h->request_id, __func__, __LINE__, remote);
+            pthread_mutex_unlock(&log_mutex);
         }
         pthread_mutex_unlock(&login_tracker_mutex);
         return true;
@@ -136,8 +142,10 @@ bool check_login_tracker(struct handler_args* h){
        // The record is old, ignore it.
 
         if (h->conf->log_login_tracker_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d host %s ignoring old record\n",
-            gettime(), h->request_id, __func__, __LINE__, remote);
+                gettime(), h->request_id, __func__, __LINE__, remote);
+            pthread_mutex_unlock(&log_mutex);
         }
         pthread_mutex_unlock(&login_tracker_mutex);
         return true;
@@ -145,9 +153,11 @@ bool check_login_tracker(struct handler_args* h){
 
    if (lt->failed > h->conf->max_failed_logins){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d denying login attempt from host %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             remote);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_TOO_MANY_REQUESTS,
             "Too many failed login attempts.\nTry again later.");
@@ -159,8 +169,10 @@ bool check_login_tracker(struct handler_args* h){
         return true;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d fail unexpected result\n",
         gettime(), h->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     pthread_mutex_unlock(&login_tracker_mutex);
     return false; // should never happen.
@@ -177,19 +189,23 @@ void login_tracking_scanner(void* payload, void* data, const xmlChar* name){
     struct handler_args* hargs = data;
 
     if (hargs->conf->log_login_tracker_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d checking host %s "
             "last_attempt %f failed %d success %d\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             lt->remote_host, lt->last_attempt, lt->failed, lt->success);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     if ((gettime() - lt->last_attempt) >
             hargs->conf->failed_login_block_timeout){
 
         if (hargs->conf->log_login_tracker_details){
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d removing host %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 lt->remote_host);
+            pthread_mutex_unlock(&log_mutex);
         }
        // The record is old, clear it out.
        xmlHashRemoveEntry(failed_login_tracker, name,
@@ -200,8 +216,10 @@ void login_tracking_housekeeping(struct handler_args* hargs){
 
     double start_time = gettime();
     if (hargs->conf->log_login_tracker_details){
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d beginning housekeeping\n",
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     pthread_mutex_lock(&login_tracker_mutex);
@@ -210,9 +228,11 @@ void login_tracking_housekeeping(struct handler_args* hargs){
 
     pthread_mutex_unlock(&login_tracker_mutex);
 
-     fprintf(hargs->log, "%f %d %s:%d completed in %f\n",
+    pthread_mutex_lock(&log_mutex);
+    fprintf(hargs->log, "%f %d %s:%d completed in %f\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         gettime() - start_time);
+    pthread_mutex_unlock(&log_mutex);
 
 }
 
@@ -229,8 +249,10 @@ void req_login( struct handler_args* h ){
     xmlNodePtr list;
     xmlNodePtr list_item;
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d\n", 
         gettime(), h->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     // logged by function
     if (check_login_tracker(h) == false) return;
@@ -238,9 +260,11 @@ void req_login( struct handler_args* h ){
     doc_from_file(h, "login.xml");
     if (h->error_exists) return;
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d login request from host %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         FCGX_GetParam("REMOTE_ADDR", h->envpfcgi));
+    pthread_mutex_unlock(&log_mutex);
 
     divqz = qzGetElementByID(h, "qz");
     if (divqz != NULL){
@@ -289,8 +313,10 @@ void req_login( struct handler_args* h ){
         
     }else{
      
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id qz not found\n", 
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     return;
@@ -343,8 +369,10 @@ void redirect_to_menu(struct handler_args* h){
 
         add_listener(h, NULL, "DOMContentLoaded", js_func);
     }else{
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
     }
 }
 /*
@@ -364,8 +392,10 @@ void validate_login( struct handler_args* h  ){
         return;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d start login\n",
             gettime(), h->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     const char* kw[] = { "user", "password", NULL };
     char* vals[] = { "", "", NULL };
@@ -396,8 +426,10 @@ void validate_login( struct handler_args* h  ){
 
 
     if (strlen(user) > MAX_USER_NAME_LENGTH){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d user name too long %zu\n",
             gettime(), h->request_id, __func__, __LINE__, strlen(user));
+        pthread_mutex_unlock(&log_mutex);
 
         char* uri_parts[] = {h->uri_parts[0], "login", NULL};
         char* login_target = build_path(uri_parts);
@@ -424,8 +456,10 @@ void validate_login( struct handler_args* h  ){
         listen_rs = PQexec(h->session->conn, "LISTEN pg_db_change");
         if (PQresultStatus(listen_rs) != PGRES_COMMAND_OK){
             // This is a most unexpected, and unfortunate error
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d LISTEN command failed\n", 
                 gettime(), h->request_id, __func__, __LINE__);
+            pthread_mutex_unlock(&log_mutex);
 
         }
         PQclear(listen_rs);
@@ -433,13 +467,17 @@ void validate_login( struct handler_args* h  ){
         listen_rs = PQexec(h->session->conn, "LISTEN qz_notify");
         if (PQresultStatus(listen_rs) != PGRES_COMMAND_OK){
             // This is a most unexpected, and unfortunate error
+            pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d LISTEN command failed\n", 
                 gettime(), h->request_id, __func__, __LINE__);
+            pthread_mutex_unlock(&log_mutex);
         }
         PQclear(listen_rs);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d user %s login success from host %s\n",
             gettime(), h->request_id, __func__, __LINE__, user, remote_address);
+        pthread_mutex_unlock(&log_mutex);
 
         record_login_attempt(h, remote_address, true);
 
@@ -447,8 +485,10 @@ void validate_login( struct handler_args* h  ){
         redirect_to_menu(h);
     }else{
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d user %s login failed from host %s\n",
             gettime(), h->request_id, __func__, __LINE__, user, remote_address);
+        pthread_mutex_unlock(&log_mutex);
 
         record_login_attempt(h, remote_address, false);
 
@@ -470,16 +510,20 @@ void logout(struct handler_args* hargs){
     if (hargs->session != NULL){
 
         if (*hargs->session->user != '\0'){
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, 
                 "%f %d %s:%d logout user %s from host %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 hargs->session->user,
                 FCGX_GetParam("REMOTE_ADDR", hargs->envpfcgi));
+            pthread_mutex_unlock(&log_mutex);
         }else{
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, 
                 "%f %d %s:%d logout user with null name from host %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 FCGX_GetParam("REMOTE_ADDR", hargs->envpfcgi));
+            pthread_mutex_unlock(&log_mutex);
         }
 
         close_session(hargs, hargs->session);
@@ -512,8 +556,10 @@ void logout(struct handler_args* hargs){
         free(login_path);
     }    
     
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d logout\n", 
         gettime(), hargs->request_id, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
 
     return;
 }

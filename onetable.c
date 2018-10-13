@@ -356,30 +356,38 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     struct table_action* list_ta = open_table(h, form_name, "list");
     if (list_ta==NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail table_action %s list not found\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Not Found");
         return;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
         form_name, "list");
+    pthread_mutex_unlock(&log_mutex);
 
     PGresult* list_rs = perform_post_action(h, list_ta);
     if (list_rs == NULL) {
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d perform action from %s list produced NULL\n",
             gettime(), h->request_id, __func__, __LINE__, form_name);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Null result"); // not expected.
         return;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_action  result %s returned %d cols %d rows\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(list_rs)),
         PQnfields(list_rs), PQntuples(list_rs));
+    pthread_mutex_unlock(&log_mutex);
 
     xmlNewTextChild(divqz, NULL, "h2", form_name);
 
@@ -572,8 +580,10 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     struct table_action* edit_ta = open_table(h, form_name, "edit");
     if (edit_ta == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log,"%f %d open_table %s, edit) failed\n",
             gettime(), h->request_id, form_name);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "form_name not found");
         return;
@@ -582,21 +592,27 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     PGresult* edit_rs = perform_post_action(h, edit_ta);
 
     if (edit_rs == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
-        gettime(), h->request_id, __func__, __LINE__);
+            gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "action returned null");
         return;
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s %d perform action returned %d rows\n",
         gettime(), h->request_id, __func__, __LINE__, PQntuples(edit_rs));
+    pthread_mutex_unlock(&log_mutex);
 
     // not found.
     if (PQntuples(edit_rs) == 0){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d Record not found.\n",
             gettime(), h->request_id, __func__, __LINE__ );
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "Record not found.");
         PQclear(edit_rs);
@@ -605,9 +621,11 @@ void onetable_edit(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     // Exactly 1. PQgetvalue can be called for row 0.
     if (PQntuples(edit_rs) != 1){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d Wrong data count %d should be 1.\n",
             gettime(), h->request_id, __func__, __LINE__,
             PQntuples(edit_rs));
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Wrong data count");
         PQclear(edit_rs);
@@ -631,9 +649,11 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     if (create_ta == NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d create_ta is null from %s, %s\n",
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "create");
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "Not Found");
         return;
@@ -643,8 +663,10 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     if (create_rs == NULL){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "action returned null");
         return;
@@ -653,9 +675,11 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     // Exactly 1. PQgetvalue can be called for row 0.
     if (PQntuples(create_rs) != 1){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d Wrong data count %d should be 1.\n",
             gettime(), h->request_id, __func__, __LINE__,
             PQntuples(create_rs));
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "Wrong data count");
         PQclear(create_rs);
@@ -678,9 +702,11 @@ void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     struct table_action* insert_ta = open_table(h, form_name, "insert");
 
     if (insert_ta == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d insert_ta is null from %s, %s\n",
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "insert");
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "Not Found");
         return;
@@ -690,8 +716,10 @@ void onetable_insert(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     PGresult* insert_rs = perform_post_action(h, insert_ta);
 
     if (insert_rs == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
-        gettime(), h->request_id, __func__, __LINE__);
+            gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "action returned null");
         return;
@@ -730,9 +758,11 @@ void onetable_update(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     struct table_action* update_ta = open_table(h, form_name, "update");
 
     if (update_ta == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d update_ta is null from %s, %s\n",
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "update");
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "Not Found");
         return;
@@ -741,10 +771,12 @@ void onetable_update(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     // This is it right here.
     PGresult* update_rs = perform_post_action(h, update_ta);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d table action returned %s %s\n",
-            gettime(), h->request_id,  __func__, __LINE__,
-            PQresStatus(PQresultStatus(update_rs)),
-            PQcmdStatus(update_rs));
+        gettime(), h->request_id,  __func__, __LINE__,
+        PQresStatus(PQresultStatus(update_rs)),
+        PQcmdStatus(update_rs));
+    pthread_mutex_unlock(&log_mutex);
 
     if ( (PQresultStatus(update_rs) == PGRES_TUPLES_OK)
          ||
@@ -778,9 +810,12 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
    struct table_action* delete_ta = open_table(h, form_name, "delete");
 
    if (delete_ta == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d delete_ta is null from %s, %s\n",
             gettime(), h->request_id,  __func__, __LINE__,
             form_name, "delete");
+        pthread_mutex_unlock(&log_mutex);
+
         error_page(h, SC_NOT_FOUND, "Not Found");
         return;
     }
@@ -788,8 +823,10 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     PGresult* delete_rs = perform_post_action(h, delete_ta);
 
     if (delete_rs == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s %d fail action returned null\n",
-        gettime(), h->request_id, __func__, __LINE__);
+            gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND, "action returned null");
         return;
@@ -830,9 +867,11 @@ void onetable(struct handler_args* h){
     struct table_action* this_ta = open_table(h, form_name, action);
 
     if (this_ta == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail table_action (%s,%s) not found\n",
             gettime(), h->request_id, __func__, __LINE__,
             form_name, action);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST, "no action");
         return;
@@ -845,9 +884,11 @@ void onetable(struct handler_args* h){
 
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, this_ta->target_div)) == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
             gettime(), h->request_id, __func__, __LINE__,
             this_ta->target_div);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_NOT_FOUND,  "id element not found");
         return;
@@ -873,8 +914,10 @@ void onetable(struct handler_args* h){
         onetable_delete(h, form_name, divqz);
 
     }else{
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d unknown action (%s) \n",
             gettime(), h->request_id, __func__, __LINE__, action);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h,400, "unknown action");
     }

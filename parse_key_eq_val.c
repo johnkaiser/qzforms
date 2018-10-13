@@ -185,9 +185,11 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
                 }else if ( !isspace(*ch) ){
                     searchstate = parse_error;
 
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(hargs->log, "%f %d %s:%d fail %s %d\n", 
                         gettime(), hargs->request_id, __func__, __LINE__,
                         "not a legal char for nextkey dec", *ch);
+                    pthread_mutex_unlock(&log_mutex);
 
                 } // else leading space - ignore
               break;
@@ -199,9 +201,11 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
                 }else if ( !is_legal_char(*ch) ){
                     searchstate = parse_error;
 
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(hargs->log, "%f %d %s:%d fail %s %d\n", 
                         gettime(), hargs->request_id, __func__, __LINE__,
                         "not a legal char for nextkey dec", *ch);
+                    pthread_mutex_unlock(&log_mutex);
                 }
               break;
 
@@ -218,17 +222,21 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
                         
                         searchstate = parse_error;
 
+                        pthread_mutex_lock(&log_mutex);
                         fprintf(hargs->log, "%f %d %s:%d fail %s [%s]\n", 
                             gettime(), hargs->request_id, __func__, __LINE__,
                             "duplicate key in data", akey);
+                        pthread_mutex_unlock(&log_mutex);
                     }else{     
                         if ( xmlHashAddEntry( pt, akey, aval ) == -1 ){
                             searchstate = parse_error;
     
+                            pthread_mutex_lock(&log_mutex);
                             fprintf(hargs->log, "%f %d %s:%d fail %s [%s] %s [%s]\n", 
                                 gettime(), hargs->request_id, __func__, __LINE__,
                                 "xmlHashAddEntry failed on key", akey,
                                 "val", aval);
+                            pthread_mutex_unlock(&log_mutex);
                         }
                     }    
                 }else if ( *ch == fieldsep ){
@@ -241,16 +249,20 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
                     if (xmlHashAddEntry( pt, akey,(void*) blank ) == -1){
                         searchstate = parse_error;
 
+                        pthread_mutex_lock(&log_mutex);
                         fprintf(hargs->log, "%f %d %s:%d fail %s [%s]\n", 
                             gettime(), hargs->request_id, __func__, __LINE__,
                             "xmlHashAddEntry failed on key", akey);
+                        pthread_mutex_unlock(&log_mutex);
                     }    
                 }else if ( !isspace(*ch) ){
                     searchstate = parse_error;
 
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(hargs->log, "%f %d %s:%d fail %s [%c]\n", 
                         gettime(), hargs->request_id, __func__, __LINE__,
                         "unexpected char", *ch);
+                    pthread_mutex_unlock(&log_mutex);
                 } // else leading space - ignore
                 break;
 
@@ -261,9 +273,11 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
                 }else if ( !is_legal_char(*ch) ){
                     searchstate = parse_error;
 
+                    pthread_mutex_lock(&log_mutex);
                     fprintf(hargs->log, "%f %d %s:%d fail %s %d\n", 
                         gettime(), hargs->request_id, __func__, __LINE__,
                         "not a legal char for inval dec",*ch);
+                    pthread_mutex_unlock(&log_mutex);
                 }
                 break;
 
@@ -281,9 +295,11 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
         if (xmlHashAddEntry(pt, akey, (void*) blank) == -1){
             searchstate = parse_error;
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d fail %s [%s]\n", 
                 gettime(), hargs->request_id, __func__, __LINE__,
                 "xmlHashAddEntry failed on key", akey);
+            pthread_mutex_unlock(&log_mutex);
         }    
     }
 
@@ -303,8 +319,10 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
 
     if (!is_valid_utf8){
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail invalid utf-8\n", 
             gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(hargs, SC_BAD_REQUEST, 
             "Post data contains invalid UTF-8 data");
@@ -318,6 +336,8 @@ xmlHashTablePtr parse_key_eq_val(struct handler_args* hargs, char* kvstr,
 
 #ifdef PARSE_KEY_EQ_VAL_MAIN
 
+pthread_mutex_t log_mutex;
+
 void error_page( struct handler_args* hargs, int status_code, const char* msg ){
     printf("error_page status=%d msg=%s\n", status_code, msg);
 }
@@ -327,6 +347,7 @@ void ht_scanner(void* val, void* ignore, xmlChar* key){
 int main(int argc, char* argv[]){
 
     DEBUG = true;
+    pthread_mutex_init(&log_mutex,NULL);
 
     struct handler_args shargs = {
         .log = stderr,

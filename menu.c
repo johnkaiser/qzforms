@@ -46,8 +46,10 @@ void menupage( struct handler_args* h ){
     content_type(h, "text/html");
 
     if ((divqz = qzGetElementByID(h, "qz")) == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",
             gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
 
         error_page(h, SC_BAD_REQUEST,  "Element with id qz not found");
         return;
@@ -83,12 +85,14 @@ bool form_name_is_menu(struct handler_args* h){
         does_exist = ( 't' == m_ex[0] );
     }
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d menu_name_exists_rs is %s, %s tuples %d "
         "fields %d (0,0) %s %d\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(menu_exists_rs)),
         error_msg, PQntuples(menu_exists_rs), PQnfields(menu_exists_rs),
         PQgetvalue(menu_exists_rs, 0, 0), does_exist);
+    pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
     PQclear(menu_exists_rs);
@@ -119,91 +123,97 @@ void init_menu(struct handler_args* hargs){
         "WHERE mi.menu_name = $1 "
         "ORDER BY mi.menu_item_sequence ";
 
-   rs = PQprepare(hargs->session->conn, "fetch_menu_items", menu_items,
-       0, NULL);
+    rs = PQprepare(hargs->session->conn, "fetch_menu_items", menu_items,
+        0, NULL);
 
-   char* error_msg = nlfree_error_msg(rs);
-   fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
-       gettime(), hargs->request_id, __func__, __LINE__,
-       "fetch_menu_items", PQresStatus(PQresultStatus(rs)), error_msg );
+    char* error_msg = nlfree_error_msg(rs);
+    pthread_mutex_lock(&log_mutex);
+    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
+        gettime(), hargs->request_id, __func__, __LINE__,
+        "fetch_menu_items", PQresStatus(PQresultStatus(rs)), error_msg );
+    pthread_mutex_unlock(&log_mutex);
 
-   free(error_msg);
-   error_msg = NULL;
-   PQclear(rs);
-   rs = NULL;
+    free(error_msg);
+    error_msg = NULL;
+    PQclear(rs);
+    rs = NULL;
 
-   char menu_set[] =
-       "SELECT CASE "
-       "WHEN s.menu_name = 'main' THEN "
-       "  COALESCE( "
+    char menu_set[] =
+        "SELECT CASE "
+        "WHEN s.menu_name = 'main' THEN "
+        "  COALESCE( "
             "(SELECT u.main_menu FROM qz.user u "
             "WHERE u.user_name = current_user), "
-       "  'main') "
-       "  ELSE s.menu_name "
-       "END menu_name, "
-       "m.target_div, m.description "
-       "FROM qz.menu_set s "
-       "JOIN qz.menu m ON ( m.menu_name = s.menu_name ) "
-       "WHERE s.host_form_name = $1 "
-       "AND (s.action = 'any' OR s.action = $2) "
-       "ORDER BY s.menu_name ";
+        "  'main') "
+        "  ELSE s.menu_name "
+        "END menu_name, "
+        "m.target_div, m.description "
+        "FROM qz.menu_set s "
+        "JOIN qz.menu m ON ( m.menu_name = s.menu_name ) "
+        "WHERE s.host_form_name = $1 "
+        "AND (s.action = 'any' OR s.action = $2) "
+        "ORDER BY s.menu_name ";
 
-   rs = PQprepare(hargs->session->conn, "fetch_menu_set", menu_set,
-       0, NULL);
+    rs = PQprepare(hargs->session->conn, "fetch_menu_set", menu_set,
+        0, NULL);
 
-   error_msg = nlfree_error_msg(rs);
-   fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
-       gettime(), hargs->request_id, __func__, __LINE__,
-       "fetch_menu_set", PQresStatus(PQresultStatus(rs)), error_msg );
+    error_msg = nlfree_error_msg(rs);
+    pthread_mutex_lock(&log_mutex);
+    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
+        gettime(), hargs->request_id, __func__, __LINE__,
+        "fetch_menu_set", PQresStatus(PQresultStatus(rs)), error_msg );
+    pthread_mutex_unlock(&log_mutex);
 
-   free(error_msg);
-   error_msg = NULL;
-   PQclear(rs);
-   rs = NULL;
+    free(error_msg);
+    error_msg = NULL;
+    PQclear(rs);
+    rs = NULL;
 
-   char fixed_parameter[] =
+    char fixed_parameter[] =
         "SELECT parameter_key, parameter_value "
         "FROM qz.fixed_parameter "
         "WHERE menu_name = $1 "
         "AND menu_item_sequence = $2 ";
 
-   rs = PQprepare(hargs->session->conn, "fetch_fixed_parameter",
-       fixed_parameter, 0, NULL);
+    rs = PQprepare(hargs->session->conn, "fetch_fixed_parameter",
+        fixed_parameter, 0, NULL);
 
-   error_msg = nlfree_error_msg(rs);
+    error_msg = nlfree_error_msg(rs);
 
-   fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
-       gettime(), hargs->request_id, __func__, __LINE__,
-       "fetch_fixed_parameter", PQresStatus(PQresultStatus(rs)),
-       error_msg );
+    pthread_mutex_lock(&log_mutex);
+    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
+        gettime(), hargs->request_id, __func__, __LINE__,
+        "fetch_fixed_parameter", PQresStatus(PQresultStatus(rs)),
+        error_msg );
+    pthread_mutex_unlock(&log_mutex);
 
-   free(error_msg);
-   error_msg = NULL;
-   PQclear(rs);
-   rs = NULL;
+    free(error_msg);
+    error_msg = NULL;
+    PQclear(rs);
+    rs = NULL;
 
-   //
-   char menu_exists_check[] =
+    char menu_exists_check[] =
         "SELECT EXISTS ("
         "SELECT form_name "
         "FROM qz.form "
         "WHERE form_name = $1 "
         "AND handler_name = 'menupage') ";
 
-   rs = PQprepare(hargs->session->conn, "menu_exists_check",
-       menu_exists_check, 0, NULL);
+    rs = PQprepare(hargs->session->conn, "menu_exists_check",
+        menu_exists_check, 0, NULL);
 
-   error_msg = nlfree_error_msg(rs);
+    error_msg = nlfree_error_msg(rs);
 
-   fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
-       gettime(), hargs->request_id, __func__, __LINE__,
-       "menu_exists_check", PQresStatus(PQresultStatus(rs)), error_msg );
+    pthread_mutex_lock(&log_mutex);
+    fprintf(hargs->log, "%f %d %s:%d %s %s %s\n",
+        gettime(), hargs->request_id, __func__, __LINE__,
+        "menu_exists_check", PQresStatus(PQresultStatus(rs)), error_msg );
+    pthread_mutex_unlock(&log_mutex);
 
-   free(error_msg);
-   error_msg = NULL;
-   PQclear(rs);
-   rs = NULL;
-
+    free(error_msg);
+    error_msg = NULL;
+    PQclear(rs);
+    rs = NULL;
 }
 
 struct node_scanner_args {
@@ -301,9 +311,11 @@ void add_menu(struct handler_args* hargs,
             // But first...
 
             if ( ! form_set_is_valid(hargs, hargs->current_form_set)){ 
+                 pthread_mutex_lock(&log_mutex);
                  fprintf(hargs->log, "%f %d %s:%d fail current form set "
                      "is invalid\n",
                      gettime(), hargs->request_id, "add_all_menus", __LINE__);
+                 pthread_mutex_unlock(&log_mutex);
 
                  error_page(hargs, SC_INTERNAL_SERVER_ERROR, "bad token");
                  return;
@@ -330,10 +342,12 @@ void add_menu(struct handler_args* hargs,
                     }else{
    
                       // This is probably bad.
+                      pthread_mutex_lock(&log_mutex);
                       fprintf(hargs->log, "%f %d %s:%d warning menu %s param %s "
                           "not found in input\n",
                           gettime(), hargs->request_id, __func__, __LINE__,
                           get_value(menu_rs, row, "menu_name"), params[p]);
+                      pthread_mutex_unlock(&log_mutex);
                     }
                 }
             }
@@ -397,26 +411,32 @@ void context_variable_logging_scanner(void* payload, void* data,
     struct handler_args* hargs = data;
     char* value = payload;
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d context_variable=%s value=%s\n",
         gettime(), hargs->request_id, "add_all_menus", __LINE__,
         name, value);
+    pthread_mutex_unlock(&log_mutex);
 }
 void log_context_variables(struct handler_args* hargs){
  
-     if ((hargs->current_form_set != NULL) && 
-         (hargs->current_form_set->context_parameters != NULL)){
+    if ((hargs->current_form_set != NULL) &&
+        (hargs->current_form_set->context_parameters != NULL)){
 
-         fprintf(hargs->log, "%f %d %s:%d context_paramters has %d items\n",
-             gettime(), hargs->request_id, __func__, __LINE__,
-             xmlHashSize(hargs->current_form_set->context_parameters));
+        pthread_mutex_lock(&log_mutex);
+        fprintf(hargs->log, "%f %d %s:%d context_paramters has %d items\n",
+            gettime(), hargs->request_id, __func__, __LINE__,
+            xmlHashSize(hargs->current_form_set->context_parameters));
+        pthread_mutex_unlock(&log_mutex);
          
          xmlHashScan(hargs->current_form_set->context_parameters, 
              (void*) context_variable_logging_scanner, hargs);
 
-     }else{
-         fprintf(hargs->log, "%f %d %s:%d form_set or form_set->"
-             "context_parameters is null\n",
+    }else{
+        pthread_mutex_lock(&log_mutex);
+        fprintf(hargs->log, "%f %d %s:%d form_set or form_set->"
+            "context_parameters is null\n",
              gettime(), hargs->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
      }
 }
  
@@ -459,9 +479,11 @@ void add_all_menus(struct handler_args* hargs){
         (PQresultStatus(menu_set_rs) != PGRES_TUPLES_OK)){
 
         char* error_msg = nlfree_error_msg(menu_set_rs);
+        pthread_mutex_lock(&log_mutex);
         fprintf(hargs->log, "%f %d %s:%d fail fetch_menu_set %s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             error_msg);
+        pthread_mutex_unlock(&log_mutex);
 
         free(error_msg);
         PQclear(menu_set_rs);
@@ -479,9 +501,11 @@ void add_all_menus(struct handler_args* hargs){
 
         if (add_here == NULL){
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d fail - target_div %s not found\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 target_div);
+            pthread_mutex_unlock(&log_mutex);
 
             return;
         }
@@ -498,9 +522,11 @@ void add_all_menus(struct handler_args* hargs){
 
             char* error_msg = nlfree_error_msg(menu_item_rs);
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d fail menu_item %s not found %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 menu_name, error_msg);
+            pthread_mutex_unlock(&log_mutex);
 
             free(error_msg);
 
@@ -510,17 +536,21 @@ void add_all_menus(struct handler_args* hargs){
 
             if (hargs->error_exists) return;
 
+            pthread_mutex_lock(&log_mutex);
             fprintf(hargs->log, "%f %d %s:%d menu %s added\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 menu_name);
+            pthread_mutex_unlock(&log_mutex);
         }
 
         PQclear(menu_item_rs);
     }
     PQclear(menu_set_rs);
+    pthread_mutex_lock(&log_mutex);
     fprintf(hargs->log, "%f %d %s:%d completed in %f\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         gettime() - start_time);
+    pthread_mutex_unlock(&log_mutex);
 }
 
 

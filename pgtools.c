@@ -131,10 +131,12 @@ struct pgtype_datum* create_pgtype_datum(PGresult* rs, int row){
 
     int pgtype_datum_version = atoi(PQgetvalue(rs,row,col)); 
     if (pgtype_datum_version != PGTYPE_DATUM_VERSION){
+        pthread_mutex_lock(&log_mutex);
         fprintf(stderr, 
             "%f %s:%d fail pgtype_version error. SQL version %d, c version %d\n",
             gettime(),__func__, __LINE__, 
             pgtype_datum_version, PGTYPE_DATUM_VERSION);
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
@@ -223,11 +225,13 @@ struct pgtype_datum* get_pgtype_datum(
     datum = xmlHashLookup2(datums, table_name, column_name);
 
     if (datum != NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, 
             "%f %d %s:%d returning datum from hash (%s,%s,%s) in %f\n", 
             gettime(), h->request_id, __func__, __LINE__,
             datum->table_schema, datum->table_name, datum->column_name,
             gettime() - start); 
+        pthread_mutex_unlock(&log_mutex);
         return datum;
     }    
 
@@ -245,11 +249,13 @@ struct pgtype_datum* get_pgtype_datum(
         // because they mess up the log file.
         char* error_msg = nlfree_error_msg(datum_rs);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail (%s,%s) expected 1 row, got %d "
                 "error=%s\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 table_name, column_name,
                 PQntuples(datum_rs), error_msg);
+        pthread_mutex_unlock(&log_mutex);
         
         free(error_msg);
 
@@ -261,11 +267,13 @@ struct pgtype_datum* get_pgtype_datum(
 
     datum = create_pgtype_datum(datum_rs, row);
 
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d create_pgtype_datum (%s,%s,%s) "
         "completed in %f\n", 
         gettime(), h->request_id, __func__, __LINE__,
         datum->table_schema, datum->table_name, datum->column_name,
         gettime() - start); 
+    pthread_mutex_unlock(&log_mutex);
 
     // XXXXXXXXXXXXXX
     // This stopped working because reasons
@@ -277,9 +285,11 @@ struct pgtype_datum* get_pgtype_datum(
     // what about housekeeper?
     if (xmlHashAddEntry2(datums, table_name, column_name, datum) !=0){
         
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d xmlHashAddEntry2 failed (%s,%s)\n", 
             gettime(), h->request_id, __func__, __LINE__,
             table_name, column_name); 
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;
     }
@@ -481,18 +491,22 @@ void close_all_pgtype_datums(struct session* this_session){
 char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
 
     if (pg_type == NULL){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail %s",
             gettime(), h->request_id, __func__, __LINE__,
             "pg_type is null");
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;    
     }
 
     if(!pg_type->has_fkey){
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail on %s %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             pg_type->column_name,
             "pg_type record has no foreign key");
+        pthread_mutex_unlock(&log_mutex);
 
         return NULL;    
     }
@@ -530,9 +544,11 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
         // error message needs to be stripped of \n
         char* error_msg = nlfree_error_msg(rs);
 
+        pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail on %s %s",
             gettime(), h->request_id, __func__, __LINE__,
             fetch_list, error_msg);
+        pthread_mutex_unlock(&log_mutex);
 
         free(error_msg);
         free(fetch_list);
@@ -540,9 +556,11 @@ char ** foreign_key_list(struct handler_args* h, struct pgtype_datum* pg_type){
         PQclear(rs);
         return NULL;
     }
+    pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d select_fkey %s returned %d items\n",
         gettime(), h->request_id, __func__, __LINE__,
         fetch_list, PQntuples(rs));
+    pthread_mutex_unlock(&log_mutex);
 
     // Need the size of the data.
     int fkey_size = 0;
