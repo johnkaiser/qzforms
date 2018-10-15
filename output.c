@@ -342,12 +342,6 @@ void do_page( struct handler_args* hargs ){
             }
             if ((handler_name == NULL) && (action == NULL)){
                // like a menu page
-                pthread_mutex_lock(&log_mutex);
-                fprintf(hargs->log, "%f %d %s:%d form_name_is_menu=%s\n", 
-                    gettime(), hargs->request_id, __func__, __LINE__,
-                    form_name_is_menu(hargs) ? "t":"f");
-                pthread_mutex_unlock(&log_mutex);
-
                if (form_name_is_menu(hargs)){
                    handler_name = menu_txt;
                    hargs->page_ta = open_table(hargs, form_name, "view");
