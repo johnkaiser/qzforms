@@ -1111,7 +1111,7 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
             return NULL;
         }
         if (strlen(element) == 0){
-            free(element); // An empty string
+            if (free_array[k]) free(element); // An empty string
             paramdata[k] = NULL;
         }else{
             paramdata[k] = element;
