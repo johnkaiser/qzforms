@@ -280,6 +280,7 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
 
         free(ivec);
         free(crypt_data);
+        EVP_CIPHER_CTX_free(ctx);
         return errortag;
     }
 
@@ -297,6 +298,7 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
 
         free(ivec);
         free(crypt_data);
+        EVP_CIPHER_CTX_free(ctx);
         return errortag;
     }
 
@@ -312,6 +314,7 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
 
         free(ivec);
         free(crypt_data);
+        EVP_CIPHER_CTX_free(ctx);
         return errortag;
     }
 
