@@ -253,6 +253,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->log_validate_rule_details = DEFAULT_LOG_VALIDATE_RULE_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
+    snprintf(conf->stderr_file, MAXPATHLEN, "%s", DEFAULT_STDERR_FILE);
     snprintf(conf->template_path, MAXPATHLEN, "%s", DEFAULT_TEMPLATE_PATH);
 
     char* setting;
@@ -274,15 +275,21 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         unsigned int nbr_users = (unsigned int) strtol(setting, NULL, 10);
 
         conf->number_of_users = nbr_users;
-    } 
-    
+    }
+
     setting = xmlHashLookup(conf_hash, "LOG_FILENAME"); 
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_LOG_FILENAME");
     if (setting == NULL) setting = getenv("LOG_FILENAME");
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->logfile_name, MAXPATHLEN, "%s", setting);
     }
-    
+
+    setting = xmlHashLookup(conf_hash, "STDERR_FILE");
+    if (setting == NULL) setting = getenv("STDERR_FILE");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        snprintf(conf->stderr_file, MAXPATHLEN, "%s", setting);
+    }
+
     setting = xmlHashLookup(conf_hash, "TEMPLATE_PATH");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_TEMPLATE_PATH");
     if (setting == NULL) setting = getenv("TEMPLATE_PATH");
@@ -570,6 +577,7 @@ int main(int argc, char* argv[], char* env[]){
     printf("server_key=%s\n", config->server_key);
     printf("template_path=%s\n", config->template_path);
     printf("logfile_name=%s\n", config->logfile_name);
+    printf("stderr_file=%s\n", config->stderr_file);
     printf("session_inactivity_timeout=%d\n", config->session_inactivity_timeout);
     printf("form_duration=%d\n", config->form_duration);
     printf("housekeeper_nap_time=%d\n", config->housekeeper_nap_time);

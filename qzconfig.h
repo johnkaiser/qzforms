@@ -11,15 +11,16 @@
  *  3. set the field to its default at the top of set_config in qzconfig.c
  *  3. add a setting block to function set_config in qzconfig.c
  *  4. add a test under QZCONFIG_MAIN near the end of qzconfig.c
- *  5. make test_qzconfig
+ *  5. make qzconfig_test
  *  6. export QZ_CONFIG_FILENAME=some/path/x.conf
- *  7. ./test_qzconfig
+ *  7. ./qzconfig_test
  */
  
 #define DEFAULT_CONFIG_FILE  "config/qzforms.conf"
 #define DEFAULT_TAGGER_SOCKET_PATH  "run/qzfcgi.sock"
 #define DEFAULT_NUMBER_OF_USERS (42)
 #define DEFAULT_LOGFILE_NAME "logs/qzfcgi.log"
+#define DEFAULT_STDERR_FILE ""
 #define DEFAULT_SESSION_INACTIVITY_TIMEOUT (600)
 #define DEFAULT_TEMPLATE_PATH "templates"
 #define DEFAULT_FORM_DURATION (180)
@@ -50,6 +51,7 @@ struct qz_config {
     char server_token[SERVER_TOKEN_HEX_LENGTH+2];
     char server_key[SERVER_KEY_HEX_LENGTH+2];
     char logfile_name[MAXPATHLEN+2];
+    char stderr_file[MAXPATHLEN+2];
     char template_path[MAXPATHLEN+2];
     unsigned int session_inactivity_timeout;
     int number_of_threads;

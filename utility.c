@@ -376,7 +376,7 @@ char* base64_encode(char* astr){
  *  but it is OK because only housekeeper is using them.
  */
 
-void log_file_rotation(struct qz_config* conf){
+void log_file_rotation(struct qz_config* conf, char* logfile_name){
 
     // The file is too big, but need to know
     // how many numbered logs there, e.g qz.log.0
@@ -394,11 +394,11 @@ void log_file_rotation(struct qz_config* conf){
     unsigned int min_filenbr = UINT_MAX;
     unsigned int nbrcount = 0;
 
-    asprintf(&lognamecopy1, "%s", conf->logfile_name);
+    asprintf(&lognamecopy1, "%s", logfile_name);
     logdirname = dirname(lognamecopy1);
 
 
-    asprintf(&lognamecopy2, "%s", conf->logfile_name);
+    asprintf(&lognamecopy2, "%s", logfile_name);
     logbasename = basename(lognamecopy2);
     baselen = strlen(logbasename);
 
@@ -434,11 +434,11 @@ void log_file_rotation(struct qz_config* conf){
             } // while
             // .. so move log file to new numbered name
             char* newlogname;
-            asprintf(&newlogname, "%s.%d", conf->logfile_name,
+            asprintf(&newlogname, "%s.%d", logfile_name,
                 max_filenbr + 1);
             
-            link(conf->logfile_name, newlogname);
-            unlink(conf->logfile_name);
+            link(logfile_name, newlogname);
+            unlink(logfile_name);
             free(newlogname);
             newlogname = NULL;
 
@@ -446,7 +446,7 @@ void log_file_rotation(struct qz_config* conf){
                 (smallest != NULL)){
                
                 if (unlink(smallest) != 0){
-                    FILE* log = fopen(conf->logfile_name, "a");
+                    FILE* log = fopen(logfile_name, "a");
                     pthread_mutex_lock(&log_mutex);
                     fprintf(log, "%f %d %s:%d fail on unlink %s errno=%d\n",
                         gettime(), 0, __func__, __LINE__,
@@ -461,7 +461,7 @@ void log_file_rotation(struct qz_config* conf){
         }
     }else{
         // This is an improbable error
-        FILE* log = fopen(conf->logfile_name, "a");
+        FILE* log = fopen(logfile_name, "a");
         pthread_mutex_lock(&log_mutex);
         fprintf(log, "%f %d %s:%d %s\n",
             gettime(), 0, __func__, __LINE__,

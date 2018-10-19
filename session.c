@@ -525,8 +525,23 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
                 gettime(), h->request_id, __func__, __LINE__);
             pthread_mutex_unlock(&log_mutex);
 
-            log_file_rotation(conf);
+            log_file_rotation(conf, conf->logfile_name);
+        }
+    }
+    bzero(&logsb, sizeof(logsb));
+    if (strlen(conf->stderr_file) > 0){
+        if (stat(conf->stderr_file, &logsb) == 0){
+            if ((conf->max_log_file_size > 0) &&
+                (S_ISREG(logsb.st_mode)) &&
+                (logsb.st_size > conf->max_log_file_size)){
 
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d rotating stderr file\n",
+                    gettime(), h->request_id, __func__, __LINE__);
+                pthread_mutex_unlock(&log_mutex);
+
+                log_file_rotation(conf, conf->stderr_file);
+            }
         }
     }
 

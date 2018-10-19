@@ -460,14 +460,19 @@ int main(int argc, char* argv[], char* envpmain[]){
     init_login_tracker();
 
     next_id = 0;
-    log_file_rotation(conf);
-    FILE* log = fopen(conf->logfile_name,"a+");
+    log_file_rotation(conf, conf->logfile_name);
+    FILE* log = fopen(conf->logfile_name,"a");
 
     if (log == NULL) {
         fprintf(stderr, "unable to open log file %s exiting now\n",
             conf->logfile_name);
 
         exit(12);
+    }
+
+    if (strlen(conf->stderr_file) > 0){
+        log_file_rotation(conf, conf->stderr_file);
+        freopen(conf->stderr_file, "a", stderr);
     }
 
     // Log the startup condition

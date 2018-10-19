@@ -1043,7 +1043,7 @@ extern void save_pkey_values(struct handler_args* h,
  *  log_file_rotation
  *  utility.c
  */
-extern void log_file_rotation(struct qz_config* conf);
+extern void log_file_rotation(struct qz_config* conf, char* logfile_name);
 
 /*
  *  add_listener
