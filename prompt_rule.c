@@ -281,15 +281,16 @@ xmlNodePtr add_not_implemented(struct prompt_add_args* args){
  */
 bool truthishness(struct handler_args* h, char* str){
 
-   // XXXXXXXXXXXXXx lose the n characters
-   if (strncasecmp("TRUE", str, 4) == 0) return true;
-   if (strncasecmp("FALSE", str, 4) == 0) return false;
+   if ( ! has_data(str) ) return false;
 
-   if (strncasecmp("yes", str, 4) == 0) return true;
-   if (strncasecmp("no", str, 4) == 0) return false;
+   if (strcasecmp("TRUE", str) == 0) return true;
+   if (strcasecmp("FALSE", str) == 0) return false;
 
-   if (strncasecmp("on", str, 4) == 0) return true;
-   if (strncasecmp("off", str, 4) == 0) return false;
+   if (strcasecmp("yes", str) == 0) return true;
+   if (strcasecmp("no", str) == 0) return false;
+
+   if (strcasecmp("on", str) == 0) return true;
+   if (strcasecmp("off", str) == 0) return false;
 
    if (strlen(str) == 1){
        if (str[0] == 't') return true;
