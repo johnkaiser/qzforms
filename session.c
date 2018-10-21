@@ -306,12 +306,6 @@ session_from_hargs(struct handler_args* hargs,
         return NULL;
     }
 
-    pthread_mutex_lock(&log_mutex);
-    fprintf(hargs->log, "%f %d %s:%d user=%s\n",
-        gettime(), hargs->request_id, __func__, __LINE__,
-        this_session->user);
-    pthread_mutex_unlock(&log_mutex);
-
     return this_session;
 }
 
@@ -616,6 +610,7 @@ int main(int argc, char* argv[]){
      tagger_pid = tagger_init(conf, argv);
      printf( "tagger_pid = %d\n", tagger_pid);
      signal( SIGTERM, cleanup );
+     printf("sizeof(struct session)=%ld\n", sizeof(struct session));
 
      int j;
      xmlHashTablePtr ht = xmlHashCreate(NBRTESTS);
