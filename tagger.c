@@ -312,7 +312,7 @@ void process_requests(struct tag_data_conf* tagdat){
         }
 
         close(incoming);
-        if (tagdat->conf->log_tagger_details){
+        if (log_tagger_details){
             fclose(qzlog);
         }
     }
