@@ -61,7 +61,7 @@ xmlHashTablePtr parse_config(char* filebuf){
      *  |error           |error     |error       |error          |error      |error           |error           |error      |
      *  +----------------+----------+------------+---------------+-----------+----------------+----------------+-----------+
      *
-     *    1.  Keys are always 7bit ASCII alpha characters. 
+     *    1.  Keys are always 7bit ASCII alpha characters.
      *    2.  Values can contain symbols, punctuation, UTF8, etc.
      *
      */
@@ -72,7 +72,7 @@ xmlHashTablePtr parse_config(char* filebuf){
     char* akey = NULL;
     char* ch;
     int line_nbr = 1;
-    // There are about 30 things that can be set, but it is not an important value. 
+    // There are about 30 things that can be set, but it is not an important value.
     xmlHashTablePtr pt = xmlHashCreate(30);
 
     static char* key_with_start_digit = "Key can not start with a digit";
@@ -86,7 +86,7 @@ xmlHashTablePtr parse_config(char* filebuf){
         if (*ch == '\n') line_nbr++;
 
         switch(searchstate){
-            case looking_for_key: 
+            case looking_for_key:
                if (isalpha(*ch) || (*ch == '_')) {
                   akey = ch;
                   searchstate = in_key;
@@ -109,7 +109,7 @@ xmlHashTablePtr parse_config(char* filebuf){
                }
                break;
 
-            case in_key: 
+            case in_key:
                 if (isspace(*ch)){
                     *ch = '\0';
                     searchstate = looking_for_eq;
@@ -125,34 +125,34 @@ xmlHashTablePtr parse_config(char* filebuf){
                 }
                 break;
 
-            case in_comment: 
+            case in_comment:
                 if ((*ch == '\r') || (*ch == '\n')){
                     searchstate = looking_for_key;
                 }
                 break;
 
-            case looking_for_eq: 
+            case looking_for_eq:
                 if (*ch == '='){
                     searchstate = looking_for_val;
                 }else if (isspace(*ch)){
                     ; // no op
-                }else{    
+                }else{
                     parse_error = eq_not_found;
                     error_line = line_nbr;
                 }
                 break;
 
-            case looking_for_val: 
+            case looking_for_val:
                  if (isspace(*ch)){
                      ; // no op
                  }else if ((*ch == '#')||(*ch == '=')||(*ch == '\r')||(*ch == '\n')){
                      parse_error = bad_value;
                      error_line = line_nbr;
                      searchstate = error;
-                 }else{ 
-                     // other cases, alpha, numeric, _, UTF8   
+                 }else{
+                     // other cases, alpha, numeric, _, UTF8
                      searchstate = in_val;
-                     
+
                      // XXXXXXXXXXXXXXXXX
                      // check if akey is in hash table and
                      // error out hard if it is,
@@ -165,15 +165,15 @@ xmlHashTablePtr parse_config(char* filebuf){
                  }
                  break;
 
-            case in_val: 
+            case in_val:
                 if ((*ch == '\r')||(*ch == '\n')){
                     *ch = '\0';
                     searchstate = looking_for_key;
-                    // Work backwards now turning spaces to nulls, 
+                    // Work backwards now turning spaces to nulls,
                     char* trim;
                     for(trim=ch-1; isspace(*trim); trim--){
                         *trim = '\0';
-                    }    
+                    }
                 }
                 break;
 
@@ -188,7 +188,7 @@ xmlHashTablePtr parse_config(char* filebuf){
         return NULL;
     }else{
         return pt;
-    }    
+    }
 }
 
 /*
@@ -225,12 +225,12 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     qzrandom64_init();
 
     if (conf == NULL){
-       fprintf(stderr, "set_config given null conf\n");   
+       fprintf(stderr, "set_config given null conf\n");
        exit(31);
     }
 
     // Set the defaults first
-    snprintf(conf->tagger_socket_path, MAX_SOCKET_NAME_LEN, "%s", 
+    snprintf(conf->tagger_socket_path, MAX_SOCKET_NAME_LEN, "%s",
         DEFAULT_TAGGER_SOCKET_PATH);
 
     conf->number_of_users =  DEFAULT_NUMBER_OF_USERS;
@@ -251,6 +251,8 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->log_form_set_details = DEFAULT_LOG_FORM_SET_DETAILS;
     conf->log_login_tracker_details = DEFAULT_LOG_LOGIN_TRACKER_DETAILS;
     conf->log_validate_rule_details = DEFAULT_LOG_VALIDATE_RULE_DETAILS;
+    conf->log_fs_etag_details = DEFAULT_LOG_FS_ETAG_DETAILS;
+    conf->log_tagger_details = DEFAULT_LOG_TAGGER_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
     snprintf(conf->stderr_file, MAXPATHLEN, "%s", DEFAULT_STDERR_FILE);
@@ -277,7 +279,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         conf->number_of_users = nbr_users;
     }
 
-    setting = xmlHashLookup(conf_hash, "LOG_FILENAME"); 
+    setting = xmlHashLookup(conf_hash, "LOG_FILENAME");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_LOG_FILENAME");
     if (setting == NULL) setting = getenv("LOG_FILENAME");
     if ((setting != NULL) && (strlen(setting) > 0)){
@@ -293,8 +295,8 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     setting = xmlHashLookup(conf_hash, "TEMPLATE_PATH");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_TEMPLATE_PATH");
     if (setting == NULL) setting = getenv("TEMPLATE_PATH");
-    snprintf(conf->template_path, MAXPATHLEN, "%s", 
-        ((setting != NULL) && (strlen(setting) > 0)) ?  
+    snprintf(conf->template_path, MAXPATHLEN, "%s",
+        ((setting != NULL) && (strlen(setting) > 0)) ?
             setting:DEFAULT_TEMPLATE_PATH );
 
     // SERVER_TOKEN and SERVER_KEY can not be set from environment
@@ -304,7 +306,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     if ((setting != NULL) && (strlen(setting) > 0)){
         snprintf(conf->server_token, SERVER_TOKEN_HEX_LENGTH+1, "%s", setting);
     }
-    
+
     setting = xmlHashLookup(conf_hash, "SERVER_KEY");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_SERVER_KEY");
     if ((setting != NULL) && (strlen(setting) > 0)){
@@ -312,27 +314,27 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "SESSION_INACTIVITY_TIMEOUT");
-    if (setting == NULL) setting = xmlHashLookup(conf_hash, 
+    if (setting == NULL) setting = xmlHashLookup(conf_hash,
         "QZ_SESSION_INACTIVITY_TIMEOUT");
 
     if (setting == NULL) setting = getenv("SESSION_INACTIVITY_TIMEOUT");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        unsigned int inactivity_timeout = (unsigned int) 
+        unsigned int inactivity_timeout = (unsigned int)
             strtol(setting, NULL, 10);
         conf->session_inactivity_timeout = inactivity_timeout;
-    } 
+    }
 
     setting = xmlHashLookup(conf_hash, "FORM_DURATION");
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_FORM_DURATION");
     if (setting == NULL) setting = getenv("FORM_DURATION");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        unsigned int form_duration = (unsigned int) 
+        unsigned int form_duration = (unsigned int)
             strtol(setting, NULL, 10);
         conf->form_duration = form_duration;
     }
 
     setting = xmlHashLookup(conf_hash, "HOUSEKEEPER_NAP_TIME");
-    if (setting == NULL) setting = xmlHashLookup(conf_hash, 
+    if (setting == NULL) setting = xmlHashLookup(conf_hash,
         "QZ_HOUSEKEEPER_NAP_TIME");
 
     if (setting == NULL) setting = getenv("HOUSEKEEPER_NAP_TIME");
@@ -340,7 +342,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         unsigned int housekeeper_nap_time = (unsigned int)
             strtol(setting, NULL, 10);
         conf->housekeeper_nap_time = housekeeper_nap_time;
-    }    
+    }
 
     setting = xmlHashLookup(conf_hash, "AUDIT_FORM_SET_REF_COUNT");
     if (setting == NULL) setting = getenv("AUDIT_FORM_SET_REF_COUNT");
@@ -349,7 +351,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "NUMBER_OF_THREADS");
-    if (setting == NULL) setting = xmlHashLookup(conf_hash, 
+    if (setting == NULL) setting = xmlHashLookup(conf_hash,
         "QZ_NUMBER_OF_THREADS");
 
     if (setting == NULL) setting = getenv("NUMBER_OF_THREADS");
@@ -386,7 +388,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_table_action_details = is_true(setting);
     }
-    
+
     setting = xmlHashLookup(conf_hash, "LOG_FORM_TAG_DETAILS");
     if (setting == NULL) setting = getenv("LOG_FORM_TAG_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
@@ -427,6 +429,18 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         conf->log_login_tracker_details = is_true(setting);
     }
 
+    setting = xmlHashLookup(conf_hash, "LOG_FS_ETAG_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_FS_ETAG_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_fs_etag_details = is_true(setting);
+    }
+
+    setting = xmlHashLookup(conf_hash, "LOG_TAGGER_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_TAGGER_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_tagger_details = is_true(setting);
+    }
+
     // Put postgres vars into environment.
     setenv("PGAPPNAME", "qzforms", 0);
 
@@ -455,7 +469,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         "PGSSLROOTCERT",
         "PGTZ",
         NULL
-    };    
+    };
     char* var;
     int n = 0;
     for (var=allowed_vars[n]; var!=NULL; var=allowed_vars[++n]){
@@ -480,13 +494,13 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
 
 /*
  *  init_config
- * 
+ *
  *  Open and load the configuration file.
- */  
+ */
 struct qz_config* init_config(void){
 
     char* config_file = getenv("QZ_CONFIG_FILENAME");
-    
+
     if (config_file == NULL){
         config_file = DEFAULT_CONFIG_FILE;
     }
@@ -498,9 +512,9 @@ struct qz_config* init_config(void){
     struct qz_config* conf = calloc(1, sizeof(struct qz_config));
 
     if (strlen(config_file) > 0){
-        if (stat(config_file, &sb) == 0){ 
+        if (stat(config_file, &sb) == 0){
             int conf_fd = -1;
-    
+
             conf_fd = open(config_file, O_RDONLY, 0);
             if (conf_fd > 0){
                 ssize_t bytesread;
@@ -508,12 +522,12 @@ struct qz_config* init_config(void){
                 bytesread = read(conf_fd, config_file_buf, sb.st_size);
                 if (bytesread == sb.st_size){
                     config_file_buf[bytesread] = '\0';
-    
+
                 }else{
                     // bytes read != file size.
                     perror("Short read on config file");
                     exit(33);
-                }    
+                }
                 conf_hash = parse_config(config_file_buf);
 
                 if (conf_hash == NULL){
@@ -527,13 +541,13 @@ struct qz_config* init_config(void){
             }else{
                 perror("open on config file failed");
                 exit(34);
-            }    
+            }
         }else{
             // stat on config file name has failed.
             perror("No configuration file");
             exit(35);
         }
-    } 
+    }
 
 
     set_config(conf, conf_hash);
@@ -566,7 +580,10 @@ int main(int argc, char* argv[], char* env[]){
                 break;
         }
     }
-    printf("begin init_config\n");
+    printf("begin init_config %s\n",
+       (getenv("QZ_CONFIG_FILENAME") != NULL) ?
+           getenv("QZ_CONFIG_FILENAME"):DEFAULT_CONFIG_FILE );
+
     config = init_config();
     printf("fin init_config\n\n");
 
@@ -586,12 +603,14 @@ int main(int argc, char* argv[], char* env[]){
     printf("max_log_file_size=%"PRIu64"\n", config->max_log_file_size);
     printf("max_log_file_count=%d\n",  config->max_log_file_count);
     printf("log_id_index_details=%c\n", (config->log_id_index_details) ? 't':'f');
-    printf("log_table_action_details=%c\n", (config->log_table_action_details) ? 't':'f'); 
-    printf("log_form_tag_details=%c\n", (config->log_form_tag_details) ? 't':'f'); 
-    printf("log_form_set_details=%c\n", (config->log_form_set_details) ? 't':'f'); 
+    printf("log_table_action_details=%c\n", (config->log_table_action_details) ? 't':'f');
+    printf("log_form_tag_details=%c\n", (config->log_form_tag_details) ? 't':'f');
+    printf("log_form_set_details=%c\n", (config->log_form_set_details) ? 't':'f');
     printf("log_validate_rule_details=%c\n", (config->log_validate_rule_details) ? 't':'f');
+    printf("log_fs_etag_details=%c\n", (config->log_fs_etag_details) ? 't':'f');
+    printf("log_tagger_details=%c\n", (config->log_tagger_details) ? 't':'f');
 
-    
+
     char* allowed_vars[] = {
         "PGAPPNAME",
         "PGCLIENTENCODING",
@@ -617,7 +636,7 @@ int main(int argc, char* argv[], char* env[]){
         "PGSSLROOTCERT",
         "PGTZ",
         NULL
-    }; 
+    };
     char* var;
     char* val;
     int n = 0;

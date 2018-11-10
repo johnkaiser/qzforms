@@ -45,7 +45,6 @@
 #include <arpa/inet.h>
 
 #include "http_codes.h"
-#include "qzconfig.h"
 #include "qzrandom64.h"
 #include "strbuf.h"
 #include "tagger.h"

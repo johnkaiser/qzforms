@@ -405,6 +405,7 @@ void launch_connection_thread(void* data){
                             }
                         }else{
 
+                            close_session(hargs, hargs->session);
                             setup_session(hargs,thread_dat->sessions,
                                     thread_dat->conf);
 
@@ -412,6 +413,7 @@ void launch_connection_thread(void* data){
                         }
                     }else{
 
+                        close_session(hargs, hargs->session);
                         setup_session(hargs,thread_dat->sessions,
                             thread_dat->conf);
 

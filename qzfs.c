@@ -45,7 +45,6 @@ void etag_header(struct handler_args* h, char* payload){
     snprintf(padded_payload, 17, "%s", payload);
 
     struct strbuf* etag_header = new_strbuf(NULL, 128);
-
     char etag_buf[98];
 
     make_etag(etag_buf, h->conf->tagger_socket_path, h->session->etag_token,
@@ -74,7 +73,6 @@ void etag_header(struct handler_args* h, char* payload){
  *  must be some form of text.
  */
 void qzfs(struct handler_args* h){
-
 
     //  The URL will be /qz/which_table/get/which_name
     //                  /0 /1          /2  /3
@@ -118,21 +116,32 @@ void qzfs(struct handler_args* h){
     char* http_if_none_match =
         FCGX_GetParam("HTTP_IF_NONE_MATCH", h->envpfcgi);
 
+    if (h->conf->log_fs_etag_details){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d %s HTTP_IF_NONE_MATCH=%s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            which_name, http_if_none_match);
+        pthread_mutex_unlock(&log_mutex);
+    }
+
     if (http_if_none_match != NULL){
 
        // payload from the client is compared to the result of a table_action
         validate_etag(payload, h->conf->tagger_socket_path,
             h->session->etag_token, http_if_none_match);
 
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d etag name %s payload is %s\n",
-            gettime(), h->request_id, __func__, __LINE__,
-            which_name, (payload > 0)  ? "OK" : "invalid"  );
-        pthread_mutex_unlock(&log_mutex);
+        if (h->conf->log_fs_etag_details){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d etag name %s payload is %s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                which_name, (payload > 0)  ? "OK" : "invalid"  );
+            pthread_mutex_unlock(&log_mutex);
+        }
 
         if (payload[0] != '\0'){
             struct table_action* etag_value_ta;
             etag_value_ta = open_table(h,  get_uri_part(h, 1), "etag_value");
+
 
             char* etag_params[2];
             etag_params[0] = which_name;
@@ -199,6 +208,19 @@ void qzfs(struct handler_args* h){
     if (has_data(etag_str)){
         // etag_header calls make_etag
         etag_header(h, etag_str);
+    }else{
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail etag from pg has no value\n",
+            gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
+    }
+
+    if (h->conf->log_fs_etag_details){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d set etag value %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            etag_str);
+        pthread_mutex_unlock(&log_mutex);
     }
 
     // It.
@@ -209,7 +231,6 @@ void qzfs(struct handler_args* h){
         gettime(), h->request_id, __func__, __LINE__,
         which_name, PQgetlength(rs, 0, PQfnumber(rs, "data")));
     pthread_mutex_unlock(&log_mutex);
-
 
     free(a_name);
     a_name = NULL;
