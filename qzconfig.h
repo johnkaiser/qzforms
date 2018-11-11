@@ -40,6 +40,7 @@
 #define DEFAULT_LOG_VALIDATE_RULE_DETAILS false;
 #define DEFAULT_LOG_FS_ETAG_DETAILS false;
 #define DEFAULT_LOG_TAGGER_DETAILS false;
+#define DEFAULT_LOG_PROMPT_RULE_DETAILS false
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -73,7 +74,7 @@ struct qz_config {
     bool log_validate_rule_details;
     bool log_fs_etag_details;
     bool log_tagger_details;
-    // add: bool log_prompt_rule_details free_prompt_rule:239 fetch_prompt_rule:218
+    bool log_prompt_rule_details;
     uint64_t integrity_token;
 };
 

@@ -131,8 +131,6 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
     char* form_name, char* fieldname){
 
     double start = gettime();
-    bool log_errors = true;
-
     char* paramValues[] = {form_name, fieldname, NULL};
 
     PGresult* rs = PQexecPrepared(h->session->conn, "fetch_rule", 2,
@@ -211,7 +209,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
 
         return rule;
     }else{
-        if (log_errors){
+        if (h->conf->log_prompt_rule_details){
             pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fetch_prompt_rules"
                 "resStatus:%s cmdStatus:%s ErrorMessage:%s\n", 
@@ -234,11 +232,13 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
 void free_prompt_rule(struct handler_args* h, 
     struct prompt_rule* rule){
 
-    pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d (%s,%s)\n",
-        gettime(), h->request_id, __func__, __LINE__,
-        rule->form_name, rule->fieldname);
-    pthread_mutex_unlock(&log_mutex);
+    if (h->conf->log_prompt_rule_details){ 
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d (%s,%s)\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            rule->form_name, rule->fieldname);
+        pthread_mutex_unlock(&log_mutex);
+    }
 
     if (rule == NULL) return;
 
@@ -304,11 +304,13 @@ bool truthishness(struct handler_args* h, char* str){
    }
 
    // fail massively 
-   pthread_mutex_lock(&log_mutex);
-   fprintf(h->log, "%f %d %s:%d fail, truthishness of %s "
-        "could not be determined\n",
-        gettime(), h->request_id, __func__, __LINE__, str);
-   pthread_mutex_unlock(&log_mutex);
+   if (h->conf->log_prompt_rule_details){
+       pthread_mutex_lock(&log_mutex);
+       fprintf(h->log, "%f %d %s:%d fail, truthishness of %s "
+            "could not be determined\n",
+            gettime(), h->request_id, __func__, __LINE__, str);
+       pthread_mutex_unlock(&log_mutex);
+   }
 
    return false;
 }
@@ -1402,44 +1404,52 @@ char**  fetch_options(
         // Use the option list specified.
         new_options = parse_pg_array(p_rule->options);
 
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d prompt rule options %s\n", 
-            gettime(), h->request_id, __func__, __LINE__,
-            p_rule->options);
-        pthread_mutex_unlock(&log_mutex);
- 
+        if (h->conf->log_prompt_rule_details){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d prompt rule options %s\n", 
+                gettime(), h->request_id, __func__, __LINE__,
+                p_rule->options);
+            pthread_mutex_unlock(&log_mutex);
+        }
 
     }else if ((pgtype != NULL) && 
               (pgtype->enum_labels!= NULL) &&
               (pgtype->enum_labels[0] != '\0')){
 
         new_options = parse_pg_array(pgtype->enum_labels);
-        
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d pgtype enum %s\n", 
-            gettime(), h->request_id, __func__, __LINE__,
-            pgtype->enum_labels);
-        pthread_mutex_unlock(&log_mutex);
+       
 
+        if (h->conf->log_prompt_rule_details){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d pgtype enum %s\n", 
+                gettime(), h->request_id, __func__, __LINE__,
+                pgtype->enum_labels);
+            pthread_mutex_unlock(&log_mutex);
+        }
     }else if ((pgtype != NULL) && (pgtype->is_boolean)){  
         new_options = parse_pg_array(boolean_options);
 
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d boolean %s\n", 
-            gettime(), h->request_id, __func__, __LINE__,
-            boolean_options);
-        pthread_mutex_unlock(&log_mutex);
+        
+        if (h->conf->log_prompt_rule_details){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d boolean %s\n", 
+                gettime(), h->request_id, __func__, __LINE__,
+                boolean_options);
+            pthread_mutex_unlock(&log_mutex);
+        }
 
     }else if ((pgtype != NULL) && (pgtype->has_fkey) && (p_rule != NULL)){
         if (strcmp("select_fkey", p_rule->prompt_type) == 0){
             new_options = foreign_key_list(h, pgtype);
         
-            pthread_mutex_lock(&log_mutex);
-            fprintf(h->log, "%f %d %s:%d fkey %s\n", 
-                gettime(), h->request_id, __func__, __LINE__,
-                    ((new_options != NULL) && (new_options[0] != '\0')) ?
-                        "OK":"foreign_key_list fail");
-            pthread_mutex_unlock(&log_mutex);
+            if (h->conf->log_prompt_rule_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d fkey %s\n", 
+                    gettime(), h->request_id, __func__, __LINE__,
+                        ((new_options != NULL) && (new_options[0] != '\0')) ?
+                            "OK":"foreign_key_list fail");
+                pthread_mutex_unlock(&log_mutex);
+            }
         }
     }
 
