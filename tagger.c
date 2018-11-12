@@ -291,11 +291,13 @@ void process_requests(struct tag_data_conf* tagdat){
                 }else{
                     write(incoming, blank, sizeof(blank));
 
-                    pthread_mutex_lock(&log_mutex);
-                    fprintf(qzlog, "%f %d %s:%d domain_token validate failed %"PRIu64" != %"PRIu64" payload=%s\n",
-                        gettime(), request_id, __func__, __LINE__,
-                        ctag.domain_token, valtag->domain_token, ctag.payload);
-                    pthread_mutex_unlock(&log_mutex);
+                    if (log_tagger_details){
+                        pthread_mutex_lock(&log_mutex);
+                        fprintf(qzlog, "%f %d %s:%d domain_token validate failed %"PRIu64" != %"PRIu64" payload=%s\n",
+                            gettime(), request_id, __func__, __LINE__,
+                            ctag.domain_token, valtag->domain_token, ctag.payload);
+                        pthread_mutex_unlock(&log_mutex);
+                    }
                 }
                 break;
 
