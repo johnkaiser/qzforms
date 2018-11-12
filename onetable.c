@@ -851,6 +851,54 @@ void onetable_delete(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 }
 
 /*
+ *  onetable_view
+ *
+ *  Display only
+ */
+void onetable_view(struct handler_args* h, char* form_name, xmlNodePtr divqz){
+
+    struct table_action* view_ta = open_table(h, form_name, "view");
+
+    if (view_ta == NULL){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d view_ta is null from %s, %s\n",
+            gettime(), h->request_id,  __func__, __LINE__,
+            form_name, "view");
+        pthread_mutex_unlock(&log_mutex);
+
+        error_page(h, SC_NOT_FOUND, "Not Found");
+        return;
+    }
+    xmlNewTextChild(divqz, NULL, "h2", form_name);
+
+    PGresult* view_rs = perform_post_action(h, view_ta);
+
+    if (view_rs == NULL){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s %d fail action returned null\n",
+            gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
+
+        error_page(h, SC_NOT_FOUND, "action returned null");
+        return;
+    }
+
+    if ( (PQresultStatus(view_rs) == PGRES_TUPLES_OK)
+         ||
+         (PQresultStatus(view_rs) == PGRES_COMMAND_OK) ){
+        // Yeah, it worked.
+        rs_to_sideways_table(divqz, view_rs, "view name");
+
+    }else{
+        char* err_msg = PQresultErrorMessage(view_rs);
+        xmlNodePtr update_error = xmlNewTextChild(divqz, NULL, "pre", err_msg);
+        append_class(update_error, "err_msg");
+    }
+
+    add_helpful_text(h, view_ta);
+    PQclear(view_rs);
+}
+/*
  *  onetable
  *
  *  Manage a single Postgres table.
@@ -912,6 +960,9 @@ void onetable(struct handler_args* h){
 
     }else if (strcmp("delete", action)==0){
         onetable_delete(h, form_name, divqz);
+
+    }else if (strcmp("view", action)==0){
+        onetable_view(h, form_name, divqz);
 
     }else{
         pthread_mutex_lock(&log_mutex);

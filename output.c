@@ -431,3 +431,28 @@ void rs_to_table(xmlNodePtr add_here, PGresult* rs, char* id){
     }
 }
 
+void rs_to_sideways_table(xmlNodePtr add_here, PGresult* rs, char* id){
+
+    xmlNodePtr table = xmlNewChild(add_here, NULL, "table", NULL);
+    xmlNodePtr tbody;
+    xmlNodePtr tr;
+    xmlNodePtr td;
+    int t, f;
+
+    xmlNewProp(table, "class", "qztable tablesorter");
+    if (id!=NULL) xmlNewProp(table, "id", id);
+
+    tbody = xmlNewChild(table,NULL,"tbody",NULL);
+
+    for (f=0; f<PQnfields(rs); f++ ){
+
+        tr = xmlNewChild(tbody, NULL, "tr", NULL);
+        td = xmlNewTextChild(tr, NULL, "td", PQfname(rs,f) );
+        append_class(td, "viewtitle");
+
+        for (t=0; t<PQntuples(rs); t++){
+            xmlNewTextChild(tr,NULL, "td", PQgetvalue(rs, t, f) );
+        }
+    }
+}
+

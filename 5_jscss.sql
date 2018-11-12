@@ -135,12 +135,17 @@ th.input_hidden {
 div.menu form {
     display: inline;
 }    
+
 .err_msg {
     background: yellow;
     border: 2pt solid red;
     padding: 3pt;
     display: table;
     font-weight: bold;
+}
+
+td.viewtitle{
+   font-weight: bold;
 }
 $QZF$);
 

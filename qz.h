@@ -746,12 +746,22 @@ extern PGresult* perform_post_row_action(struct handler_args* h,
  *  rs_to_table
  *  output.c
  *
- *  Turn the given result set into an html table.
+ *  Turn the given result set into an html table with tuples in rows.
  *  Give the created table attribute the id of id.
  */
 
 extern void rs_to_table(xmlNodePtr add_here, PGresult* rs, char* id);
- 
+
+/*
+ *  rs_to_sideways_table
+ *  output.c
+ *
+ *  Turn the given result set into an html table with tuples in columns.
+ *  Give the created table attribute the id of id.
+ */
+
+extern void rs_to_sideways_table(xmlNodePtr add_here, PGresult* rs, char* id);
+
 /*
  *  build_path
  *  utility.c
