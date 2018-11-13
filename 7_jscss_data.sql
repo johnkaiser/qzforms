@@ -13,9 +13,7 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_host_edit'
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_item_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('menu_set_edit', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('prompt_rule_edit', 10, 'qzforms.css');
-INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('prompt_rule', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('table_action_edit', 10, 'qzforms.css');
-INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('table_action', 10, 'qzforms.css');
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('status', 10, 'qzforms.css');
 
 INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('page_css', 10, 'qzforms.css');
@@ -42,7 +40,6 @@ INSERT INTO qz.page_css (form_name, sequence, filename) VALUES ('form_set', 1, '
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('fixed_parameters', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_host_edit', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('table_action_edit', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('table_action', 30, 'qzforms.js');
 
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('js_edit', 30, 'qzforms.js');
 
@@ -54,7 +51,6 @@ INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_item_edit',
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_set_edit', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu_edit', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('form', 30, 'qzforms.js');
-INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('prompt_rule', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('prompt_rule_edit', 30, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('form_dev', 3, 'qzforms.js');
 INSERT INTO qz.page_js (form_name, sequence, filename) VALUES ('menu', 30, 'qzforms.js');

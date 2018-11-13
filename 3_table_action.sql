@@ -547,14 +547,14 @@ specific row or set of rows.');
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('css', 'etag_value',
-    'SELECT etag
+    'SELECT to_hex(etag) "etag"
     FROM qz.css
     WHERE filename = $1',
 '{filename}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('css', 'get',
-    'SELECT filename,mimetype,modtime,etag,data
+    'SELECT filename,mimetype,modtime,to_hex(etag) "etag",data
     FROM qz.css
     WHERE filename = $1',
 '{filename}', NULL);
@@ -565,14 +565,14 @@ VALUES ('css', 'get',
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('js', 'etag_value',
-    'SELECT etag
+    'SELECT to_hex(etag) "etag"
     FROM qz.js
     WHERE filename = $1',
 '{filename}', NULL);
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('js', 'get',
-    'SELECT filename,mimetype,modtime,etag,data
+    'SELECT filename,mimetype,modtime,to_hex(etag) "etag",data
     FROM qz.js
     WHERE filename = $1',
 '{filename}', NULL);

@@ -6,7 +6,7 @@ CREATE TABLE qz.form(
      xml_template qz.file_name,
      target_div qz.variable_name,
      hidden boolean default false, 
-     add_description boolean,
+     add_description boolean DEFAULT 'f',
      prompt_container qz.prompt_container_type,
      form_set_name qz.variable_name,
      pkey varchar(63)[]
@@ -125,6 +125,5 @@ INSERT INTO qz.form
 (form_name, handler_name, xml_template, target_div, pkey)
 VALUES
 ('menu_menu_page', 'menupage', 'base.xml', 'qz', '{none}');
-
 
 

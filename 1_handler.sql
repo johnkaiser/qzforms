@@ -39,6 +39,7 @@ INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'l
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'edit');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'update');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'delete');
+INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('onetable', 'view');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('fs', 'get');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('fs', 'etag_value');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('grid', 'edit');
