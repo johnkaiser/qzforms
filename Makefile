@@ -38,7 +38,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=11
+SCHEMA_VERSION=12
 
 OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
@@ -61,13 +61,13 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	form_tag.c prompt_rule.c grid.c form_set.c logview.py
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
-	4_prompt_rule.sql 5_jscss.sql 7_jscss_data.sql 8_menu.sql \
-	9_functions.sql  pgtype_datum.sql comment.sql 
+	4_prompt_rule.sql 5_jscss.sql 6_jscss_data.sql 7_menu.sql \
+	8_templates.sql 9_functions.sql  pgtype_datum.sql comment.sql
 
 SQLUTIL=qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
 	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql \
-	qz_db_update_SV11.sql
+	qz_db_update_SV11.sql qz_db_update_SV12.sql
 
 EXAMPLES=examples/release_checklist.sql \
 	examples/release_checklist_data.sql \
@@ -121,13 +121,13 @@ session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom64.o \
 	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o  \
 	opentable.o parse_pg_array.o
 	$(CC) $(CFLAGS) $(XMLLIBDIR) -L$(PGLIBDIR) $(LFLAGS) -DSESSION_MAIN \
-		-L$(PCRELIBS) \
-		session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom64.o \
-		hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
-		opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
-		str_to_array.o login.o prompt_rule.o output.o \
-		input.o menu.o qzhandlers.o status.o qzfs.o onetable.o grid.o \
-		-lpq -o session_test
+	-L$(PCRELIBS) \
+	session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom64.o \
+	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
+	opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
+	str_to_array.o login.o prompt_rule.o output.o \
+	input.o menu.o qzhandlers.o status.o qzfs.o onetable.o grid.o \
+	-lpq -o session_test
 
 onetable.o: onetable.c qz.h
 	$(CC) $(CFLAGS) -c onetable.c
@@ -220,6 +220,7 @@ qzrandom64.o: qzrandom64.c qzrandom64.h
 	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom64.c
 
 qzrandom64_test: qzrandom64.c qzrandom64.h hex_to_uchar.o
+	echo "\n\tIf this fails then edit Makefile and set QZRANDOM\n"
 	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DR64_MAIN  qzrandom64.c \
 	hex_to_uchar.o \
 	-o qzrandom64_test
@@ -244,23 +245,23 @@ tagger.o:tagger.c
 # launch tagger process and test against it.
 tagger_test: tagger.c qzrandom64.o crypto_etag.o hex_to_uchar.o qzconfig.o gettime.o
 	$(CC) -Wall -g -lcrypto  -DTAGGER_MAIN tagger.c \
-		qzrandom64.o crypto_etag.o qzconfig.o hex_to_uchar.o gettime.o \
-		$(XMLCFLAGS) $(XMLLIBDIR)\
-		-o tagger_test
+	qzrandom64.o crypto_etag.o qzconfig.o hex_to_uchar.o gettime.o \
+	$(XMLCFLAGS) $(XMLLIBDIR)\
+	-o tagger_test
 
 # send tests to a running tagger
 test_tagger: tagger.c
 	$(CC) -Wall -g -lcrypto  -DTEST_TAGGER tagger.c qzrandom64.o crypto_etag.o \
-		hex_to_uchar.o -o test_tagger
+	gettime.o hex_to_uchar.o -o test_tagger
 
 qzconfig.o:qzconfig.c qzconfig.h 
 	$(CC) $(CFLAGS)  -Wall -c qzconfig.c 
 
 qzconfig_test:qzconfig.c qzconfig.h qzrandom64.o gettime.o
 	$(CC) $(CFLAGS) -lcrypto -DQZCONFIG_TEST  qzconfig.c \
-		$(XMLLIBDIR) -lxml2 \
-		qzrandom64.o gettime.o \
-		-o qzconfig_test
+	$(XMLLIBDIR) -lxml2 \
+	qzrandom64.o gettime.o \
+	-o qzconfig_test
 
 prompt_rule.o: prompt_rule.c qz.h 
 	$(CC) $(CFLAGS) $(PCRECFLAGS)  -Wall -c prompt_rule.c 
@@ -273,10 +274,10 @@ test_prompt_rule: prompt_rule.c qz.h
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o form_set.o \
-		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-		$(XMLLIBDIR) $(PCRELIBS) \
-		-lpq \
-		-o test_prompt_rule
+	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+	$(XMLLIBDIR) $(PCRELIBS) \
+	-lpq \
+	-o test_prompt_rule
 
 gettime.o:gettime.c
 	$(CC) $(CFLAGS)  -Wall -c gettime.c 
@@ -298,10 +299,10 @@ test_form_set: form_set.c
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
-		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-		$(XMLLIBDIR) $(PCRELIBS) \
-		-lpq \
-		-o test_form_set
+	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+	$(XMLLIBDIR) $(PCRELIBS) \
+	-lpq \
+	-o test_form_set
 
 id_index_test: input.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
@@ -311,10 +312,10 @@ id_index_test: input.c
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
-		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-		$(XMLLIBDIR) $(PCRELIBS) \
-		-lpq \
-		-o id_index_test
+	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
+	$(XMLLIBDIR) $(PCRELIBS) \
+	-lpq \
+	-o id_index_test
 inc:
 	echo $(VERSION)"+0.001"|bc > Version.new
 	printf "%.3f\n" `cat Version.new` > Version
@@ -350,11 +351,13 @@ qzforms.js.sql: $(JS)
 	cat js/grid_delete_row.js       >> qzforms.js.sql
 	cat js/set_action_options.js    >> qzforms.js.sql
 	cat js/dollarquote              >> qzforms.js.sql
-	echo " WHERE filename = 'qzforms.js'" >> qzforms.js.sql
+	echo " WHERE filename = 'qzforms.js';" >> qzforms.js.sql
 
 qz_db_install_SV$(SCHEMA_VERSION).sql : $(SQL) qzforms.js.sql
-	cat $(SQL) > qz_db_install_SV$(SCHEMA_VERSION).sql
+	echo "BEGIN;" > qz_db_install_SV$(SCHEMA_VERSION).sql
+	cat $(SQL) >> qz_db_install_SV$(SCHEMA_VERSION).sql
 	cat qzforms.js.sql >> qz_db_install_SV$(SCHEMA_VERSION).sql
+	echo "COMMIT;" >> qz_db_install_SV$(SCHEMA_VERSION).sql
 
 tar:
 	tar -cz -s '|^|qzforms-$(VERSION)/|' -f qzforms-$(VERSION).tgz \

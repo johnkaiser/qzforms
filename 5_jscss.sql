@@ -147,6 +147,10 @@ div.menu form {
 td.viewtitle{
    font-weight: bold;
 }
+
+td.heading{
+   font-weight: bold;
+}
 $QZF$);
 
 INSERT INTO qz.css (filename, mimetype, modtime, data) 
