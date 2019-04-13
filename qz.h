@@ -48,6 +48,7 @@
 #include "qzrandom64.h"
 #include "strbuf.h"
 #include "tagger.h"
+#include "hex_to_uchar.h"
 
 #ifndef QZVER 
 #define QZVER 0
@@ -304,8 +305,7 @@ struct form_record{
 
 
 struct form_set{
-    char id[9];
-    char zero;
+    char set_id[16];
     int64_t ref_count;
     int64_t audit_count;
     bool is_valid;

@@ -43,24 +43,22 @@ struct form_set* create_form_set(struct handler_args* h, char name[64]){
     struct form_set* fs = calloc(1, sizeof(struct form_set));
     if (fs == NULL) return NULL;
 
-    qzrandom64ch(fs->id);
-    fs->zero = 0;
+    qzrandomch(fs->set_id, 16, last_is_null);
     fs->ref_count = 0;   // For housekeeping.
     fs->is_valid = true; // For use only once on all forms in a set.
     fs->integrity_token = h->session->integrity_token;
     // 67 should be in the config file XXXXXXXXXX
     fs->context_parameters = xmlHashCreate(67);
     snprintf(fs->name, 64, "%s", name);
-    xmlHashAddEntry(h->session->form_sets, fs->id, fs);
+    xmlHashAddEntry(h->session->form_sets, fs->set_id, fs);
 
-    uint64_t fsid;
-    memcpy(&fsid, fs->id, 8);
+    unsigned char* form_set_id = uchar_to_hex(fs->set_id,16);
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d  %s %"PRIx64"\n",
+    fprintf(h->log, "%f %d %s:%d  %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
-        fs->name, fsid);
+        fs->name, form_set_id);
     pthread_mutex_unlock(&log_mutex);
-
+    free(form_set_id);
     return fs;
 }
 
@@ -70,6 +68,11 @@ struct form_set* create_form_set(struct handler_args* h, char name[64]){
  *  Return the form set attached to a form record.
  */
 struct form_set* get_form_set(struct handler_args* h, char* form_set_id){
+
+    if (strnlen(form_set_id, 16) != 15){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "invalid form set id");
+        return NULL;
+    }
 
     struct form_set* fs = xmlHashLookup(h->session->form_sets, form_set_id);
 
@@ -113,7 +116,7 @@ bool form_set_is_valid(struct handler_args* h, struct form_set* fs){
         return false;
     }
 
-    if (strnlen(fs->id,10) != 8){
+    if (strnlen(fs->set_id,16) != 15){
 
         pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail id length error.\n",
@@ -132,27 +135,28 @@ bool form_set_is_valid(struct handler_args* h, struct form_set* fs){
  *  Remove the named form set from the session freeing the item.
  */
 
-void remove_form_set(struct form_tag_housekeeping_data* ft_hk_data, char* id){
+void remove_form_set(struct form_tag_housekeeping_data* ft_hk_data, char* set_id){
 
     struct session* this_session = ft_hk_data->this_session;
     struct handler_args* hargs = ft_hk_data->hargs;
 
-    struct form_set* fs = xmlHashLookup(this_session->form_sets, id);
+    struct form_set* fs = xmlHashLookup(this_session->form_sets, set_id);
 
     if (hargs->conf->log_form_set_details){
-        uint64_t form_set_id;
-        memcpy(&form_set_id, fs->id, 8);
+        unsigned char* form_set_id = uchar_to_hex(set_id, 16);
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(hargs->log, "%f %d %s:%d form_set->id=%"PRIx64"\n",
+        fprintf(hargs->log, "%f %d %s:%d form_set->set_id=%s\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             form_set_id);
         pthread_mutex_unlock(&log_mutex);
+
+        free(form_set_id);
     }
 
     if (fs != NULL){
        xmlHashFree(fs->context_parameters, (xmlHashDeallocator)xmlFree);
-       xmlHashRemoveEntry(this_session->form_sets, (const xmlChar *)fs->id,
+       xmlHashRemoveEntry(this_session->form_sets, (const xmlChar *)fs->set_id,
            (xmlHashDeallocator)xmlFree);
     }
 }
@@ -369,26 +373,25 @@ void close_form_set_scanner(void* payload, void* data, const xmlChar* name){
     struct form_tag_housekeeping_data* ft_hk_data = data;
     struct session* session = ft_hk_data->this_session;
     struct handler_args* hargs = ft_hk_data->hargs;
-    char* id;
-    asprintf(&id, "%s", name);
-
+    char* set_id;
+    asprintf(&set_id, "%s", name);
+    
     if (fs->context_parameters != NULL){
         xmlHashFree(fs->context_parameters, (xmlHashDeallocator)xmlFree);
     }
     if (hargs->conf->log_form_set_details){
 
-        uint64_t form_set_id;
-        memcpy(&form_set_id, id, 8);
-
+        unsigned char* form_set_id = uchar_to_hex(set_id, 16);
         pthread_mutex_lock(&log_mutex);
-        fprintf(hargs->log, "%f %d %s:%d remove_form_set %"PRIx64".\n",
+        fprintf(hargs->log, "%f %d %s:%d remove_form_set %s.\n",
             gettime(), hargs->request_id, __func__, __LINE__,
             form_set_id);
         pthread_mutex_unlock(&log_mutex);
+        free(form_set_id);
     }
-    xmlHashRemoveEntry(session->form_sets, id, (xmlHashDeallocator)xmlFree);
+    xmlHashRemoveEntry(session->form_sets, set_id, (xmlHashDeallocator)xmlFree);
 
-    free(id);
+    free(set_id);
 }
 
 void close_all_form_sets(struct form_tag_housekeeping_data* ft_hk_data){
@@ -447,12 +450,12 @@ void audit_form_set_scanner(void* payload, void* data, const xmlChar* name){
         return;
     }
 
-    if (strnlen(form_set->id,10) != 8){
+    if (strnlen(form_set->set_id,16) != 15){
 
         pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d form_set id length fail %zu\n",
            gettime(), h->request_id, __func__, __LINE__,
-           strnlen(form_set->id,10));
+           strnlen(form_set->set_id,16));
         pthread_mutex_unlock(&log_mutex);
 
         return;
@@ -460,7 +463,7 @@ void audit_form_set_scanner(void* payload, void* data, const xmlChar* name){
     //form_set  seems OK.
 
     // Does the form rec reference the form set being checked?
-    if (strncmp(form_rec->form_set->id, form_set->id, 9) == 0){
+    if (strncmp(form_rec->form_set->set_id, form_set->set_id, 16) == 0){
         form_set->audit_count++;
     }
 }
@@ -494,44 +497,52 @@ void form_set_housekeeping_scanner(void* payload, void* data, const xmlChar* nam
         xmlHashScan(session->form_tags, (void*) audit_form_set_scanner,
             &aud_det);
 
-        uint64_t fsid;
-        memcpy(&fsid, form_set->id, 8);
+        unsigned char* form_set_id = uchar_to_hex(form_set->set_id, 16);
+
         if (form_set->audit_count == form_set->ref_count){
 
             pthread_mutex_lock(&log_mutex);
-            fprintf(h->log, "%f %d %s:%d form_set %s %"PRIx64" audit passed\n",
+            fprintf(h->log, "%f %d %s:%d form_set %s %s audit passed\n",
                gettime(), h->request_id, __func__, __LINE__,
-               form_set->name, fsid);
+               form_set->name, form_set_id);
             pthread_mutex_unlock(&log_mutex);
 
             // What this is all about
             if  (form_set->ref_count == 0){
-                remove_form_set(ft_hk_data, form_set->id);
+                remove_form_set(ft_hk_data, form_set->set_id);
             }
         }else{
-            fprintf(h->log, "%f %d %s:%d form_set %s %"PRIx64" "
+            fprintf(h->log, "%f %d %s:%d form_set %s %s "
                 "ref count %"PRId64" audit count %"PRId64"\n",
                 gettime(), h->request_id, __func__, __LINE__,
-                form_set->name, fsid, form_set->ref_count, form_set->audit_count);
+                form_set->name, form_set_id, form_set->ref_count, form_set->audit_count);
         }
+        free(form_set_id);
     }else{
 
         // The normal case - auditing is turned off.
 
         if  (form_set->ref_count == 0){
-            remove_form_set(ft_hk_data, form_set->id);
+            remove_form_set(ft_hk_data, form_set->set_id);
         }
     }
 }
 
 
 #ifdef FORM_SET_MAIN
+/* 
+ * This test is not working right.
+ * A far better test is to run the full program with config option 
+ * LOG_FORM_SET_DETAILS = t
+ */
+
 #include <pthread.h>
+#include "hex_to_uchar.h"
+
 pthread_mutex_t log_mutex;
 pid_t tagger_pid = 0;
 
 int main(int argc, char* argv[]){
-
 
     // setup a fake environment
     pthread_mutex_init(&log_mutex,NULL);
@@ -542,12 +553,14 @@ int main(int argc, char* argv[]){
     }
 
     struct FCGX_Request freq = (struct FCGX_Request){
-       .requestId = 1,
+        .requestId = 1,
     };
+    init_prompt_type_hash();
+
     struct handler_args hargs = (struct handler_args){
-       .request_id = 1,
-       .request = &freq,
-       .conf = conf,
+        .request_id = 1,
+        .request = &freq,
+        .conf = conf,
     };
     struct handler_args* h = &hargs;
     hargs.log = stdout;
@@ -557,20 +570,22 @@ int main(int argc, char* argv[]){
     struct session s;
     hargs.session = &s;
 
-    doc_from_file(h, "base.xml");
+    xmlNodePtr target_node = xmlHashLookup(h->id_index, "qz");
 
     xmlNodePtr qzdiv = qzGetElementByID(h, "qz");
 
     const char* kw[] = { "host", "dbname", "user", "password",
         "application_name", NULL };
 
-    char* vals[] = { "localhost", "testqz", "qz", "42", "qztest", NULL };
+    char* vals[] = { "localhost", "test5", "qz", "42", "qztest", NULL };
 
     h->session->conn = PQconnectdbParams(kw, (const char* const*) vals, 0);
 
     if (PQstatus(h->session->conn) != CONNECTION_OK){
-       fprintf(h->log, "bad connect\n");
-       exit(53);
+        fprintf(h->log, "bad connect\n");
+        exit(53);
+    }else{
+        fprintf(h->log, "*** postgresql login complete\n");
     }
 
     h->session->opentables = xmlHashCreate(50);
@@ -579,25 +594,60 @@ int main(int argc, char* argv[]){
     h->request_id = 42;
 
     h->uri_parts =  str_to_array("/qz/form/edit", '/');
+    h->nbr_uri_parts = 3;
     init_open_table(h);
 
     char* fname;
-    asprintf(&fname, "%s%c%s%c\n", "form_name", '\0', "form", '\0');
-    xmlHashAddEntry(h->postdata, fname, fname);
+    //asprintf(&fname, "%s%c%s%c\n", "form_name", '\0', "form", '\0');
+    //xmlHashAddEntry(h->postdata, fname, fname);
+    //asprintf(&fname, "%s%c%s%c\n", "action", '\0', "/qz/form/edit", '\0');
+ 
+    char* abuf;
+    asprintf(&abuf, "%s%c", "form_name=todo&handler_name=onetable", '\0');
+    h->postbuf = abuf;
+    h->postdata = parse_key_eq_val(h, h->postbuf, '&',true);
 
     char* handler_name_ro;
     asprintf(&handler_name_ro, "%s%c%s%c\n", "handler_name_ro", '\0', "onetable", '\0');
     xmlHashAddEntry(h->postdata, handler_name_ro, handler_name_ro);
 
+    fprintf(h->log, "*** Fake environment setup complete\n");
+
     h->page_ta = open_table(h, "form", "edit");
+    fprintf(h->log, "***  form/edit opened, form_set_name=%s\n", 
+        h->page_ta->form_set_name);
+
+    register_form(h, target_node, SUBMIT_MULTIPLE, "/qz/form/edit");
+    
     onetable(h);
+    fprintf(h->log, "*** onetable called\n");
+    if (h->error_exists){
+        exit(68);
+    }    
 
+    // Now run check the form set
+    struct form_set* fs = h->current_form_set;
+    unsigned char* form_set_id = uchar_to_hex(fs->id,16);
+    fprintf(h->log, "form set %s\n", form_set_id);
+    if (fs == NULL){
+        fprintf(h->log, "*** current_form_set is null\n");
+    }else{
+        fprintf(h->log, "zero is zero %c\n",
+            (fs->zero == 0) ? 't':'f');
 
+        fprintf(h->log, "ref_count = %"PRId64"\n", fs->ref_count);
+        fprintf(h->log, "audit_count = %"PRId64"\n", fs->audit_count);
+        fprintf(h->log, "is_valid = %c\n",
+            (fs->is_valid) ? 't':'f');
+        
+        fprintf(h->log, "name = %s\n", fs->name);    
+    }        
+    
      kill( tagger_pid, 15);
      int status;
      waitpid(tagger_pid, &status, 0);
      fprintf(stderr, "killed tagger pid %d waitpid status = %d\n",
-         tagger_pid, status);
+        tagger_pid, status);
 
      return 0;
 

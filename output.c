@@ -155,7 +155,23 @@ void expires(struct handler_args* h, time_t expires_t){
 void error_page( struct handler_args* h, int status_code, const char* msg ){
 
     h->error_exists = true;
-    
+
+#ifdef IS_TEST
+    fprintf(stderr, "XXXXXXXXXXXX ERROR PAGE XXXXXXXXXXXXXX\n");
+    fprintf(stderr, "Status: %d\n", status_code);
+
+    if (msg != NULL){
+        fprintf(stderr, "Content-type: text/plain\r\n");
+        fprintf(stderr, "\r\n");
+        fprintf(stderr, "ERROR MSG:\r\n");
+        fprintf(stderr, "%s\r\n", msg);
+        fprintf(stderr, "code=%d\r\n", status_code);
+        fprintf(stderr, "request_id=%d\r\n", h->request_id);
+        h->error_exists = true;
+    }
+
+#else
+
     FCGX_SetExitStatus(status_code, h->out);
     FCGX_FPrintF(h->out, "Status: %d\r\n", status_code);
 
@@ -170,6 +186,8 @@ void error_page( struct handler_args* h, int status_code, const char* msg ){
     }else{
         FCGX_FPrintF(h->out, "\r\n");
     }    
+#endif
+
     return;
 }
 

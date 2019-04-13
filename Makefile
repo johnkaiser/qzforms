@@ -291,11 +291,16 @@ grid.o: grid.c
 form_set.o: form_set.c
 	$(CC) $(CFLAGS) -Wall -c form_set.c
 
-test_form_set: form_set.c
+test_form_set: form_set.c qzhandlers.o onetable.o str_to_array.o session.o \
+	login.o cookie.o input.o strbuf.o menu.o utility.o strbufs.o \
+	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o pgtools.o \
+	qzrandom64.o crypto_etag.o tagger.o hex_to_uchar.o qzconfig.o gettime.o \
+	form_tag.o grid.o prompt_rule.o
+	$(CC) $(CFLAGS) -DIS_TEST -c output.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DFORM_SET_MAIN form_set.c \
-	qzhandlers.o onetable.o \
+	output.o qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
-	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
+	 input.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
@@ -367,4 +372,4 @@ clean:
 	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array \
 	testopentable qzrandom64_test crypto_etag_test test_prompt_rule \
 	hex_to_uchar_test qzforms.js.sql qz_db_install_SV$(SCHEMA_VERSION).sql \
-	qzforms_examples.sql
+	qzforms_examples.sql test_form_set

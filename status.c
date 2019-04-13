@@ -75,12 +75,11 @@ void form_tag_status_scanner(void* val, void* data, const xmlChar* name){
         (form_tag->submit_only_once) ?  "t":"f");
    
     if (form_tag->form_set != NULL){
-        uint64_t id_val;
-        memcpy(&id_val, form_tag->form_set->id, 8);
-        char* id_str;
-        asprintf(&id_str, "%"PRIx64, id_val);
+
+        char* id_str = uchar_to_hex(form_tag->form_set->set_id,16);
         xmlNewTextChild(tr, NULL, "td", id_str);
         free(id_str);
+
     }else{
         xmlNewTextChild(tr, NULL, "td", "NULL");
     }
@@ -106,10 +105,7 @@ void form_set_scanner(void* val, void* data, const xmlChar* name){
     xmlNodePtr tr = xmlNewChild(thead, NULL, "tr", NULL);
     xmlNewTextChild(tr, NULL, "td", form_set->name);
 
-    uint64_t id_val;
-    memcpy(&id_val, form_set->id, 8);
-    char* id_str;
-    asprintf(&id_str, "%"PRIx64, id_val);
+    char* id_str = uchar_to_hex(form_set->set_id,16);
     xmlNewTextChild(tr, NULL, "td", id_str);
     free(id_str);
  
