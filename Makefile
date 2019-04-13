@@ -87,7 +87,7 @@ DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
 TESTS=tests/delete_simplelist.py tests/create_simplegrid.py \
 	tests/qztest.py tests/create_simplelist.py tests/delete_simplegrid.py \
-	tests/vg
+	tests/testdata.sql tests/vg
 
 # The random test is first so make fails early without randomness source
 all: qzrandom64_test qzforms.fcgi \
