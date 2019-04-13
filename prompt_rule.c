@@ -1536,7 +1536,7 @@ int main(int argc, char* argv[]){
 
     // setup a fake environment
 
-    qzrandom64_init();
+    qzrandom_init();
     pthread_mutex_init(&log_mutex,NULL);
 
     struct handler_args hargs = (struct handler_args){

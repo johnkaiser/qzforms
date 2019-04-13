@@ -1326,7 +1326,7 @@ int main(int argc, char* argv[]){
     printf("%s\n", argv[0]);
 
     printf("setup a fake environment\n");
-    qzrandom64_init();
+    qzrandom_init();
     struct qz_config* conf = init_config();
 
 

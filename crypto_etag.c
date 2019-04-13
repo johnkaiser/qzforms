@@ -54,7 +54,7 @@
 #include <stdbool.h>
 #include <openssl/evp.h>
 #include "hex_to_uchar.h"
-#include "qzrandom64.h"
+#include "qzrandom.h"
 #include "crypto_etag.h"
 
 extern double gettime(void);

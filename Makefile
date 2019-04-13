@@ -44,19 +44,19 @@ OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
 	input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
-	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
+	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
 	grid.o form_set.o
 
 FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	templates/base.xml templates/login.xml templates/tinymce.xml \
 	qzforms.init README.txt strbuf.c strbuf.h \
-	http_codes.h qzrandom64.h crypto_etag.h \
+	http_codes.h qzrandom.h crypto_etag.h \
 	qzmain.c qzhandlers.c onetable.c \
 	str_to_array.c session.c login.c cookie.c \
 	input.c output.c menu.c utility.c strbufs.c \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
-	pgtools.c qzrandom64.c crypto_etag.c tagger.h tagger.c \
+	pgtools.c qzrandom.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
 	form_tag.c prompt_rule.c grid.c form_set.c logview.py
 
@@ -90,7 +90,7 @@ TESTS=tests/delete_simplelist.py tests/create_simplegrid.py \
 	tests/testdata.sql tests/vg
 
 # The random test is first so make fails early without randomness source
-all: qzrandom64_test qzforms.fcgi \
+all: test_qzrandom qzforms.fcgi \
 	qz_db_install_SV$(SCHEMA_VERSION).sql \
 	qzforms_examples.sql
 
@@ -117,12 +117,12 @@ test_str_to_array: str_to_array.c
 session.o: session.c
 	$(CC) $(CFLAGS) -c session.c
 
-session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom64.o \
+session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom.o \
 	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o  \
 	opentable.o parse_pg_array.o
 	$(CC) $(CFLAGS) $(XMLLIBDIR) -L$(PGLIBDIR) $(LFLAGS) -DSESSION_MAIN \
 	-L$(PCRELIBS) \
-	session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom64.o \
+	session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom.o \
 	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
 	opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
 	str_to_array.o login.o prompt_rule.o output.o \
@@ -150,7 +150,7 @@ array_base_test: utility.c qz.h
 	str_to_array.o session.o login.o  cookie.o\
 	input.o output.o strbuf.o menu.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
-	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
+	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
 	grid.o form_set.o \
 	-DARRAY_BASE_TEST utility.c \
@@ -182,13 +182,13 @@ opentable.o: opentable.c qz.h
 	$(CC) $(CFLAGS) -DSCHEMA_VER=\"$(SCHEMA_VERSION)\" -c opentable.c
 
 opentable_test: opentable.c \
-	parse_pg_array.o qz.h gettime.o qzrandom64.o pgtools.o
+	parse_pg_array.o qz.h gettime.o qzrandom.o pgtools.o
 	$(CC) $(CFLAGS) $(LFLAGS) -DSCHEMA_VER=\"$(SCHEMA_VERSION)\" \
 	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
 	$(XMLLIBDIR) $(PCRELIBS) \
 	-lpq \
 	-DOPENTABLE_TEST -g \
-	gettime.o pgtools.o strbuf.o parse_pg_array.o output.o qzrandom64.o \
+	gettime.o pgtools.o strbuf.o parse_pg_array.o output.o qzrandom.o \
 	prompt_rule.o tagger.o crypto_etag.o utility.o str_to_array.o grid.o \
 	hex_to_uchar.o form_tag.o qzhandlers.o  status.o qzfs.o form_set.o \
 	onetable.o menu.o login.o input.o cookie.o session.o parse_key_eq_val.o \
@@ -216,14 +216,14 @@ qzfs.o: qzfs.c qz.h
 strbufs.o: strbufs.c qz.h
 	$(CC) $(CFLAGS) -c strbufs.c
 
-qzrandom64.o: qzrandom64.c qzrandom64.h 
-	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom64.c
+qzrandom.o: qzrandom.c qzrandom.h
+	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom.c
 
-qzrandom64_test: qzrandom64.c qzrandom64.h hex_to_uchar.o
+test_qzrandom: qzrandom.c qzrandom.h hex_to_uchar.o
 	echo "\n\tIf this fails then edit Makefile and set QZRANDOM\n"
-	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DR64_MAIN  qzrandom64.c \
+	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DTEST_QZRANDOM  qzrandom.c \
 	hex_to_uchar.o \
-	-o qzrandom64_test
+	-o test_qzrandom
 
 hex_to_uchar.o: hex_to_uchar.c
 	$(CC) $(CFLAGS) -c hex_to_uchar.c
@@ -235,32 +235,32 @@ hex_to_uchar_test: hex_to_uchar.c gettime.o
 crypto_etag.o: crypto_etag.c crypto_etag.h
 	$(CC) $(CFLAGS) -c crypto_etag.c
 
-crypto_etag_test: crypto_etag.c crypto_etag.h qzrandom64.o hex_to_uchar.o gettime.o
-	$(CC) $(CFLAGS) -DCRYPTO_ETAG_MAIN  crypto_etag.c qzrandom64.o \
+crypto_etag_test: crypto_etag.c crypto_etag.h qzrandom.o hex_to_uchar.o gettime.o
+	$(CC) $(CFLAGS) -DCRYPTO_ETAG_MAIN  crypto_etag.c qzrandom.o \
 	hex_to_uchar.o  gettime.o -lcrypto -o crypto_etag_test
 
 tagger.o:tagger.c
 	$(CC) $(CFLAGS) -c tagger.c
 
 # launch tagger process and test against it.
-tagger_test: tagger.c qzrandom64.o crypto_etag.o hex_to_uchar.o qzconfig.o gettime.o
+tagger_test: tagger.c qzrandom.o crypto_etag.o hex_to_uchar.o qzconfig.o gettime.o
 	$(CC) -Wall -g -lcrypto  -DTAGGER_MAIN tagger.c \
-	qzrandom64.o crypto_etag.o qzconfig.o hex_to_uchar.o gettime.o \
+	qzrandom.o crypto_etag.o qzconfig.o hex_to_uchar.o gettime.o \
 	$(XMLCFLAGS) $(XMLLIBDIR)\
 	-o tagger_test
 
 # send tests to a running tagger
 test_tagger: tagger.c
-	$(CC) -Wall -g -lcrypto  -DTEST_TAGGER tagger.c qzrandom64.o crypto_etag.o \
+	$(CC) -Wall -g -lcrypto  -DTEST_TAGGER tagger.c qzrandom.o crypto_etag.o \
 	gettime.o hex_to_uchar.o -o test_tagger
 
 qzconfig.o:qzconfig.c qzconfig.h 
 	$(CC) $(CFLAGS)  -Wall -c qzconfig.c 
 
-qzconfig_test:qzconfig.c qzconfig.h qzrandom64.o gettime.o
+qzconfig_test:qzconfig.c qzconfig.h qzrandom.o gettime.o
 	$(CC) $(CFLAGS) -lcrypto -DQZCONFIG_TEST  qzconfig.c \
 	$(XMLLIBDIR) -lxml2 \
-	qzrandom64.o gettime.o \
+	qzrandom.o gettime.o \
 	-o qzconfig_test
 
 prompt_rule.o: prompt_rule.c qz.h 
@@ -272,7 +272,7 @@ test_prompt_rule: prompt_rule.c qz.h
 	str_to_array.o session.o login.o  cookie.o \
 	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
-	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
+	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o form_set.o \
 	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
 	$(XMLLIBDIR) $(PCRELIBS) \
@@ -291,31 +291,13 @@ grid.o: grid.c
 form_set.o: form_set.c
 	$(CC) $(CFLAGS) -Wall -c form_set.c
 
-test_form_set: form_set.c qzhandlers.o onetable.o str_to_array.o session.o \
-	login.o cookie.o input.o strbuf.o menu.o utility.o strbufs.o \
-	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o pgtools.o \
-	qzrandom64.o crypto_etag.o tagger.o hex_to_uchar.o qzconfig.o gettime.o \
-	form_tag.o grid.o prompt_rule.o
-	$(CC) $(CFLAGS) -DIS_TEST -c output.c
-	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DFORM_SET_MAIN form_set.c \
-	output.o qzhandlers.o onetable.o \
-	str_to_array.o session.o login.o  cookie.o \
-	 input.o strbuf.o menu.o utility.o strbufs.o \
-	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
-	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
-	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
-	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-	$(XMLLIBDIR) $(PCRELIBS) \
-	-lpq \
-	-o test_form_set
-
 id_index_test: input.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
 	 output.o strbuf.o menu.o utility.o strbufs.o form_set.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
-	pgtools.o qzrandom64.o crypto_etag.o tagger.o \
+	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
 	-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
 	$(XMLLIBDIR) $(PCRELIBS) \
@@ -370,6 +352,6 @@ tar:
 
 clean:
 	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array \
-	testopentable qzrandom64_test crypto_etag_test test_prompt_rule \
+	testopentable test_qzrandom crypto_etag_test test_prompt_rule \
 	hex_to_uchar_test qzforms.js.sql qz_db_install_SV$(SCHEMA_VERSION).sql \
-	qzforms_examples.sql test_form_set
+	qzforms_examples.sql

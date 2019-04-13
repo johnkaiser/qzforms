@@ -457,7 +457,7 @@ void launch_connection_thread(void* data){
 
 int main(int argc, char* argv[], char* envpmain[]){
 
-    qzrandom64_init();
+    qzrandom_init();
     struct qz_config* conf = init_config();
     init_login_tracker();
 

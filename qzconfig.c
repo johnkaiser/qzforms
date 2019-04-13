@@ -222,7 +222,7 @@ bool is_true(char* str){
  */
 void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
 
-    qzrandom64_init();
+    qzrandom_init();
 
     if (conf == NULL){
        fprintf(stderr, "set_config given null conf\n");

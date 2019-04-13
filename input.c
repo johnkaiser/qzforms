@@ -490,7 +490,7 @@ int main(void){
 
     // setup a fake environment
     pthread_mutex_init(&log_mutex,NULL);
-    qzrandom64_init();
+    qzrandom_init();
     struct qz_config* conf = init_config();
 
     struct FCGX_Request freq = (struct FCGX_Request){

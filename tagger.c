@@ -29,7 +29,7 @@
  */ 
 
 #include "tagger.h"
-#include "qzrandom64.h"
+#include "qzrandom.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -534,7 +534,7 @@ int main(int argc, char* argv[]){
     request_id = 0;
     pthread_mutex_init(&log_mutex,NULL);
 
-    qzrandom64_init();
+    qzrandom_init();
     uint64_t domain_token = 420;
 
     struct timespec start;
@@ -696,7 +696,7 @@ int main(int argc, char* argv[]){
  */
 int main(int argc, char* argv[]){
 
-    qzrandom64_init();
+    qzrandom_init();
     uint64_t domain_token = qzrandom64();
 
     char* sockname = getenv("QZ_TAGGER_SOCKET");
