@@ -105,6 +105,8 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->out = request->out;
         hargs->err = request->err;
         hargs->envpfcgi = request->envp;
+        hargs->uri_parts = NULL;
+        hargs->ctx = xmlNewParserCtxt();
         hargs->uri_parts = str_to_array(
             FCGX_GetParam("REQUEST_URI",request->envp), '/');
     }else{
@@ -118,6 +120,7 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->request = NULL;
         hargs->envpfcgi = NULL;
         hargs->uri_parts = NULL;
+        hargs->ctx = NULL;
     }
     hargs->cookie_buf = NULL;
     hargs->envpmain = envpmain;
@@ -248,6 +251,8 @@ void free_handler(struct handler_args* handler){
         }
 
         FCGX_Finish_r(handler->request);
+
+        if (handler->ctx != NULL) xmlFreeParserCtxt(handler->ctx);
 
         if (handler->log!=NULL){
             pthread_mutex_lock(&log_mutex);
@@ -460,6 +465,7 @@ int main(int argc, char* argv[], char* envpmain[]){
     qzrandom_init();
     struct qz_config* conf = init_config();
     init_login_tracker();
+    xmlInitParser();
 
     next_id = 0;
     log_file_rotation(conf, conf->logfile_name);

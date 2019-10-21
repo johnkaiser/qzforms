@@ -175,9 +175,18 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
         requested_docname); 
     pthread_mutex_unlock(&log_mutex);
 
+    if (h->ctx == NULL){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            "doc_from_file called with null h->ctx");
+        pthread_mutex_unlock(&log_mutex);
+        return;
+    }
+
     if (h->doc != NULL){
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d danger %s\n", 
+        fprintf(h->log, "%f %d %s:%d warning %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             "doc_from_file called with h->doc defined");
         pthread_mutex_unlock(&log_mutex);
@@ -196,7 +205,8 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
     asprintf(&full_path, "%s%s%s", 
         h->conf->template_path, PATH_SEPARATOR, docname);
 
-    h->doc = xmlParseFile(full_path);
+    h->doc = xmlCtxtReadFile(h->ctx, full_path, NULL,
+        XML_PARSE_NOERROR|XML_PARSE_NOWARNING|XML_PARSE_NONET);
 
     if (h->doc == NULL){
         error_page(h, SC_INTERNAL_SERVER_ERROR, "xmlParseFile failed");

@@ -2,6 +2,7 @@
 
 // This is needed to get asprintf on Linux
 #define _GNU_SOURCE
+#define LIBXML2_NEW_BUFFER
 
 #include <ctype.h>
 #include <dirent.h>
@@ -130,6 +131,7 @@ struct handler_args {
     struct form_record* posted_form;
     struct form_set* current_form_set;
     struct strbuf* headers;
+    xmlParserCtxtPtr ctx;
     xmlDocPtr doc;
     xmlHashTablePtr id_index;
     struct strbuf* data; 
