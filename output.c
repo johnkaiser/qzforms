@@ -399,6 +399,8 @@ void do_page( struct handler_args* hargs ){
                     catch_notifies(hargs);
                     handler->count++;
 
+                    hargs->handler_name = handler->name;
+
                     if ( check_postdata(hargs) ){
                        // Execute the selected handler
                         handler->handler( hargs );

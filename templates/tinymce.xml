@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src='https://cdn.tinymce.com/4/tinymce.min.js'></script>
+  <!-- Download  tinymce and host locally to avoid CDN
+       https://www.tiny.cloud/get-tiny/downloads/ -->
+  <script src='https://cloud.tinymce.com/5/tinymce.min.js'></script>
   <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
   <meta name="viewport" content="initial-scale = 1.0, maximum-scale = 1.0, user-scalable = no, width = device-width" />
   <title> QZ Forms </title>

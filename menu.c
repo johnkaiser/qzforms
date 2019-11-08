@@ -58,6 +58,8 @@ void menupage( struct handler_args* h ){
     add_helpful_text(h, h->page_ta);
     add_all_menus(h);
 
+    doc_adder(h);
+
     return;
 }
 

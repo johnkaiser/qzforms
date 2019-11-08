@@ -111,6 +111,7 @@ extern pthread_mutex_t log_mutex;
 struct handler_args {
     char session_key[16];
     struct session* session;
+    char* handler_name;
     FCGX_Request *request;
     FCGX_Stream *in;
     FCGX_Stream *out;
@@ -774,7 +775,6 @@ extern void rs_to_sideways_table(xmlNodePtr add_here, PGresult* rs, char* id);
  *
  *  XXXXX Use asprintf instead.
  */
-
 extern char* build_path(char* str_ar[]);
 
 /*
@@ -1092,3 +1092,10 @@ extern bool item_in_list(char* item, char** list);
  *  utility.c
  */
 extern char* array_base(const char* name);
+
+/*
+ *  doc_adder
+ *  docs.c
+ */
+void init_doc(struct handler_args* h);
+void doc_adder(struct handler_args* h);

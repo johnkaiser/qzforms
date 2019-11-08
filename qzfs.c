@@ -152,7 +152,8 @@ void qzfs(struct handler_args* h){
                 // XXXXX possibly check the pg type
                 char* pg_etag_str = PQgetvalue(etag_rs,0,0);
 
-                if (strncmp(pg_etag_str, payload, 16) == 0){
+                if ((pg_etag_str != NULL) &&
+                    (strncmp(pg_etag_str, payload, 16) == 0)){
 
                     // OK then, the cache is current
                     pthread_mutex_lock(&log_mutex);

@@ -451,6 +451,8 @@ void validate_login( struct handler_args* h  ){
 
         init_menu(h);
 
+        init_doc(h);
+
         PGresult* listen_rs;
 
         listen_rs = PQexec(h->session->conn, "LISTEN pg_db_change");

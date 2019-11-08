@@ -122,6 +122,7 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
         hargs->uri_parts = NULL;
         hargs->ctx = NULL;
     }
+    hargs->handler_name = NULL;
     hargs->cookie_buf = NULL;
     hargs->envpmain = envpmain;
     hargs->request_id = request_id;

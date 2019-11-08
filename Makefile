@@ -46,7 +46,7 @@ OBJ=qzhandlers.o onetable.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
-	grid.o form_set.o
+	grid.o form_set.o docs.o
 
 FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	templates/base.xml templates/login.xml templates/tinymce.xml \
@@ -58,7 +58,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
-	form_tag.c prompt_rule.c grid.c form_set.c logview.py
+	form_tag.c prompt_rule.c grid.c form_set.c docs.c logview.py
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jscss_data.sql 7_menu.sql \
@@ -67,7 +67,7 @@ SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 SQLUTIL=qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
 	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql \
-	qz_db_update_SV11.sql qz_db_update_SV12.sql
+	qz_db_update_SV11.sql qz_db_update_SV12.sql qz_db_update_SV13.sql \
 
 EXAMPLES=examples/release_checklist.sql \
 	examples/release_checklist_data.sql \
@@ -81,7 +81,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/change_status.js js/form_refresh.js js/form_refresh_init.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
-	js/set_action_options.js js/dollarquote
+	js/set_action_options.js js/dollarquote js/tinymce.init.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
@@ -291,6 +291,9 @@ grid.o: grid.c
 form_set.o: form_set.c
 	$(CC) $(CFLAGS) -Wall -c form_set.c
 
+docs.o: docs.c
+	$(CC) $(CFLAGS) -Wall -c docs.c
+
 id_index_test: input.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
 	qzhandlers.o onetable.o \
@@ -337,6 +340,7 @@ qzforms.js.sql: $(JS)
 	cat js/grid_add_row.js          >> qzforms.js.sql
 	cat js/grid_delete_row.js       >> qzforms.js.sql
 	cat js/set_action_options.js    >> qzforms.js.sql
+	cat js/tinymce.init.js           >> qzforms.js.sql
 	cat js/dollarquote              >> qzforms.js.sql
 	echo " WHERE filename = 'qzforms.js';" >> qzforms.js.sql
 

@@ -416,10 +416,15 @@ void init_table_entry(struct handler_args* hargs,
     table_entry_size+= prepared_name_len+2;
 
     //  Get the table_action from postgres.
-    const char* paramValues[3];
+    char* paramValues[3];
     paramValues[0] = form_name;
     paramValues[1] = action;
     paramValues[2] = NULL;
+
+    static char view[] = "view";
+    if ( ! has_data(paramValues[1]) && strcmp("menupage", hargs->handler_name)==0){
+        paramValues[1] = view;
+    }
 
     PGresult* rs_table_action;
 
