@@ -30,6 +30,74 @@
 
 #include "qz.h"
 
+
+void add_context_param_input_field(struct handler_args* h, xmlNodePtr here,
+    PGresult* rs){
+
+    if (h->current_form_set == NULL) return;
+    if (h->page_ta == NULL) return;
+
+    int n;
+    char* ctxparam;
+    for(n=0; h->page_ta->context_parameters[n] != NULL; n++){
+        ctxparam = h->page_ta->context_parameters[n];
+
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d checking %s\n",
+            gettime(), h->request_id, __func__, __LINE__, ctxparam);
+        pthread_mutex_unlock(&log_mutex);
+
+        // If the current context parameter is in the clear list,
+        // then skip it.
+        int m;
+        if (h->page_ta->clear_context_parameters != NULL){
+            for(m=0; h->page_ta->clear_context_parameters[m] != NULL; m++){
+                char* clearparam = h->page_ta->clear_context_parameters[m];
+                if (strncmp(ctxparam, clearparam, 64) == 0){
+
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d %s in clear list\n",
+            gettime(), h->request_id, __func__, __LINE__, ctxparam);
+        pthread_mutex_unlock(&log_mutex);
+
+                    continue;
+                }
+            }
+        }
+
+        // If the current context parameter is in the result set,
+        // then skip it
+        char* rs_value = get_value(rs, 0, ctxparam);
+        if (has_data(rs_value)){
+
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d skipping %s has data %s\n",
+            gettime(), h->request_id, __func__, __LINE__, ctxparam, rs_value);
+        pthread_mutex_unlock(&log_mutex);
+
+            continue;
+        }
+
+        // If the current context parameter has a value in the
+        // form set, then add an input field.
+        char* fvalue = xmlHashLookup(h->current_form_set->context_parameters,
+            ctxparam);
+
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d add %s value %s\n",
+            gettime(), h->request_id, __func__, __LINE__, ctxparam, fvalue);
+        pthread_mutex_unlock(&log_mutex);
+
+        if (has_data(fvalue)){
+            xmlNodePtr pk_input = xmlNewChild(here, NULL, "input", NULL);
+            xmlNewProp(pk_input, "type", "hidden");
+            xmlNewProp(pk_input, "name", ctxparam);
+            xmlNewProp(pk_input, "id", ctxparam);
+            xmlNewProp(pk_input, "value", fvalue);
+        }
+    }
+}
+
 /*
  *  add_delete
  *
@@ -87,6 +155,16 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     for (pcnt=0; pcnt<delete_ta->nbr_pkeys; pcnt++){
         char* fname = delete_ta->pkeys[pcnt];
         char* fvalue = PQgetvalue(rs, 0, PQfnumber(rs, fname));
+
+        // If the pkey is not in the Postgresql result set,
+        // then check the form set context parameters.
+        if (( ! has_data(fvalue)) &&
+            (h->current_form_set != NULL)){
+
+                fvalue = xmlHashLookup(
+                    h->current_form_set->context_parameters,
+                    fname);
+        }
         xmlNodePtr pk_input = xmlNewChild(del_form, NULL, "input", NULL);
         xmlNewProp(pk_input, "type", "hidden");
         xmlNewProp(pk_input, "name", fname);
@@ -151,6 +229,8 @@ void edit_form(struct handler_args* h, char* next_action,
     save_context_parameters(h, form_rec, edit_rs, 0);
 
     save_pkey_values(h, form_rec, edit_ta, edit_rs, 0);
+
+    add_context_param_input_field(h, form, edit_rs);
 
     if (deldet != NULL){
         save_context_parameters(h, deldet->form_record, edit_rs, -1);

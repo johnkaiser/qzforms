@@ -64,9 +64,33 @@ struct form_record* register_form(struct handler_args* h,
     //form_rec->pkey_values = xmlHashCreate(23);
     form_rec->pkey_values = NULL;
     form_rec->session_integrity_token = h->session->integrity_token;
-  
+
     snprintf(form_rec->form_action, action_url_len+1, "%s", form_action);
 
+    // Set the form set name if appropriate
+    char* posted_form_set_name = NULL;
+    char* new_form_set_name = NULL;
+
+    if ((h != NULL) && (h->posted_form != NULL) &&
+        (h->posted_form->form_set != NULL)){
+
+            posted_form_set_name = h->posted_form->form_set->name;
+    }
+
+    if ((h != NULL) && (h->page_ta != NULL) &&
+        (h->page_ta->form_set_name[0] != '\0')){
+
+            new_form_set_name = h->page_ta->form_set_name;
+    }
+
+    if ((posted_form_set_name != NULL) &&
+        (new_form_set_name != NULL)){
+
+        if (strcmp(posted_form_set_name, new_form_set_name) == 0){
+            // It's the one, save it.
+            h->current_form_set = h->posted_form->form_set;
+        }
+    }
     // save the record.
     xmlHashAddEntry(h->session->form_tags, form_rec->form_id, form_rec);
 

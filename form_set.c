@@ -63,29 +63,6 @@ struct form_set* create_form_set(struct handler_args* h, char name[64]){
 }
 
 /*
- *  get_form_set
- *
- *  Return the form set attached to a form record.
- */
-struct form_set* get_form_set(struct handler_args* h, char* form_set_id){
-
-    if (strnlen(form_set_id, 16) != 15){
-        error_page(h, SC_INTERNAL_SERVER_ERROR, "invalid form set id");
-        return NULL;
-    }
-
-    struct form_set* fs = xmlHashLookup(h->session->form_sets, form_set_id);
-
-    if ( ! form_set_is_valid(h, fs)){
-        error_page(h, SC_INTERNAL_SERVER_ERROR, "bad token");
-        return NULL;
-
-    }else{
-        return fs;
-    }
-}
-
-/*
  *  form_set_is_valid
  *
  *  Return t/f for a valid form set,
