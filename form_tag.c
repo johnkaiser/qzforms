@@ -83,15 +83,7 @@ struct form_record* register_form(struct handler_args* h,
             new_form_set_name = h->page_ta->form_set_name;
     }
 
-    if ((posted_form_set_name != NULL) &&
-        (new_form_set_name != NULL)){
-
-        if (strcmp(posted_form_set_name, new_form_set_name) == 0){
-            // It's the one, save it.
-            h->current_form_set = h->posted_form->form_set;
-        }
-    }
-    // save the record.
+   // save the record.
     xmlHashAddEntry(h->session->form_tags, form_rec->form_id, form_rec);
 
     // add the hidden input field.
@@ -113,7 +105,6 @@ struct form_record* register_form(struct handler_args* h,
     xmlNewProp(form_node, "expires", expires_buf);
     free(expires_buf);
 
-    //
     if (form_set_is_valid(h, h->current_form_set)){
         form_rec->form_set = h->current_form_set;
         h->current_form_set->ref_count++;
