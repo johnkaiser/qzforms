@@ -386,6 +386,7 @@ void add_menu(struct handler_args* hargs,
                        get_value(fixed_params_rs, fpn, "parameter_value"));
                }
             }
+            PQclear(fixed_params_rs);
         }    
 
         // The menu form has a button.
