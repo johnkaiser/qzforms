@@ -254,6 +254,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->log_fs_etag_details = DEFAULT_LOG_FS_ETAG_DETAILS;
     conf->log_tagger_details = DEFAULT_LOG_TAGGER_DETAILS;
     conf->log_prompt_rule_details = DEFAULT_LOG_PROMPT_RULE_DETAILS;
+    conf->log_context_parameter_details = DEFAULT_LOG_CONTEXT_PARAMETER_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
     snprintf(conf->stderr_file, MAXPATHLEN, "%s", DEFAULT_STDERR_FILE);
@@ -446,7 +447,11 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_prompt_rule_details = is_true(setting);
     }
-
+    setting = xmlHashLookup(conf_hash, "LOG_CONTEXT_PARAMETER_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_CONTEXT_PARAMETER_DETAILS");
+    if ((setting != NULL) && (strlen(setting) > 0)){
+        conf->log_context_parameter_details = is_true(setting);
+    }
 
     // Put postgres vars into environment.
     setenv("PGAPPNAME", "qzforms", 0);
@@ -617,6 +622,7 @@ int main(int argc, char* argv[], char* env[]){
     printf("log_fs_etag_details=%c\n", (config->log_fs_etag_details) ? 't':'f');
     printf("log_tagger_details=%c\n", (config->log_tagger_details) ? 't':'f');
     printf("log_prompt_rule_details=%c\n", (config->log_prompt_rule_details) ? 't':'f');
+    printf("log_context_parameter_details=%c\n", (config->log_context_parameter_details) ? 't':'f');
 
 
     char* allowed_vars[] = {

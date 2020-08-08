@@ -269,6 +269,15 @@ void save_context_parameters(struct handler_args* h,
     for(n=0; key[n] != NULL; n++){
 
         if (item_in_list(key[n], h->page_ta->clear_context_parameters)){
+
+            if (h->conf->log_context_parameter_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d context parameter in clear list %s.\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    key[n]);
+                pthread_mutex_unlock(&log_mutex);
+            }
+
             // Well, not so much clear it as do not set it.
             continue;
         }
@@ -278,20 +287,25 @@ void save_context_parameters(struct handler_args* h,
             key[n]);
         if (param_value != NULL) continue; // It's already there.
 
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d checking context_parameter %s\n",
-            gettime(), h->request_id, __func__, __LINE__,
-            key[n]);
-        pthread_mutex_unlock(&log_mutex);
+        if (h->conf->log_context_parameter_details){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d checking context_parameter %s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                key[n]);
+            pthread_mutex_unlock(&log_mutex);
+        }
 
         // Maybe it is in the current actions result set.
         param_value = get_value(values_rs, row, key[n]);
-        if ((param_value != NULL) && (param_value[0] != '\0')){
-            pthread_mutex_lock(&log_mutex);
-            fprintf(h->log, "%f %d %s:%d PG rs found value %s\n",
-                gettime(), h->request_id, __func__, __LINE__,
-                param_value);
-            pthread_mutex_unlock(&log_mutex);
+        if ((h->conf->log_context_parameter_details) &&
+            (param_value != NULL) &&
+            (param_value[0] != '\0')){
+
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d PG rs found value %s\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    param_value);
+                pthread_mutex_unlock(&log_mutex);
         }
 
         // If not, maybe it's in the posted form set
@@ -299,7 +313,9 @@ void save_context_parameters(struct handler_args* h,
             param_value = xmlHashLookup(
                 h->posted_form->form_set->context_parameters, key[n]);
 
-            if (has_data(param_value)){
+            if ((h->conf->log_context_parameter_details) &&
+                (has_data(param_value))){
+
                 pthread_mutex_lock(&log_mutex);
                 fprintf(h->log, "%f %d %s:%d matching form_set found value %s\n",
                     gettime(), h->request_id, __func__, __LINE__,
@@ -316,18 +332,22 @@ void save_context_parameters(struct handler_args* h,
             xmlHashAddEntry(h->current_form_set->context_parameters,
                 this_key, context_param);
 
-            pthread_mutex_lock(&log_mutex);
-            fprintf(h->log, "%f %d %s:%d set context parameter %s=%s.\n",
-                gettime(), h->request_id, __func__, __LINE__,
-                this_key, context_param);
-            pthread_mutex_unlock(&log_mutex);
+            if (h->conf->log_context_parameter_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d set context parameter %s=%s.\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    this_key, context_param);
+                pthread_mutex_unlock(&log_mutex);
+            }
         }else{
 
-            pthread_mutex_lock(&log_mutex);
-            fprintf(h->log, "%f %d %s:%d context parameter not found %s.\n",
-                gettime(), h->request_id, __func__, __LINE__,
-                key[n]);
-            pthread_mutex_unlock(&log_mutex);
+            if (h->conf->log_context_parameter_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d context parameter not found %s.\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    key[n]);
+                pthread_mutex_unlock(&log_mutex);
+            }
         }
     }
 
