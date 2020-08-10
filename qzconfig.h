@@ -36,11 +36,12 @@
 #define DEFAULT_LOG_FORM_SET_DETAILS false
 #define DEFAULT_FAILED_LOGIN_BLOCK_TIMEOUT (300)
 #define DEFAULT_MAX_FAILED_LOGINS (20)
-#define DEFAULT_LOG_LOGIN_TRACKER_DETAILS false;
-#define DEFAULT_LOG_VALIDATE_RULE_DETAILS false;
-#define DEFAULT_LOG_FS_ETAG_DETAILS false;
-#define DEFAULT_LOG_TAGGER_DETAILS false;
+#define DEFAULT_LOG_LOGIN_TRACKER_DETAILS false
+#define DEFAULT_LOG_VALIDATE_RULE_DETAILS false
+#define DEFAULT_LOG_FS_ETAG_DETAILS false
+#define DEFAULT_LOG_TAGGER_DETAILS false
 #define DEFAULT_LOG_PROMPT_RULE_DETAILS false
+#define DEFAULT_LOG_CONTEXT_PARAMETER_DETAILS false
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -75,6 +76,7 @@ struct qz_config {
     bool log_fs_etag_details;
     bool log_tagger_details;
     bool log_prompt_rule_details;
+    bool log_context_parameter_details;
     uint64_t integrity_token;
 };
 
