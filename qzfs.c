@@ -225,12 +225,17 @@ void qzfs(struct handler_args* h){
     }
 
     // It.
-    h->data = new_strbuf( PQgetvalue(rs, 0, PQfnumber(rs, "data")),0);
+    h->data = xmlBufferCreate();
+    //xmlBufferCat(h->data, PQgetvalue(rs, 0, PQfnumber(rs, "data")));
+    int fn = PQfnumber(rs, "data");
+    int xbufrc =
+    xmlBufferAdd(h->data, PQgetvalue(rs,0,fn), PQgetlength(rs,0,fn));
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d\n",
+    fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d "
+        "xmlBufferAdd rc=%d xmlBufferLength=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
-        which_name, PQgetlength(rs, 0, PQfnumber(rs, "data")));
+        which_name, PQgetlength(rs, 0, fn), xbufrc, xmlBufferLength(h->data));
     pthread_mutex_unlock(&log_mutex);
 
     free(a_name);

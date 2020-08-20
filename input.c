@@ -326,7 +326,8 @@ void validate_rule(void* val, void* data, const xmlChar* key){
             // Then this is the first one, start with an
             // explanatory note about the failure.
 
-            h->data = new_strbuf(regex_failure_hdr, 0);
+            h->data = xmlBufferCreate();
+            xmlBufferCat(h->data, regex_failure_hdr);
             content_type(h, "text/plain");
             h->regex_check = failed;
         }
@@ -335,7 +336,7 @@ void validate_rule(void* val, void* data, const xmlChar* key){
         asprintf(&error_msg, "attribute %s failed regex_pattern %s rc=%d\n\n",
              key, rule->regex_pattern, rc);
 
-        strbuf_append(h->data, new_strbuf(error_msg,0));
+        xmlBufferCat(h->data, error_msg);
 
         pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d "
@@ -368,7 +369,8 @@ void validate_rule(void* val, void* data, const xmlChar* key){
                 // Then this is the first one, start with an
                 // explanatory note about the failure.
 
-                h->data = new_strbuf(regex_failure_hdr, 0);
+                h->data = xmlBufferCreate();
+                xmlBufferCat(h->data, regex_failure_hdr);
                 content_type(h, "text/plain");
                 h->regex_check = failed;
             }
@@ -379,7 +381,7 @@ void validate_rule(void* val, void* data, const xmlChar* key){
                 "length of %"PRIu64" exceeds maxlength %d\n\n",
                 key, (uint64_t)val_length, rule->maxlength);
 
-            strbuf_append(h->data, new_strbuf(length_error,0));
+            xmlBufferCat(h->data, length_error);
 
             pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d key %s value length %"PRIu64

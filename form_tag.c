@@ -301,7 +301,8 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
 
     // No comma before the first element
     if (h->data == NULL){
-        h->data = new_strbuf("{[ ",0);
+        h->data = xmlBufferCreate();
+        xmlBufferCat(h->data, "{[ ");
         comma = ' ';
     }
 
@@ -336,7 +337,7 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
         //  not valid, no change, return zero
         asprintf(&result, "%c {%s,%d}", comma, form_id, 0);
     }
-    strbuf_append(h->data, new_strbuf(result,0));
+    xmlBufferCat(h->data, result);
     free(result);
 }
 
@@ -381,7 +382,7 @@ void refresh_form_tag(struct handler_args* h){
         }
     }
     if (h->data != NULL){
-        strbuf_append(h->data, new_strbuf(" ]}",0));
+        xmlBufferCat(h->data, " ]}");
     }
 }
 

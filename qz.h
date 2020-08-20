@@ -135,7 +135,7 @@ struct handler_args {
     xmlParserCtxtPtr ctx;
     xmlDocPtr doc;
     xmlHashTablePtr id_index;
-    struct strbuf* data; 
+    xmlBufferPtr data;
     enum precheck_status regex_check;
     enum precheck_status pkey_check;
     bool error_exists;

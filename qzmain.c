@@ -248,7 +248,7 @@ void free_handler(struct handler_args* handler){
         }
 
         if (handler->data != NULL){
-            strbuf_free_chain(handler->data);
+            xmlBufferFree(handler->data);
         }
 
         FCGX_Finish_r(handler->request);

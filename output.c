@@ -35,7 +35,7 @@
  *
  *  If the error flag is flipped then do nothing.
  *  If an xml document exists then serve that,
- *  otherwise look for a strbuf list.
+ *  otherwise look for an xmlBuffer in handler_args data.
  */
 
 void serve_output( struct handler_args* hargs ){ 
@@ -91,11 +91,8 @@ void serve_output( struct handler_args* hargs ){
 
     } else if (hargs->data != NULL){
 
-        struct strbuf* a_datum;
-        for(a_datum=hargs->data; a_datum!=NULL; a_datum=a_datum->next){
-            FCGX_FPrintF(hargs->out, "%s", a_datum->str);
+        FCGX_FPrintF(hargs->out, "%s", xmlBufferContent(hargs->data));
 
-        }
     } else {
         error_page(hargs, SC_BAD_REQUEST, "No content generated" );
     }
