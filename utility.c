@@ -37,24 +37,14 @@
  *  the content.
  */
 void add_header(struct handler_args* h, char* key, char* value){
-    int keysize = strlen(key);
-    int valsize = strlen(value);
 
-    // 3 is ": " plus \0
-    struct strbuf* new_header = new_strbuf(NULL, keysize+valsize+3);
+    if (h->headers==NULL) h->headers = xmlBufferCreate();
+    char* new_hdr;
 
-    strncpy(new_header->str, key, keysize+1 );
-    strncat(new_header->str, ": ", 3);
-    strncat(new_header->str, value, valsize+1);
+    asprintf(&new_hdr, "%s: %s\r\n", key, value);
+    xmlBufferCat(h->headers, new_hdr);
+    free(new_hdr);
 
-    new_header->next = h->headers;
-    new_header->prev = NULL;
-
-    if (h->headers != NULL){
-        h->headers->prev = new_header;
-    }
-    h->headers = new_header; 
-    
     return; 
 }
 

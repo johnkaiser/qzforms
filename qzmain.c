@@ -229,7 +229,8 @@ void free_handler(struct handler_args* handler){
         if (handler->doc != NULL) xmlFreeDoc(handler->doc);
         if (handler->id_index != NULL) xmlHashFree(handler->id_index,(xmlHashDeallocator) xmlFree);
         if (handler->uri_parts != NULL) free(handler->uri_parts);
-        if (handler->headers   != NULL) strbuf_free_chain(handler->headers);
+        if (handler->headers   != NULL) xmlBufferFree(handler->headers);
+        if (handler->data != NULL){ xmlBufferFree(handler->data); }
 
         if (handler->cookiesin != NULL){
             xmlHashFree(handler->cookiesin, NULL);
@@ -247,9 +248,6 @@ void free_handler(struct handler_args* handler){
             handler->postbuf = NULL;
         }
 
-        if (handler->data != NULL){
-            xmlBufferFree(handler->data);
-        }
 
         FCGX_Finish_r(handler->request);
 

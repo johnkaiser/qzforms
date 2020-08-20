@@ -47,7 +47,6 @@
 
 #include "http_codes.h"
 #include "qzrandom.h"
-#include "strbuf.h"
 #include "tagger.h"
 #include "hex_to_uchar.h"
 
@@ -131,7 +130,7 @@ struct handler_args {
     struct table_action* page_ta; 
     struct form_record* posted_form;
     struct form_set* current_form_set;
-    struct strbuf* headers;
+    xmlBufferPtr headers;
     xmlParserCtxtPtr ctx;
     xmlDocPtr doc;
     xmlHashTablePtr id_index;
@@ -346,7 +345,6 @@ extern void formtest( struct handler_args*);
 extern void qz_status( struct handler_args*);
 extern void qzfs( struct handler_args*);   
 extern void onetable(struct handler_args*);
-extern void strbufs(struct handler_args* );
 extern void testdatum(struct handler_args*);
 extern void menupage( struct handler_args*);
 /*
