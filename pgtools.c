@@ -413,20 +413,18 @@ void testdatum(struct handler_args* h){
     int j;
 
     content_type(h, "text/plain");
-    struct strbuf* heading = new_strbuf("pgtype_datum\n",0);
-    h->data = heading;
+    h->data = xmlBufferCreate();
+    xmlBufferCat(h->data, "pgtype_datum\n");
 
     for(j=0; cols[j]!=NULL; j++){
         datum = get_pgtype_datum(h, "stuff", cols[j]);
         if (datum != NULL){
             char* json_str = pgtype_datum_to_json(datum);
-            struct strbuf* sb = new_strbuf(json_str, 0) ;
-            strbuf_append(heading, sb);
+            xmlBufferCat(h->data, json_str);
 
             char* escaped_pgtype = xmlURIEscapeStr(json_str, NULL);
             if (escaped_pgtype != NULL){
-                struct strbuf* pgt = new_strbuf(escaped_pgtype, 0);
-                strbuf_append(heading, pgt);
+                xmlBufferCat(h->data, escaped_pgtype);
                 free(escaped_pgtype);
             }    
 
@@ -443,8 +441,7 @@ void testdatum(struct handler_args* h){
         allchars[k+1] = '\0';
     }
     char* esc_allchars = xmlURIEscapeStr(allchars, "\n" );
-    struct strbuf* allch = new_strbuf(esc_allchars, 0);
-    strbuf_append(h->data, allch);
+    xmlBufferCat(h->data, esc_allchars);
     free(esc_allchars);
 
 

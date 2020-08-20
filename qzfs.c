@@ -44,16 +44,13 @@ void etag_header(struct handler_args* h, char* payload){
     bzero(padded_payload, 17);
     snprintf(padded_payload, 17, "%s", payload);
 
-    struct strbuf* etag_header = new_strbuf(NULL, 128);
     char etag_buf[98];
 
     make_etag(etag_buf, h->conf->tagger_socket_path, h->session->etag_token,
         padded_payload);
 
     if (strlen(etag_buf) == 97){
-        snprintf(etag_header->str, 128, "etag: \"%s\"", etag_buf);
-        etag_header->next = h->headers;
-        h->headers = etag_header;
+        add_header(h, "etag", etag_buf);
     }else{
         pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail make_etag strlen %lu payload %s\n",
@@ -61,7 +58,7 @@ void etag_header(struct handler_args* h, char* payload){
             strlen(etag_buf), (payload[0]=='\0') ? "is zero":"is not zero");
         pthread_mutex_unlock(&log_mutex);
 
-       free(etag_header);
+        // XXXXXXX this should be a hard error
     }
 }
 
@@ -225,12 +222,17 @@ void qzfs(struct handler_args* h){
     }
 
     // It.
-    h->data = new_strbuf( PQgetvalue(rs, 0, PQfnumber(rs, "data")),0);
+    h->data = xmlBufferCreate();
+    //xmlBufferCat(h->data, PQgetvalue(rs, 0, PQfnumber(rs, "data")));
+    int fn = PQfnumber(rs, "data");
+    int xbufrc =
+    xmlBufferAdd(h->data, PQgetvalue(rs,0,fn), PQgetlength(rs,0,fn));
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d\n",
+    fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d "
+        "xmlBufferAdd rc=%d xmlBufferLength=%d\n",
         gettime(), h->request_id, __func__, __LINE__,
-        which_name, PQgetlength(rs, 0, PQfnumber(rs, "data")));
+        which_name, PQgetlength(rs, 0, fn), xbufrc, xmlBufferLength(h->data));
     pthread_mutex_unlock(&log_mutex);
 
     free(a_name);

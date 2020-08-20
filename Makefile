@@ -42,7 +42,7 @@ SCHEMA_VERSION=12
 
 OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
-	input.o output.o strbuf.o menu.o utility.o strbufs.o \
+	input.o output.o strbuf.o menu.o utility.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
@@ -54,7 +54,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	http_codes.h qzrandom.h crypto_etag.h \
 	qzmain.c qzhandlers.c onetable.c \
 	str_to_array.c session.c login.c cookie.c \
-	input.c output.c menu.c utility.c strbufs.c \
+	input.c output.c menu.c utility.c \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
@@ -148,7 +148,7 @@ array_base_test: utility.c qz.h
 	$(CC) $(CFLAGS) \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
-	input.o output.o strbuf.o menu.o strbufs.o \
+	input.o output.o strbuf.o menu.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
@@ -213,9 +213,6 @@ test_parse_pg_array: parse_pg_array.c
 qzfs.o: qzfs.c qz.h
 	$(CC) $(CFLAGS) -c qzfs.c
 
-strbufs.o: strbufs.c qz.h
-	$(CC) $(CFLAGS) -c strbufs.c
-
 qzrandom.o: qzrandom.c qzrandom.h
 	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom.c
 
@@ -270,7 +267,7 @@ test_prompt_rule: prompt_rule.c qz.h
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DPROMPT_RULE_MAIN  prompt_rule.c \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
-	 input.o output.o strbuf.o menu.o utility.o strbufs.o \
+	 input.o output.o strbuf.o menu.o utility.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o form_set.o \
@@ -298,7 +295,7 @@ id_index_test: input.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
-	 output.o strbuf.o menu.o utility.o strbufs.o form_set.o \
+	 output.o strbuf.o menu.o utility.o form_set.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \

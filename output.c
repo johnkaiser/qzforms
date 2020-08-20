@@ -35,7 +35,7 @@
  *
  *  If the error flag is flipped then do nothing.
  *  If an xml document exists then serve that,
- *  otherwise look for a strbuf list.
+ *  otherwise look for an xmlBuffer in handler_args data.
  */
 
 void serve_output( struct handler_args* hargs ){ 
@@ -49,13 +49,9 @@ void serve_output( struct handler_args* hargs ){
         "function serve_output");
     pthread_mutex_unlock(&log_mutex);
 
-    struct strbuf* a_header = hargs->headers;
-
-    while(a_header != NULL){
-        FCGX_FPrintF(hargs->out, "%s\r\n", a_header->str); 
-        a_header = a_header->next;
+    if (hargs->headers != NULL){
+        FCGX_FPrintF(hargs->out, "%s\r\n", xmlBufferContent(hargs->headers));
     }
-    if (hargs->headers != NULL) FCGX_FPrintF(hargs->out, "\r\n");
 
     if (hargs->doc != NULL){
        
@@ -91,11 +87,8 @@ void serve_output( struct handler_args* hargs ){
 
     } else if (hargs->data != NULL){
 
-        struct strbuf* a_datum;
-        for(a_datum=hargs->data; a_datum!=NULL; a_datum=a_datum->next){
-            FCGX_FPrintF(hargs->out, "%s", a_datum->str);
+        FCGX_FPrintF(hargs->out, "%s", xmlBufferContent(hargs->data));
 
-        }
     } else {
         error_page(hargs, SC_BAD_REQUEST, "No content generated" );
     }
@@ -111,15 +104,7 @@ void serve_output( struct handler_args* hargs ){
 
 void content_type(struct handler_args* h, char* mime_type){
 
-    char *content_type = "Content-type: ";
-    struct strbuf * ct = new_strbuf(NULL, QZ_MAX_CONTENT_TYPE_LENGTH);
-
-    strncpy(ct->str, content_type, QZ_MAX_CONTENT_TYPE_LENGTH);
-    strncat(ct->str, mime_type, 
-        QZ_MAX_CONTENT_TYPE_LENGTH - strlen(content_type) );
-     
-    ct->next = h->headers;
-    h->headers = ct;
+    add_header(h, "Content-type", mime_type);
 }
 
 /*
@@ -130,17 +115,13 @@ void content_type(struct handler_args* h, char* mime_type){
 
 void expires(struct handler_args* h, time_t expires_t){
     // I need about 38 chars, 128 is gratuitous
-    struct strbuf* expires_buf = new_strbuf(NULL, 128);
- 
+    char expbuf[128];
     struct tm* expires_tm = malloc(sizeof(struct tm));
 
     gmtime_r(&expires_t, expires_tm);
-    strftime(expires_buf->str, 127, "Expires: %a %b %d %T %Z %Y", expires_tm);
-
+    strftime(expbuf, 127, "%a %b %d %T %Z %Y", expires_tm);
+    add_header(h, "Expires", expbuf);
     free(expires_tm);
-
-    expires_buf->next = h->headers;
-    h->headers = expires_buf;
 }
 
 /*

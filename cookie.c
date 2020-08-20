@@ -61,8 +61,8 @@ void make_cookie(struct handler_args* h,
         strftime(expires, QZ_COOKIE_MAX_EXPIRE_LENGTH,fmt,now_tm);
     }
 
-    //                             value;   exp; domain;  path; secure; http
-    asprintf(&cookie, "Set-Cookie: %s=%s; " "%s" "%s%s%s" "%s%s%s" "%s" "%s",
+    //                 value;   exp; domain;  path; secure; http
+    asprintf(&cookie, "%s=%s; " "%s" "%s%s%s" "%s%s%s" "%s" "%s",
         name,
         (value != NULL) ? value:"",
         expires,
@@ -76,15 +76,8 @@ void make_cookie(struct handler_args* h,
         (http_only) ? "HttpOnly ":""
         );
 
-    struct strbuf* cookie_buffer;
-    cookie_buffer = new_strbuf(cookie, 0);     
-    cookie_buffer->next = h->headers;
-    cookie_buffer->prev = NULL;
-
-    h->headers = cookie_buffer;
-
+    add_header(h, "Set-Cookie", cookie);
     free(cookie);
-    cookie = NULL;
 }     
 
 /*

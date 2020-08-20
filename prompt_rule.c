@@ -1468,7 +1468,7 @@ void free_test_handler(struct handler_args* handler){
         if (handler->doc != NULL) xmlFreeDoc(handler->doc);
         if (handler->id_index != NULL) xmlHashFree(handler->id_index,(xmlHashDeallocator) xmlFree);
         if (handler->uri_parts != NULL) free(handler->uri_parts);
-        if (handler->headers   != NULL) strbuf_free_chain(handler->headers);
+        if (handler->headers   != NULL) xmlBufferFree(handler->headers);
 
         if (handler->cookiesin != NULL){
             xmlHashFree(handler->cookiesin, NULL);
