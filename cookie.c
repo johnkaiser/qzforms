@@ -36,7 +36,6 @@
  *  make_cookie
  *
  *  Turn function parameters into a cookie request.
- *  The request is added to a linked list of cookies.
  */
 
 void make_cookie(struct handler_args* h,
@@ -61,8 +60,9 @@ void make_cookie(struct handler_args* h,
         strftime(expires, QZ_COOKIE_MAX_EXPIRE_LENGTH,fmt,now_tm);
     }
 
-    //                 value;   exp; domain;  path; secure; http
-    asprintf(&cookie, "%s=%s; " "%s" "%s%s%s" "%s%s%s" "%s" "%s",
+    //                 value;   exp; domain;  path; secure; samsite http
+    asprintf(&cookie, "%s=%s; " "%s" "%s%s%s" "%s%s%s" "%s" "%s" "%s"
+    ,
         name,
         (value != NULL) ? value:"",
         expires,
@@ -72,11 +72,20 @@ void make_cookie(struct handler_args* h,
         (path != NULL) ? "Path=":"",
         (path != NULL) ? path:"",
         (path != NULL) ? "; ":"",
-        (secure) ? "Secure ":"",
-        (http_only) ? "HttpOnly ":""
+        (secure) ? "Secure; ":"",
+        (secure) ? "SameSite=Strict; ":"",
+        (http_only) ? "HttpOnly; ":""
         );
 
     add_header(h, "Set-Cookie", cookie);
+
+    if (false){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d Set-Cookie %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            cookie);
+        pthread_mutex_unlock(&log_mutex);
+    } 
     free(cookie);
 }     
 
