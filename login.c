@@ -534,7 +534,7 @@ void logout(struct handler_args* hargs){
     // Set an empty session key to destroy the session.
     char* path_parts[] = {hargs->uri_parts[0], "", NULL};
     char* path = build_path(path_parts);
-    make_cookie(hargs, "session_key", "", path, NULL, 0, false, true);
+    make_cookie(hargs, "session_key", "", path, NULL, 0, true, true);
     free(path);
 
     // Build the logout page with a link to login.

@@ -79,9 +79,9 @@ void make_cookie(struct handler_args* h,
 
     add_header(h, "Set-Cookie", cookie);
 
-    if (false){
+    if (h->conf->log_cookie_details){
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d Set-Cookie %s\n",
+        fprintf(h->log, "%f %d %s:%d Set-Cookie: %s\n",
             gettime(), h->request_id, __func__, __LINE__,
             cookie);
         pthread_mutex_unlock(&log_mutex);
