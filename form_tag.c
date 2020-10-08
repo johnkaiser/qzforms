@@ -83,27 +83,29 @@ struct form_record* register_form(struct handler_args* h,
             new_form_set_name = h->page_ta->form_set_name;
     }
 
-   // save the record.
+    // save the record.
     xmlHashAddEntry(h->session->form_tags, form_rec->form_id, form_rec);
 
     // add the hidden input field.
+    // skip this for callbacks
+    if (form_node != NULL){
+        xmlNodePtr tag_node = xmlNewChild(form_node, NULL, "input", NULL);
+        xmlNewProp(tag_node, "type", "hidden");
+        xmlNewProp(tag_node, "name", "form_tag");
+        xmlNewProp(tag_node, "refresh", "1");
+        xmlChar tagbuf[ETAG_MAX_LENGTH];
 
-    xmlNodePtr tag_node = xmlNewChild(form_node, NULL, "input", NULL);
-    xmlNewProp(tag_node, "type", "hidden");
-    xmlNewProp(tag_node, "name", "form_tag");
-    xmlNewProp(tag_node, "refresh", "1");
-    xmlChar tagbuf[ETAG_MAX_LENGTH];
+        make_etag(tagbuf, h->conf->tagger_socket_path, h->session->form_tag_token,
+            form_rec->form_id);
 
-    make_etag(tagbuf, h->conf->tagger_socket_path, h->session->form_tag_token,
-        form_rec->form_id);
+        xmlNewProp(tag_node, "value", tagbuf);
 
-    xmlNewProp(tag_node, "value", tagbuf);
-
-    // add an expires attribute
-    char* expires_buf;
-    asprintf(&expires_buf, "%"PRId64, (int64_t)form_rec->expires);
-    xmlNewProp(form_node, "expires", expires_buf);
-    free(expires_buf);
+        // add an expires attribute
+        char* expires_buf;
+        asprintf(&expires_buf, "%"PRId64, (int64_t)form_rec->expires);
+        xmlNewProp(form_node, "expires", expires_buf);
+        free(expires_buf);
+    }
 
     if (form_set_is_valid(h, h->current_form_set)){
         form_rec->form_set = h->current_form_set;
@@ -124,6 +126,17 @@ struct form_record* register_form(struct handler_args* h,
         free(hex_form_id);
     }
     return form_rec;
+}
+
+/*
+ *  set_form_name
+ *
+ *  Copies the given form name to the form record.
+ *  This is to be used with callbacks, so the callback
+ *  can be told which form it is for.
+ */
+void set_form_name(struct form_record* form, char* form_name){
+    snprintf(form->form_name, PG_NAMEDATALEN, "%s", form_name);
 }
 
 /*
@@ -211,7 +224,16 @@ bool post_contains_valid_form_tag(struct handler_args* h){
         pthread_mutex_unlock(&log_mutex);
 
         return false;
-    }    
+    }
+
+    if ( ! has_data( get_uri_part(h, QZ_URI_FORM_NAME) )){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail request has no name\n",
+           gettime(), h->request_id, __func__, __LINE__);
+        pthread_mutex_unlock(&log_mutex);
+
+        return false;
+    }
 
     // Compare the url saved in the form record to the url used in 
     // the request.  Note url used is allowed to have extra text, just

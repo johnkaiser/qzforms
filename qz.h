@@ -50,6 +50,9 @@
 #include "tagger.h"
 #include "hex_to_uchar.h"
 
+#include "json-parser/json.h"
+#include "json-builder/json-builder.h"
+
 #ifndef QZVER 
 #define QZVER 0
 #endif
@@ -104,6 +107,7 @@ select_options=13, select_fkey=14, textarea=15, text_array=16};
 // XXXXXXXXXXX add td, div, 
 enum prompt_container_type {no_container, fieldset};
 enum precheck_status {notchecked,failed,passed};
+enum callback_response_type {plain_text,qzforms_json,postgresql_json,html_table};
 
 extern pthread_mutex_t log_mutex;
 
@@ -184,6 +188,7 @@ struct table_action{
     bool add_description;
     char* prompt_container;
     char* helpful_text;
+    char** callbacks;
     char** js_filenames;
     char** css_filenames;
     char*  inline_js;
@@ -191,6 +196,9 @@ struct table_action{
     char form_set_name[PG_NAMEDATALEN+2];
     char** context_parameters;
     char** clear_context_parameters;
+    bool is_callback;
+    char callback_attached_action[PG_NAMEDATALEN+2];
+    enum callback_response_type callback_response;
     uint64_t integrity_token;
 };
 
@@ -299,6 +307,7 @@ struct form_record{
     time_t expires;
     time_t duration;
     bool submit_only_once;
+    char form_name[PG_NAMEDATALEN+2];
     struct form_set* form_set;
     xmlHashTablePtr pkey_values;
     uint64_t session_integrity_token;
@@ -339,14 +348,15 @@ static const char QZERR_EXPECTED_EQ[] = "Expected '='";
 static const char QZERR_BAD_VALUE[] = "Bad Value";
 static const char QZERR_EXPECTED_AMP[] = "Expected ampersand";
 
-extern void params( struct handler_args*);
-extern void timestamp( struct handler_args*); 
-extern void formtest( struct handler_args*);
-extern void qz_status( struct handler_args*);
-extern void qzfs( struct handler_args*);   
+extern void params(struct handler_args*);
+extern void timestamp(struct handler_args*);
+extern void formtest(struct handler_args*);
+extern void qz_status(struct handler_args*);
+extern void qzfs(struct handler_args*);
 extern void onetable(struct handler_args*);
 extern void testdatum(struct handler_args*);
-extern void menupage( struct handler_args*);
+extern void menupage(struct handler_args*);
+extern void callback(struct handler_args*);
 /*
  *  serve_output
  *  output.c
@@ -814,6 +824,15 @@ extern struct form_record* register_form(struct handler_args* h,
 );
 
 /*
+ *  set_form_name
+ *
+ *  Copies the given form name to the form record.
+ *  This is to be used with callbacks, so the callback
+ *  can be told which form it is for.
+ */
+extern void set_form_name(struct form_record* form, char* form_name);
+
+/*
  *  post_contains_valid_form_tag
  *  form_tag.c
  *
@@ -1077,7 +1096,7 @@ extern void init_login_tracker(void);
  *  login_tracking_housekeeping(struct handler_args* hargs
  *  login.c
  */
- extern void login_tracking_housekeeping(struct handler_args* hargs);
+extern void login_tracking_housekeeping(struct handler_args* hargs);
 
 /*
  *  item_in_list
@@ -1097,3 +1116,22 @@ extern char* array_base(const char* name);
  */
 void init_doc(struct handler_args* h);
 void doc_adder(struct handler_args* h);
+
+/*
+ *  callback_adder
+ *  callback.c
+ */
+extern void callback_adder(struct handler_args* h,
+    struct form_record* form_rec, struct table_action* ta);
+
+/*
+ *  callback_name_lookup
+ *  callback.c
+ */
+enum callback_response_type callback_name_lookup(char* type_name);
+
+/*
+ *  callback_enum_lookup
+ *  callback.c
+ */
+char* callback_enum_lookup(enum callback_response_type cb_response);

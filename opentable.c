@@ -94,9 +94,27 @@ void init_open_table(struct handler_args* h){
     char fetch_table_action[] =
         "SELECT fm.schema_name, fm.table_name, ta.sql, ta.fieldnames, "
         "fm.pkey, ta.etag, ta.clear_context_parameters, fm.target_div, "
-        "fm.handler_name, fm.xml_template, fm.add_description, "
+        "fm.xml_template, fm.add_description, "
         "fm.prompt_container, fm.form_set_name, fs.context_parameters, "
         "ta.helpful_text, ta.inline_js, ta.inline_css, "
+        "ta.is_callback, ta.callback_attached_action, ta.callback_response, "
+        "CASE WHEN ta.is_callback THEN "
+        "   'callback' "
+        "ELSE "
+        "  fm.handler_name "
+        "END handler_name, "
+        "CASE WHEN ta.is_callback THEN "
+        "   NULL "
+        "ELSE "
+        "  ARRAY( "
+        "    SELECT action "
+        "    FROM qz.table_action cbta "
+        "    WHERE cbta.form_name = $1 "
+        "    AND (cbta.callback_attached_action) IN ('any', $2) "
+        "    AND cbta.is_callback "
+        "    ORDER BY action "
+        "  ) "
+        "END callbacks, "
         "ARRAY( "
         "  SELECT 'js/get/'|| f.filename filename "
         "  FROM qz.page_js f "
@@ -296,9 +314,21 @@ void log_table_action_details(struct handler_args* h,
         gettime(), h->request_id, __func__, __LINE__,
         (ta->add_description) ? 't':'f');
 
+    fprintf(h->log, "%f %d %s:%d is_callback=%c\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        (ta->is_callback) ? 't':'f');
+
     fprintf(h->log, "%f %d %s:%d prompt_container=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         ta->prompt_container);
+
+    if (ta->callbacks != NULL){
+        for (k=0; ta->callbacks[k] != NULL; k++){
+            fprintf(h->log, "%f %d %s:%d callback=%s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                ta->callbacks[k]);
+        }
+    }
 
     if (ta->js_filenames != NULL){
         for (k=0; ta->js_filenames[k] != NULL; k++){
@@ -315,6 +345,7 @@ void log_table_action_details(struct handler_args* h,
                 ta->css_filenames[k]);
         }
     }
+
     fprintf(h->log, "%f %d %s:%d inline_js %zu bytes\n",
         gettime(), h->request_id, __func__, __LINE__,
         (ta->inline_js == NULL) ? 0 : strlen(ta->inline_js));
@@ -322,7 +353,6 @@ void log_table_action_details(struct handler_args* h,
     fprintf(h->log, "%f %d %s:%d inline_css %zu bytes\n",
         gettime(), h->request_id, __func__, __LINE__,
         (ta->inline_css == NULL) ? 0 : strlen(ta->inline_css));
-
 
     fprintf(h->log, "%f %d %s:%d form_set_name=%s\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -335,6 +365,14 @@ void log_table_action_details(struct handler_args* h,
                 ta->context_parameters[k]);
         }
     }
+
+    fprintf(h->log, "%f %d %s:%d callback_attached_action=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        ta->callback_attached_action);
+
+    fprintf(h->log, "%f %d %s:%d callback_response=%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        callback_enum_lookup(ta->callback_response));
 
     fprintf(h->log, "%f %d %s:%d integrity_token=%"PRIx64"\n",
         gettime(), h->request_id, __func__, __LINE__,
@@ -687,6 +725,12 @@ void init_table_entry(struct handler_args* hargs,
         parse_pg_array(clear_context_parameters_pgarray);
     new_table_action->clear_context_parameters  = clear_context_parameters;
 
+    char* callbacks_pgarray = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "callbacks"));
+    char** callbacks =
+        parse_pg_array(callbacks_pgarray);
+    new_table_action->callbacks = callbacks;
+
     // Count the number of params
     new_table_action->nbr_params = 0;
     if (new_table_action->fieldnames != NULL){
@@ -719,6 +763,30 @@ void init_table_entry(struct handler_args* hargs,
         new_table_action->add_description = true;
     }else{
         new_table_action->add_description = false;
+    }
+
+    // is_callback is a boolean
+    char* is_callback = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "is_callback"));
+    if (is_callback[0] == 't'){
+        new_table_action->is_callback = true;
+    }else{
+        new_table_action->is_callback = false;
+    }
+
+    // callback_attached_action has storage in struct
+    char* callback_attached_action = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "callback_attached_action"));
+    if (has_data(callback_attached_action)){
+        snprintf(new_table_action->callback_attached_action, PG_NAMEDATALEN,
+            "%s", callback_attached_action);
+    }
+
+    char* callback_response = PQgetvalue(rs_table_action, 0,
+        PQfnumber(rs_table_action, "callback_response"));
+    if (has_data(callback_response)){
+        new_table_action->callback_response =
+            callback_name_lookup(callback_response);
     }
 
     // Set the check token
@@ -767,6 +835,7 @@ void free_table_action(struct table_action* ta){
     if (ta->css_filenames != NULL) free(ta->css_filenames);
     if (ta->context_parameters != NULL) free(ta->context_parameters);
     if (ta->clear_context_parameters != NULL) free(ta->clear_context_parameters);
+    if (ta->callbacks != NULL) free(ta->callbacks);
     free(ta);
 }
 

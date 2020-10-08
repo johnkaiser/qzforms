@@ -146,6 +146,7 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     struct form_record* form_record =
         register_form(h, del_form, SUBMIT_MULTIPLE, action_target);
 
+    set_form_name(form_record, "delete_it");
     if (h->error_exists) return NULL;
 
     save_pkey_values(h, form_record, delete_ta, rs, 0);
@@ -218,15 +219,18 @@ void edit_form(struct handler_args* h, char* next_action,
     asprintf(&action_name, "%s_it", next_action);
     xmlNewProp(form, "name", action_name);
     xmlNewProp(form, "id", action_name);
-    free(action_name);
-    action_name = NULL;
 
     xmlNewProp(form, "enctype", "application/x-www-form-urlencoded");
 
     struct form_record* form_rec = register_form(h, form, SUBMIT_MULTIPLE,
         form_target);
 
+    set_form_name(form_rec, action_name);
+    free(action_name);
+    action_name = NULL;
+
     save_context_parameters(h, form_rec, edit_rs, 0);
+    callback_adder(h, form_rec, edit_ta);
 
     save_pkey_values(h, form_rec, edit_ta, edit_rs, 0);
 
@@ -411,7 +415,10 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
     xmlNewProp(form, "id", "insert");
     xmlNewProp(form, "enctype", "application/x-www-form-urlencoded");
 
-    register_form(h, form, SUBMIT_MULTIPLE, action_target);
+    struct form_record* form_rec = register_form(h, form, SUBMIT_MULTIPLE,
+        action_target);
+
+    set_form_name(form_rec, "insert");
 
     xmlNodePtr button = xmlNewTextChild(form, NULL, "button", "Insert");
     xmlNewProp(button, "type", "submit");
@@ -560,10 +567,11 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
             asprintf(&form_prop_name, "edit%d",  form_nbr++);
             xmlNewProp(form, "name", form_prop_name);
             xmlNewProp(form, "id", form_prop_name);
-            free(form_prop_name);
 
             //  XXXXXX get timeout and submit_only_once flag from pg
             form_tag = register_form(h, form, SUBMIT_MULTIPLE, action_target);
+            set_form_name(form_tag, form_prop_name);
+            free(form_prop_name);
 
             if (h->current_form_set == NULL){
                 save_context_parameters(h, form_tag, list_rs, -1);

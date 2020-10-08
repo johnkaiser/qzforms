@@ -42,23 +42,27 @@ SCHEMA_VERSION=12
 
 OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
-	input.o output.o strbuf.o menu.o utility.o \
+	input.o output.o menu.o utility.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
-	grid.o form_set.o docs.o
+	grid.o form_set.o docs.o callback.o json-builder.o
 
 FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	templates/base.xml templates/login.xml templates/tinymce.xml \
-	qzforms.init README.txt strbuf.c strbuf.h \
+	qzforms.init README.txt \
 	http_codes.h qzrandom.h crypto_etag.h \
-	qzmain.c qzhandlers.c onetable.c \
+	qzmain.c qzhandlers.c onetable.c callback.c \
 	str_to_array.c session.c login.c cookie.c \
 	input.c output.c menu.c utility.c \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
-	form_tag.c prompt_rule.c grid.c form_set.c docs.c logview.py
+	form_tag.c prompt_rule.c grid.c form_set.c docs.c logview.py \
+    json-parser/json.c json-parser/json.h \
+    json-parser/LICENSE json-parser/AUTHORS \
+    json-builder/json-builder.c json-builder/json-builder.h \
+    json-builder/LICENSE json-builder/AUTHORS \
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jscss_data.sql 7_menu.sql \
@@ -81,7 +85,8 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/change_status.js js/form_refresh.js js/form_refresh_init.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
-	js/set_action_options.js js/dollarquote js/tinymce.init.js
+	js/set_action_options.js js/dollarquote js/tinymce.init.js \
+	get_callbacks.js qz_callback.jk
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
@@ -117,12 +122,12 @@ test_str_to_array: str_to_array.c
 session.o: session.c
 	$(CC) $(CFLAGS) -c session.c
 
-session_test: strbuf.o session.c gettime.o crypto_etag.o tagger.o qzrandom.o \
+session_test: session.c gettime.o crypto_etag.o tagger.o qzrandom.o \
 	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o  \
 	opentable.o parse_pg_array.o
 	$(CC) $(CFLAGS) $(XMLLIBDIR) -L$(PGLIBDIR) $(LFLAGS) -DSESSION_MAIN \
 	-L$(PCRELIBS) \
-	session.c strbuf.o gettime.o crypto_etag.o tagger.o qzrandom.o \
+	session.c gettime.o crypto_etag.o tagger.o qzrandom.o \
 	hex_to_uchar.o cookie.o parse_key_eq_val.o utility.o qzconfig.o \
 	opentable.o parse_pg_array.o  form_set.o pgtools.o form_tag.o \
 	str_to_array.o login.o prompt_rule.o output.o \
@@ -148,7 +153,7 @@ array_base_test: utility.c qz.h
 	$(CC) $(CFLAGS) \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
-	input.o output.o strbuf.o menu.o \
+	input.o output.o  menu.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
@@ -159,9 +164,6 @@ array_base_test: utility.c qz.h
 
 get_random_key.o: get_random_key.c qz.h
 	$(CC) $(CFLAGS) -c get_random_key.c
-
-strbuf.o: strbuf.c strbuf.h
-	$(CC) $(CFLAGS) -c strbuf.c
 
 cookie.o: cookie.c qz.h
 	$(CC) $(CFLAGS) -c cookie.c
@@ -188,7 +190,7 @@ opentable_test: opentable.c \
 	$(XMLLIBDIR) $(PCRELIBS) \
 	-lpq \
 	-DOPENTABLE_TEST -g \
-	gettime.o pgtools.o strbuf.o parse_pg_array.o output.o qzrandom.o \
+	gettime.o pgtools.o parse_pg_array.o output.o qzrandom.o \
 	prompt_rule.o tagger.o crypto_etag.o utility.o str_to_array.o grid.o \
 	hex_to_uchar.o form_tag.o qzhandlers.o  status.o qzfs.o form_set.o \
 	onetable.o menu.o login.o input.o cookie.o session.o parse_key_eq_val.o \
@@ -267,7 +269,7 @@ test_prompt_rule: prompt_rule.c qz.h
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DPROMPT_RULE_MAIN  prompt_rule.c \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
-	 input.o output.o strbuf.o menu.o utility.o \
+	 input.o output.o menu.o utility.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o form_set.o \
@@ -291,11 +293,17 @@ form_set.o: form_set.c
 docs.o: docs.c
 	$(CC) $(CFLAGS) -Wall -c docs.c
 
+callback.o: callback.c json-builder.o
+	$(CC) $(CFLAGS) -Wall -c callback.c
+
+json-builder.o: json-builder/json-builder.c
+	$(CC) $(CFLAGS) -Wall -c json-builder/json-builder.c
+
 id_index_test: input.c
 	$(CC) $(CFLAGS) $(LFLAGS) -lcrypto -DID_INDEX_TEST input.c \
 	qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o \
-	 output.o strbuf.o menu.o utility.o form_set.o \
+	 output.o menu.o utility.o form_set.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o grid.o prompt_rule.o \
@@ -337,7 +345,9 @@ qzforms.js.sql: $(JS)
 	cat js/grid_add_row.js          >> qzforms.js.sql
 	cat js/grid_delete_row.js       >> qzforms.js.sql
 	cat js/set_action_options.js    >> qzforms.js.sql
-	cat js/tinymce.init.js           >> qzforms.js.sql
+	cat js/tinymce.init.js          >> qzforms.js.sql
+	cat js/get_callbacks.js         >> qzforms.js.sql
+	cat js/qz_callback.js           >> qzforms.js.sql
 	cat js/dollarquote              >> qzforms.js.sql
 	echo " WHERE filename = 'qzforms.js';" >> qzforms.js.sql
 

@@ -85,6 +85,11 @@ void init_handler_hash(void){
         },    
         {
             .count = 0,
+            .name = "callback",
+            .handler = callback
+        },
+        {
+            .count = 0,
             .name = NULL,
             .handler = NULL
         }   
