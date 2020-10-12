@@ -124,10 +124,15 @@ fi
 ##
 install -d -m 775 -o ${ADMINUSER} -g ${FORMDEVGROUP} ${INSTALLDIR}/templates
 install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
+if [ ! -f ${INSTALLDIR}/templates/base.xml ]; then
     ${INSTALL_FROM}/templates/base.xml \
+fi
+if [ ! -f ${INSTALLDIR}/templates/login.xml ]; then
     ${INSTALL_FROM}/templates/login.xml \
+fi
+if [ ! -f ${INSTALLDIR}/templates/tinymce.xml ]; then
     ${INSTALL_FROM}/templates/tinymce.xml \
-    ${INSTALLDIR}/templates 
+fi
 
 ##
 ##  The config file should be well protected, especially if it contains
