@@ -425,6 +425,13 @@ char* quantify_percent_n(char* event, int n){
 
 void add_event(struct prompt_add_args* args, xmlNodePtr input, char* event_name, char* event_action){
 
+        pthread_mutex_lock(&log_mutex);
+        struct handler_args* h = args->hargs;
+        fprintf(h->log, "%f %d %s:%d even_name=%s action=%s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            event_name, event_action);
+        pthread_mutex_unlock(&log_mutex);
+
     if ((args->rule != NULL) && (args->rule->expand_percent_n)){
 
         char* new_event_action = quantify_percent_n(event_action, args->row_index);
@@ -856,6 +863,39 @@ xmlNodePtr add_textarea(struct prompt_add_args* args){
     return textarea;
 }
 
+/*
+ *  add_input_datallist
+ *
+ *  Add an input text with a datalist of options
+ */
+xmlNodePtr add_input_datalist(struct prompt_add_args* args){
+
+    // Start with a generic input text
+    xmlNodePtr input_node = add_input_text(args);
+
+    // Add a random list reference
+    char datalist_id[16];
+    gen_random_key(datalist_id, 16);
+    datalist_id[15] = '\0';
+    xmlNewProp(input_node, "list", datalist_id);
+
+    xmlNodePtr datalist_node;
+    datalist_node = xmlNewChild(args->child_of, NULL, "datalist", NULL);
+    xmlNewProp(datalist_node, "id", datalist_id);
+
+    int n;
+    xmlNodePtr datalist_option;
+    for(n=0; args->options[n] != NULL; n++){
+
+        // add the option
+        datalist_option = xmlNewTextChild(datalist_node, NULL, "option",
+            args->options[n]);
+
+        xmlNewProp(datalist_option, "value", args->options[n]);
+    }
+
+    return input_node;
+}
 
 /*
  *  json_add_element_args
@@ -1365,6 +1405,11 @@ void init_prompt_type_hash(void){
             .prompt_type = text_array,
             .name = "text_array",
             .add_prompt = add_text_array
+        },
+        {
+            .prompt_type = input_datalist,
+            .name = "input_datalist",
+            .add_prompt = add_input_datalist
         },
         {
             .prompt_type = none,

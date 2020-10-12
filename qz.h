@@ -99,10 +99,11 @@ enum session_state {no_session, bad_session, session_no_login,
 
 */
 
-enum prompt_types { none=0, button=1, input_button=2, input_checkbox=3, 
-input_file=4, input_hidden=5, input_image=6, input_password=7, input_radio=8, 
-input_reset=9, input_submit=10, input_text=11, select_enum=12, 
-select_options=13, select_fkey=14, textarea=15, text_array=16};
+enum prompt_types { none=0, button=1, input_button=2, input_checkbox=3,
+    input_file=4, input_hidden=5, input_image=6, input_password=7,
+    input_radio=8, input_reset=9, input_submit=10, input_text=11,
+    select_enum=12, select_options=13, select_fkey=14, textarea=15,
+    text_array=16, input_datalist=17};
 
 // XXXXXXXXXXX add td, div, 
 enum prompt_container_type {no_container, fieldset};
