@@ -203,6 +203,13 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
                 strlen(hargs->postbuf), "bytes");
             pthread_mutex_unlock(&log_mutex);
 
+            if (hargs->conf->log_post_data){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(hargs->log, "%f %d %s:%d post data %s\n",
+                    gettime(), hargs->request_id, __func__, __LINE__,
+                    hargs->postbuf);
+                pthread_mutex_unlock(&log_mutex);
+            }
             hargs->postdata = parse_key_eq_val(hargs, hargs->postbuf, '&',true);
 
             pthread_mutex_lock(&log_mutex);
