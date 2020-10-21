@@ -108,12 +108,8 @@ void add_context_param_input_field(struct handler_args* h, xmlNodePtr here,
  *  for later.
  */
 
-struct delete_details{
-    xmlNodePtr html_node;
-    struct form_record* form_record;
-};
-struct delete_details*
-add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
+struct form_record*
+add_delete(struct handler_args* h, xmlNodePtr b4here, PGresult* rs){
 
     char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
     struct table_action* delete_ta = open_table(h, form_name, "delete");
@@ -121,19 +117,13 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     // delete is optional, missing action is not an error.
     if (delete_ta == NULL) return NULL;
 
-    // Can't delete without a primary key
-    if (delete_ta->nbr_pkeys < 1) return NULL;
-
     char* action_target;
-    char* uri_parts[] = {
-        h->uri_parts[0], // qz
-        form_name,
-        "delete",
-        NULL
-    };
-    action_target = build_path(uri_parts);
+    asprintf(&action_target, "/%s/%s/delete",
+        h->uri_parts[QZ_URI_BASE_SEGMENT], form_name);
 
-    xmlNodePtr del_form = xmlNewChild(here, NULL, "form", NULL);
+    xmlNodePtr del_form = xmlNewNode(NULL, "form");
+    xmlAddPrevSibling(b4here, del_form);
+
     xmlNewProp(del_form, "method", "post");
     xmlNewProp(del_form, "action", action_target);
     xmlNewProp(del_form, "name", "delete_it");
@@ -153,8 +143,8 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
 
     // Add a hidden field for each primary key.
     int pcnt;
-    for (pcnt=0; pcnt<delete_ta->nbr_pkeys; pcnt++){
-        char* fname = delete_ta->pkeys[pcnt];
+    for (pcnt=0; pcnt<delete_ta->nbr_params; pcnt++){
+        char* fname = delete_ta->fieldnames[pcnt];
         char* fvalue = PQgetvalue(rs, 0, PQfnumber(rs, fname));
 
         // If the pkey is not in the Postgresql result set,
@@ -166,6 +156,15 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
                     h->current_form_set->context_parameters,
                     fname);
         }
+        // If still not found, check the posted form
+        if (( ! has_data(fvalue)) &&
+            (h->posted_form != NULL) &&
+            (h->posted_form->form_set != NULL)){
+
+            fvalue = xmlHashLookup(
+                h->posted_form->form_set->context_parameters, fname);
+        }
+
         xmlNodePtr pk_input = xmlNewChild(del_form, NULL, "input", NULL);
         xmlNewProp(pk_input, "type", "hidden");
         xmlNewProp(pk_input, "name", fname);
@@ -177,12 +176,9 @@ add_delete(struct handler_args* h, xmlNodePtr here, PGresult* rs){
     xmlNewProp(button, "type", "submit");
     xmlNewProp(button, "value", "Delete");
 
-    struct delete_details* deldet = calloc(1, sizeof(struct delete_details));
-    deldet->html_node = del_form;
-    deldet->form_record = form_record;
-
+    save_context_parameters(h, form_record, rs, 0);
     free(action_target);
-    return deldet;
+    return form_record;
 }
 
 /*
@@ -203,7 +199,6 @@ void edit_form(struct handler_args* h, char* next_action,
 
     add_helpful_text(h, edit_ta);
 
-    struct delete_details* deldet = add_delete(h, divqz, edit_rs);
 
     char* form_target;
 
@@ -236,12 +231,6 @@ void edit_form(struct handler_args* h, char* next_action,
 
     add_context_param_input_field(h, form, edit_rs);
 
-    if (deldet != NULL){
-        save_context_parameters(h, deldet->form_record, edit_rs, -1);
-        //  Just free the delete_details struct,
-        //  its' contents are managed elsewhere
-        free(deldet);
-    }
     if (h->error_exists) return;
 
     int col;
@@ -283,6 +272,9 @@ void edit_form(struct handler_args* h, char* next_action,
         xmlNewProp(input, "type", "submit");
         xmlNewProp(input, "value", "Submit");
     }
+
+    add_delete(h, form, edit_rs);
+
     // XXXXXX add a cancel button maybe.
 
     free(form_target);
@@ -1063,6 +1055,7 @@ void onetable(struct handler_args* h){
 
     if (! h->error_exists){
         add_all_menus(h);
+        doc_adder(h);
     }
     return;
 }
