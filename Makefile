@@ -86,7 +86,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
 	js/set_action_options.js js/dollarquote js/tinymce.init.js \
-	get_callbacks.js qz_callback.jk
+	js/get_callbacks.js js/qz_callback.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
