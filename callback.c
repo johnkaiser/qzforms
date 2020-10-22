@@ -187,57 +187,6 @@ void callback_adder(struct handler_args* h, struct form_record* form_rec,
     free(jsonbuf);
     json_builder_free(jsonobj);
 }
-void callback_adderx(struct handler_args* h, struct form_record* form_rec,
-    struct table_action* ta){
-
-    if ((ta == NULL) || (ta->callbacks == NULL)) return;
-
-    xmlBufferPtr jsonbuf = xmlBufferCreate();
-    xmlBufferCat(jsonbuf, "var callbacks = {");
-
-    int cbn;
-    for (cbn=0; ta->callbacks[cbn] != NULL; cbn++){
-
-        char* form_action;
-        char tagbuf[ETAG_MAX_LENGTH];
-        char* json_fragment;
-
-        asprintf(&form_action, "/%s/%s/%s", h->uri_parts[0],
-            ta->form_name, ta->callbacks[cbn]);
-
-        form_rec = register_form(h, NULL, false, form_action);
-
-        make_etag(tagbuf, h->conf->tagger_socket_path,
-            h->session->form_tag_token, form_rec->form_id);
-
-        asprintf(&json_fragment,
-            "%c\n\"%s\": {\n"
-            "    \"form_action\": \"%s\",\n"
-            "    \"form_tag\": \"%s\"\n"
-            "  }",
-            (cbn > 0) ? ',' :' ',
-            ta->callbacks[cbn], form_action, tagbuf);
-
-        xmlBufferCat(jsonbuf, json_fragment);
-
-        free(form_action);
-        free(json_fragment);
-    }
-
-    xmlBufferCat(jsonbuf, "\n};\n");
-
-    xmlNodePtr head = qzGetElementByID(h, "__HEAD__");
-    xmlNodePtr callback_node;
-    callback_node = xmlNewChild(head, NULL, "script", "\n");
-    xmlNewProp(callback_node, "id", "__CALLBACKS__");
-    xmlNewProp(callback_node, "type", "text/javascript");
-
-    const xmlChar* json_str = xmlBufferContent(jsonbuf);
-    xmlNodeAddContent(callback_node, json_str);
-    xmlBufferFree(jsonbuf);
-
-    return;
-}
 
 /*
  *  callback_plain_text
@@ -369,6 +318,39 @@ void callback_html_table(struct handler_args* h, PGresult* cb_rs){
     return;
 }
 
+PGresult* server_callback(struct handler_args* h, PGresult* form_rs, int row,
+    char* form_name, char* callback_name){
+
+    char* fname;
+    char* fvalue;
+    int k;
+    PGresult* cb_rs;
+
+    struct table_action* cb_ta = open_table(h, form_name, callback_name);
+
+    char* params[ cb_ta->nbr_params + 1 ];
+
+    for (k=0; k<cb_ta->nbr_params; k++){
+        fname = cb_ta->fieldnames[k];
+        fvalue = get_value(form_rs, row, fname);
+
+        if (( ! has_data(fvalue) && (h->current_form_set != NULL)) ){
+            fvalue = xmlHashLookup(h->current_form_set->context_parameters,
+            fvalue);
+        }
+        if (has_data(fvalue)){
+            params[k] = fvalue;
+        }else{
+
+        }
+    }
+    params[cb_ta->nbr_params] = NULL;
+
+    cb_rs = perform_action(h, cb_ta, params);
+
+    return cb_rs;
+
+}
 void callback(struct handler_args* h){
 
     struct table_action* cb_ta;
