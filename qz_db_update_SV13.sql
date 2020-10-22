@@ -313,6 +313,50 @@ AND action = 'list';
 ---
 ALTER TABLE div_id RENAME COLUMN "div_id" TO "id";
 
---- xxxxxx
---- fix template registration
+UPDATE qz.table_action
+SET sql=$IDTAE$
+SELECT id, notation
+FROM qz.div_id
+WHERE template_name = $1
+ORDER BY template_name, id
+$IDTAE$
+WHERE form_name = 'div_ids'
+AND action = 'edit';
+
+UPDATE qz.table_action
+SET sql=$IDTAU$
+UPDATE qz.div_id
+SET notation = $3
+WHERE template_name = $1
+AND id = $2
+$IDTAU$,
+fieldnames = '{template_name,id,notation}'
+WHERE form_name = 'div_ids'
+AND action = 'update_row';
+
+UPDATE qz.table_action
+SET sql=$IDTAI$
+INSERT INTO qz.div_id
+(template_name, id, notation)
+VALUES
+($1, $2, $3)
+$IDTAI$,
+fieldnames = '{template_name,id,notation}'
+WHERE form_name = 'div_ids'
+AND action = 'insert_row';
+
+UPDATE qz.table_action
+SET sql=$IDTAD$
+DELETE FROM qz.div_id
+WHERE template_name = $1
+AND id = $2
+$IDTAD$,
+fieldnames = '{template_name,id}'
+WHERE form_name = 'div_ids'
+AND action = 'delete_row';
+
+
 ---
+--- New prompt type input_datalist
+---
+--- not yet, ALTER TYPE qz.prompt_types ADD VALUE 'input_datalist';
