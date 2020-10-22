@@ -157,13 +157,14 @@ add_delete(struct handler_args* h, xmlNodePtr b4here, PGresult* rs){
                     fname);
         }
         // If still not found, check the posted form
-        if (( ! has_data(fvalue)) &&
-            (h->posted_form != NULL) &&
-            (h->posted_form->form_set != NULL)){
-
-            fvalue = xmlHashLookup(
-                h->posted_form->form_set->context_parameters, fname);
-        }
+        // XXXXXX not sure this is correct or necessary.
+        // if (( ! has_data(fvalue)) &&
+        //    (h->posted_form != NULL) &&
+        //    (h->posted_form->form_set != NULL)){
+        //
+        //    fvalue = xmlHashLookup(
+        //        h->posted_form->form_set->context_parameters, fname);
+        //}
 
         xmlNodePtr pk_input = xmlNewChild(del_form, NULL, "input", NULL);
         xmlNewProp(pk_input, "type", "hidden");
