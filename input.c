@@ -232,10 +232,11 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
         (uri_part_n_is(h, QZ_URI_FORM_NAME, "login") ||
          uri_part_n_is(h, QZ_URI_FORM_NAME, "logout")) ){
 
-        asprintf(&form_refresh, "form_refresh_init(%d*1000)",
+        asprintf(&form_refresh, "function(){form_refresh_init(%d*1000);}",
             h->conf->form_duration*95/300);
 
-        add_listener(h, NULL, "onLoad", form_refresh);
+        add_listener(h, NULL, "DOMContentLoaded", form_refresh);
+
         free(form_refresh);
     }
     pthread_mutex_lock(&log_mutex);
