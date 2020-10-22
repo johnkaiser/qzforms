@@ -727,6 +727,7 @@ void grid(struct handler_args* h){
     }
     if (! h->error_exists){
         add_all_menus(h);
+        doc_adder(h);
     }
 }
 
