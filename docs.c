@@ -39,16 +39,20 @@ void init_doc(struct handler_args* h){
         "el_class "
         "FROM qz.doc "
         "WHERE form_name = $1 "
-        "AND action = $2";
+        "AND action = $2 "
+        "ORDER BY action ";
 
     PGresult* rs = PQprepare(h->session->conn, "fetch_doc",
         (const char*) fetch_doc_query, 0, NULL);
 
     char* error_msg = nlfree_error_msg(rs);
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d %s %s %s\n",
+    fprintf(h->log, "%f %d %s:%d %s %s %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
-        "fetch_doc_query", PQresStatus(PQresultStatus(rs)), error_msg);
+        "fetch_doc_query",
+        has_data(error_msg) ? "fail": "",
+        PQresStatus(PQresultStatus(rs)), error_msg);
+
     pthread_mutex_unlock(&log_mutex);
     free(error_msg);
     error_msg = NULL;
@@ -116,15 +120,27 @@ void doc_adder(struct handler_args* h){
                          xmlAddChild(add_where, newnode);
                      }
                      
-                 }    
+                 }else{
+                     if (h->conf->log_doc_details){
+                         pthread_mutex_lock(&log_mutex);
+                         fprintf(h->log, "%f %d %s:%d doc not added %s node %s %s\n",
+                             gettime(), h->request_id, __func__, __LINE__,
+                             (data_len > 0) ? "has data":"no data",
+                             node_name,
+                             (add_where != NULL) ? "found":"not found"
+                             );
+                         pthread_mutex_unlock(&log_mutex);
+                     }
+                 }
             }
         }
     }else{
         char* error_msg = nlfree_error_msg(doc_adder_rs);
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d %s %s %s\n",
+        fprintf(h->log, "%f %d %s:%d %s %s %s %s\n",
             gettime(), h->request_id, __func__, __LINE__,
-            "doc_adder", PQresStatus(PQresultStatus(doc_adder_rs)), error_msg);
+            "doc_adder", has_data(error_msg) ? "fail":"",
+            PQresStatus(PQresultStatus(doc_adder_rs)), error_msg);
         pthread_mutex_unlock(&log_mutex);
         free(error_msg);
         error_msg = NULL;
