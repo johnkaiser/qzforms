@@ -1042,7 +1042,7 @@ PGresult* perform_post_row_action(struct handler_args* h,
         pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d fail %s\n",
             gettime(), h->request_id, __func__, __LINE__,
-            "perform_post_action called with null data");
+            "perform_post_row_action called with null data");
         pthread_mutex_unlock(&log_mutex);
 
         return NULL;
@@ -1088,6 +1088,16 @@ PGresult* perform_post_row_action(struct handler_args* h,
     rs = PQexecPrepared(h->session->conn, ta->prepare_name, ta->nbr_params,
         (const char * const *) paramdata, NULL, NULL, 0);
 
+    if (h->conf->log_table_action_details){
+        int j;
+        for(j = 0; j < ta->nbr_params; j++){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d arg=%d key=%s val length=%lu\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                j, ta->fieldnames[j], strlen(paramdata[j]));
+            pthread_mutex_unlock(&log_mutex);
+        }
+    }
     char* error_msg = nlfree_error_msg(rs);
 
     pthread_mutex_lock(&log_mutex);
@@ -1187,6 +1197,13 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
         if (strlen(element) == 0){
             if (free_array[k]) free(element); // An empty string
             paramdata[k] = NULL;
+
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d warning param %d %s is null\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                k, ta->fieldnames[k]);
+            pthread_mutex_unlock(&log_mutex);
+
         }else{
             paramdata[k] = element;
         }
@@ -1196,6 +1213,17 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
     rs = PQexecPrepared(h->session->conn, ta->prepare_name, ta->nbr_params,
         (const char * const *) paramdata, NULL, NULL, 0);
 
+    if (h->conf->log_table_action_details){
+        int j;
+        for(j=0; j<ta->nbr_params; j++){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d arg=%d key=%s val length=%lu\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                j, ta->fieldnames[j],
+                (paramdata[k] == NULL) ? 0:strlen(paramdata[j]));
+            pthread_mutex_unlock(&log_mutex);
+        }
+    }
     for(k=0; k < ta->nbr_params; k++){
         if (free_array[k]) free(paramdata[k]);
     }
@@ -1204,9 +1232,10 @@ PGresult* perform_post_action(struct handler_args* h, struct table_action* ta){
     char* error_msg = nlfree_error_msg(rs);
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d perform_post_action completed %s %s\n",
+    fprintf(h->log, "%f %d %s:%d perform_post_action completed %s %s %s %s\n",
         gettime(), h->request_id, __func__, __LINE__,
-        PQresStatus(PQresultStatus(rs)), error_msg);
+        PQresStatus(PQresultStatus(rs)), error_msg,
+        PQcmdTuples(rs), "rows affected");
     pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
@@ -1245,6 +1274,16 @@ PGresult* perform_action(struct handler_args* h, struct table_action* ta,
     rs = PQexecPrepared(h->session->conn, ta->prepare_name, ta->nbr_params,
         (const char * const *) data, NULL, NULL, 0);
 
+    if (h->conf->log_table_action_details){
+        int j;
+        for(j=0; j<ta->nbr_params; j++){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d arg=%d key=%s val length=%lu\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                j, ta->fieldnames[j], strlen(data[j]));
+            pthread_mutex_unlock(&log_mutex);
+        }
+    }
     char* error_msg = nlfree_error_msg(rs);
 
     pthread_mutex_lock(&log_mutex);
