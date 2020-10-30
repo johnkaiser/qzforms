@@ -125,15 +125,15 @@ fi
 install -d -m 775 -o ${ADMINUSER} -g ${FORMDEVGROUP} ${INSTALLDIR}/templates
 if [ ! -f ${INSTALLDIR}/templates/base.xml ]; then
     install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
-    ${INSTALL_FROM}/templates/base.xml
+    ${INSTALL_FROM}/templates/base.xml ${INSTALLDIR}/templates
 fi
 if [ ! -f ${INSTALLDIR}/templates/login.xml ]; then
     install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
-    ${INSTALL_FROM}/templates/login.xml
+    ${INSTALL_FROM}/templates/login.xml ${INSTALLDIR}/templates
 fi
 if [ ! -f ${INSTALLDIR}/templates/tinymce.xml ]; then
     install  -m 664 -o ${ADMINUSER} -g ${FORMDEVGROUP} \
-    ${INSTALL_FROM}/templates/tinymce.xml
+    ${INSTALL_FROM}/templates/tinymce.xml ${INSTALLDIR}/templates
 fi
 
 ##
