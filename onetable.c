@@ -1014,12 +1014,13 @@ void onetable(struct handler_args* h){
     xmlNodePtr divqz;
     if ((divqz = qzGetElementByID(h, this_ta->target_div)) == NULL){
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d Element with id %s not found\n",
+        fprintf(h->log, "%f %d %s:%d Target div ID '%s' was not found.\n",
             gettime(), h->request_id, __func__, __LINE__,
             this_ta->target_div);
         pthread_mutex_unlock(&log_mutex);
 
-        error_page(h, SC_NOT_FOUND,  "id element not found");
+        error_page(h, SC_NOT_FOUND,
+            "Div id element specified by form was not found");
         return;
     }
 
