@@ -171,6 +171,8 @@ void callback_adder(struct handler_args* h, struct form_record* form_rec,
 
         json_object_push(acb, "fieldnames", fieldname_array);
         json_object_push(jsonobj, ta->callbacks[cbn], acb);
+
+        free(form_action);
     }
 
     char* jsonbuf = malloc(json_measure_ex(jsonobj, opts));

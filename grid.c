@@ -590,8 +590,9 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
         // There has to be a postdata field "change_status[%n]"  where %n=row.
         char* name;
         asprintf(&name,"change_status[%d]", k);
-
         value = xmlHashLookup(h->postdata, name);
+        free(name);
+        name = NULL;
 
         if (value != NULL){
             xmlNodePtr dt = xmlNewTextChild(dl, NULL, "dt", value);
@@ -653,7 +654,6 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
                 break;
             }
         }
-        free(name);
         k++;
     }while (value != NULL);
 
