@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO qz.change_history
 (change_description,note)
 VALUES
@@ -11,6 +13,14 @@ VALUES
 ---
 --- Convert template to drop down list
 ---
+
+--- But first, add any missing templates
+INSERT INTO qz.template
+SELECT xml_template, 'upgrade' FROM form f
+WHERE NOT EXISTS
+(SELECT template_name FROM template t
+ WHERE f.xml_template = t.template_name);
+
 ALTER TABLE qz.form
 ADD FOREIGN KEY (xml_template)
 REFERENCES qz.template(template_name);
@@ -164,8 +174,8 @@ INSERT INTO qz.form
 (form_name, handler_name, schema_name, table_name, xml_template,
 target_div, hidden, prompt_container, form_set_name, pkey)
 VALUES
-('callback', 'onetable', 'qz', 'callback', 'base.xml',
-NULL, 't', 'fieldset', 'form_mgt', '{form_name,callback_name}');
+('callback', 'onetable', 'qz', 'table_action', 'base.xml',
+'qz', 't', 'fieldset', 'form_mgt', '{form_name,callback_name}');
 
 INSERT INTO qz.table_action
 (form_name, action, fieldnames, helpful_text, sql)
@@ -188,6 +198,7 @@ callback_attached_action, callback_response
 FROM qz.table_action
 WHERE form_name = $1
 AND action = $2
+AND is_callback
 $CBE$),
 
 ('callback', 'update', '{form_name, callback_name, sql, fieldnames,
@@ -201,6 +212,7 @@ callback_attached_action = $5,
 callback_response = $6
 WHERE form_name = $1
 AND action = $2
+AND is_callback
 $CBU$),
 
 ('callback', 'create', '{form_name}', NULL,
@@ -214,7 +226,7 @@ SELECT $1::qz.variable_name "form_name",
 $CBC$),
 
 ('callback', 'insert',
-'{form_name, callback_name, sql, fieldnames}',
+'{form_name, callback_name, sql, fieldnames, callback_attached_action, callback_response}',
 NULL,
 $CBI$
 INSERT INTO qz.table_action
@@ -226,10 +238,11 @@ $CBI$),
 
 ('callback', 'delete', '{form_name, callback_name}', NULL,
 $CBD$
-DELETE FROM qz.callback
+DELETE FROM qz.table_action
 WHERE
 form_name = $1
-AND callback_name= $2
+AND action = $2
+AND is_callback
 $CBD$);
 
 INSERT INTO qz.menu_set
@@ -293,6 +306,8 @@ INSERT INTO qz.prompt_rule
 VALUES
 ('callback', 'callback_response', 'select_options');
 
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type,
 ---
 --- No callbacks should be listed in table_action
 ---
@@ -360,3 +375,5 @@ AND action = 'delete_row';
 --- New prompt type input_datalist
 ---
 --- not yet, ALTER TYPE qz.prompt_types ADD VALUE 'input_datalist';
+
+COMMIT;

@@ -38,7 +38,7 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=12
+SCHEMA_VERSION=13
 
 OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
