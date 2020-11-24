@@ -2,20 +2,26 @@
 /* 
  *  Look through script id __CALLBACKS__ in the variable callbacks
  *  for callback_name. 
- *  Pass func to xmlHttpRequest.
+ *  Pass func to XMLHttpRequest.
  *  Optionaly include an object that will be the preferred
  *  source for the callback parameters.
  *  Named callback parameters not in args will be searched for
  *  in the form's elements.
+ *
+ *  Initialize xhr in the same context as func as:
+ *      var xhr = new XMLHttpRequest();
+ *
  */
-function qz_callback(callback_name, func, args={}){
+function setup_callback(callback_name, func, xhr, args={}){
 
    const callbacks = get_callbacks();
 
    // Build a www-form-urlencoded string for post data.
    // The form_tag is a token authorizing the action.
 
-   let form_tag = "form_tag=" + encodeURIComponent(callbacks[callback_name]['form_tag']);
+   let form_tag = "form_tag=" + 
+       encodeURIComponent(callbacks[callback_name]['form_tag']);
+
    let form_action = callbacks[callback_name]['form_action'];
    let form_fields = form_tag;
  
@@ -24,17 +30,18 @@ function qz_callback(callback_name, func, args={}){
 
    let fieldnames = callbacks[callback_name]['fieldnames'];
    let fn_len = fieldnames.length;
-   let form_name = callbacks[callback_name]['form_name'];
+   var form_name = callbacks[callback_name]['form_name'];
+   let postdata = {};
 
    for (let n=0; n < fn_len; n++){
        let fn = fieldnames[n];
        console.log("n="+n + " fn="+fn);
 
-        // skip the fields alread in args,
-        // look in the form elements
-        // XXXXXX not all tag types use value
-
-        if ( ! (fn in args) ) {
+       if (fn in args){
+           // args take precendence over form data
+           postdata[fn] = args[fn];
+       }else{
+           // find the fieldname in the form
            let el =  document.forms[form_name][fn];
            if (el){
                args[fn] = el.value;
@@ -53,10 +60,10 @@ function qz_callback(callback_name, func, args={}){
    }
 
     // create and post the request
-    xhr = new XMLHttpRequest();
     xhr.onload = func;
     xhr.callback_name = callback_name;
     xhr.form_name = form_name;
+    xhr.args = args;
     xhr.open("POST", form_action);
     xhr.setRequestHeader('Content-Type',"application/x-www-form-urlencoded");
     xhr.send(form_fields);
