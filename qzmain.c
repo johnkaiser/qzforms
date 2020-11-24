@@ -40,7 +40,6 @@ struct thread_launch_data {
     pthread_mutex_t accept_mutex;
     char** envpmain;
     xmlHashTablePtr sessions;
-    int* next_id;
     uint64_t* active;
 
 };
@@ -302,6 +301,7 @@ void launch_connection_thread(void* data){
         pthread_mutex_lock(&(thread_dat->accept_mutex));
         int rc = FCGX_Accept_r(&request);
         next_id += 1;
+        int this_id = next_id;
         *thread_dat->active = gettime();
         pthread_mutex_unlock(&(thread_dat->accept_mutex));
 
@@ -316,7 +316,7 @@ void launch_connection_thread(void* data){
             pthread_mutex_lock(&log_mutex);
             fprintf(log,"%f %d %s:%d FCGX_Accept failed on thread %d rc=%d "
                 "error=%s\n",
-                gettime(), next_id, __func__, __LINE__,
+                gettime(), this_id, __func__, __LINE__,
                 thread_dat->thread_id, rc, errbuf);
             pthread_mutex_unlock(&log_mutex);
 
@@ -331,14 +331,14 @@ void launch_connection_thread(void* data){
                 FILE* log = fopen(thread_dat->conf->logfile_name, "a");
                 pthread_mutex_lock(&log_mutex);
                 fprintf(log, "%f %d %s:%d request with null output\n",
-                    gettime(), next_id, __func__, __LINE__);
+                    gettime(), this_id, __func__, __LINE__);
 
                 fclose(log);
                 pthread_mutex_unlock(&log_mutex);
                 continue;
             }
 
-            hargs = init_handler(&request, thread_dat->envpmain, next_id,
+            hargs = init_handler(&request, thread_dat->envpmain, this_id,
                 thread_dat->conf);
 
             if (hargs == NULL){
@@ -595,7 +595,6 @@ int main(int argc, char* argv[], char* envpmain[]){
         thread_dat->conf = conf;
         thread_dat->thread_id = i;
         thread_dat->accept_mutex = accept_mutex;
-        thread_dat->next_id = &next_id;
         thread_dat->envpmain = envpmain;
         thread_dat->sessions = sessions;
         thread_dat->active = &(thread_state[i]);
