@@ -51,7 +51,7 @@ for fields in logfile:
         if request_id and seq_nbr != request_id:
             continue
         if seq_nbr != last_seq_nbr:
-             print "\n%s %05d" % (datetime.fromtimestamp(timestamp).ctime(), seq_nbr)
+             print("\n%s %05d" % (datetime.fromtimestamp(timestamp).ctime(), seq_nbr))
              last_timestamp = timestamp
              duration_start = timestamp
         
@@ -62,12 +62,12 @@ for fields in logfile:
         else:
             delta = timestamp
   
-        print "%18.6f %05d %s" % ( delta, seq_nbr, " ".join(fields[2:]))
+        print("%18.6f %05d %s" % ( delta, seq_nbr, " ".join(fields[2:])))
   
         last_timestamp = timestamp
         last_seq_nbr = seq_nbr
     except IndexError:
-        #print "IndexError", line.strip()
+        #print("IndexError", line.strip())
         pass
     except ValueError:
         pass
