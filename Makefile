@@ -86,7 +86,7 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
 	js/set_action_options.js js/dollarquote js/tinymce.init.js \
-	js/get_callbacks.js js/qz_callback.js js/set_options.js
+	js/get_callbacks.js js/setup_callback.js js/callback_options.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
@@ -347,8 +347,8 @@ qzforms.js.sql: $(JS)
 	cat js/set_action_options.js    >> qzforms.js.sql
 	cat js/tinymce.init.js          >> qzforms.js.sql
 	cat js/get_callbacks.js         >> qzforms.js.sql
-	cat js/qz_callback.js           >> qzforms.js.sql
-	cat js/set_options.js           >> qzforms.js.sql
+	cat js/setup_callback.js        >> qzforms.js.sql
+	cat js/callback_options.js      >> qzforms.js.sql
 	cat js/dollarquote              >> qzforms.js.sql
 	echo " WHERE filename = 'qzforms.js';" >> qzforms.js.sql
 
