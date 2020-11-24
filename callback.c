@@ -379,6 +379,6 @@ void callback(struct handler_args* h){
             callback_html_table(h, cb_rs);
             break;
     }
-
+    PQclear(cb_rs);
     return;
 }
