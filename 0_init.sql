@@ -66,10 +66,13 @@ CREATE TABLE qz.constants (
     schema_version int
 );
 
+CREATE TYPE qz.callback_response_type AS ENUM
+  ('qzforms_json', 'postgresql_json', 'plain_text', 'html_table');
+
 --
 -- Set the Schema Version
 --
-INSERT INTO qz.constants (key, schema_version) VALUES ('t', '12');
+INSERT INTO qz.constants (key, schema_version) VALUES ('t', '13');
 
 CREATE TABLE qz.change_history (
     change_id serial primary key,
