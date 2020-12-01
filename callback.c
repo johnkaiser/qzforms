@@ -116,7 +116,7 @@ char* callback_enum_lookup(enum callback_response_type cb_response){
 void callback_adder(struct handler_args* h, struct form_record* form_rec,
     struct table_action* ta){
 
-    if ((ta == NULL) || (ta->callbacks == NULL)) return;
+    if ((ta == NULL) || (ta->callbacks == NULL) || (form_rec == NULL)) return;
 
     if (h->conf->log_callback_details){
         pthread_mutex_lock(&log_mutex);

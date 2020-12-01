@@ -10,9 +10,9 @@ CREATE TABLE qz.template (
 
 CREATE TABLE qz.div_id (
     template_name  qz.file_name REFERENCES qz.template(template_name),
-    div_id qz.variable_name,
+    id qz.variable_name,
     notation varchar(50),
-    PRIMARY KEY (template_name, div_id)
+    PRIMARY KEY (template_name, id)
 );
 
 INSERT INTO qz.form_set
@@ -26,10 +26,10 @@ VALUES
 
 INSERT INTO qz.form 
 (form_name, handler_name, schema_name, table_name, xml_template, target_div,
- add_description, prompt_container, form_set_name, pkey)
+ hidden, add_description, prompt_container, form_set_name, pkey)
  VALUES
  ('templates', 'onetable', 'qz', 'template', 'base.xml', 'qz',
-  't', 'fieldset', 'templates', '{template_name}' );
+  't', 't', 'fieldset', 'templates', '{template_name}' );
 
 --
 -- Table Actions for templates
@@ -85,20 +85,20 @@ $TTAD$)
 
 INSERT INTO qz.form 
 (form_name, handler_name, schema_name, table_name, xml_template, target_div,
- add_description, prompt_container, form_set_name, pkey)
+ hidden, add_description, prompt_container, form_set_name, pkey)
  VALUES
  ('div_ids', 'grid', 'qz', 'div_id', 'base.xml', 'qz',
-  't', 'no_container', 'templates', '{template_name, div_id}' );
+  't', 't', 'no_container', 'templates', '{template_name, div_id}' );
 
 INSERT INTO qz.table_action
 (form_name, action, fieldnames, sql)
 VALUES
 ('div_ids', 'edit', '{template_name}',
 $IDAE$
-SELECT template_name, div_id, notation
+SELECT id, notation
 FROM qz.div_id
 WHERE template_name = $1
-ORDER BY template_name, div_id
+ORDER BY template_name, id
 $IDAE$),
 
 ('div_ids', 'save', NULL,
@@ -106,27 +106,27 @@ $IDAE$
 SELECT 1
 $IDAE$),
 
-('div_ids', 'update_row', '{template_name, div_id, notation}',
+('div_ids', 'update_row', '{template_name, id, notation}',
 $IDAU$
 UPDATE qz.div_id
 SET notation = $3
 WHERE template_name = $1
-AND div_id = $2
+AND id = $2
 $IDAU$),
 
-('div_ids', 'insert_row', '{template_name, div_id, notation}',
+('div_ids', 'insert_row', '{template_name, id, notation}',
 $IDAI$
 INSERT INTO qz.div_id
-(template_name, div_id, notation)
+(template_name, id, notation)
 VALUES
 ($1, $2, $3)
 $IDAI$),
 
-('div_ids', 'delete_row', '{template_name, div_id, notation}',
+('div_ids', 'delete_row', '{template_name, id}',
 $IDAD$
 DELETE FROM qz.div_id
 WHERE template_name = $1
-AND div_id = $2
+AND id = $2
 $IDAD$)
 ;
 
@@ -150,7 +150,7 @@ VALUES
  '^[^\x01-\x2c\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x2f\x60]{1,63}$',
  't', 'change_status(%n, "U")'),
 
- ('div_ids', 'div_id', 'input_text', 63, 63,
+ ('div_ids', 'id', 'input_text', 63, 63,
  '^[^\x01-\x2c\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x2f\x60]{1,63}$',
  't', 'change_status(%n, "U")'),
 
@@ -224,7 +224,7 @@ VALUES
 ('tinymce.xml', 'tinymce editor fron thier cdn');
 
 INSERT INTO qz.div_id
-(template_name, div_id, notation)
+(template_name, id, notation)
 VALUES
 ('base.xml', 'qzmenu', 'main menu'),
 ('base.xml', 'qzsubmenu', 'under the main menu'),
@@ -247,5 +247,9 @@ SET helpful_text =
 $TALC$An up and coming feature will be object placement into ids from a drop list$TALC$
 WHERE form_name = 'templates'
 AND action = 'list';
+
+ALTER TABLE qz.form
+ADD FOREIGN KEY (xml_template)
+REFERENCES qz.template(template_name);
 
 

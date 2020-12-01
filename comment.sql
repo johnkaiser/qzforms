@@ -21,7 +21,7 @@ COMMENT ON COLUMN qz.form.prompt_container IS 'Input prompts will be placed in t
 COMMENT ON COLUMN qz.form.schema_name IS 'The schema the table is in.';
 COMMENT ON COLUMN qz.form.table_name IS 'The name of the table being edited';
 COMMENT ON COLUMN qz.form.target_div IS 'An HTML div with the given id that exists in the xml_template that will contain the results.';
-COMMENT ON COLUMN qz.form.xml_template IS 'An xml file that exists in the QZ_TEMPLATE_PATH directory that will be the starting document.';
+COMMENT ON COLUMN qz.form.xml_template IS 'An xml file that exists in the TEMPLATE_PATH directory that will be the starting document.';
 COMMENT ON COLUMN qz.table_action.action IS 'Different objects will support different sets of actions. The form_name, action tuple will identify a particular SQL statement and name mapping.';
 COMMENT ON COLUMN qz.table_action.fieldnames IS
 'The names of the fields passed to the SQL prepared statement.  The names come from the incoming form post data and may or may not match the names used in the table. The order must match the positional parameters in the prepared SQL statement.  An empty cell truncates the data and values after an empty field are lost.';
@@ -34,3 +34,8 @@ COMMENT ON COLUMN qz.table_action.clear_context_parameters IS
 'Context parameters allow a form to pass attributes to other forms in the same form_set. Clear_context_parameters will remove the values after the form executes. For example, to clear one attribute in a multi part key.';
 COMMENT ON COLUMN qz.prompt_rule.el_class IS
 'An HTML Element class to be appended to any other classes assigned';
+
+COMMENT ON COLUMN qz.menu.menu_name IS 'The menu name is used to add the menu to a page.';
+COMMENT ON COLUMN qz.menu.target_div IS 'The div ID where the menu will be placed.';
+COMMENT ON COLUMN qz.menu.description IS 'A handy notation for form developers, does not appear to the user.';
+COMMENT ON COLUMN qz.menu.form_set_name IS 'An optional reference to a form set. A form set allows forms to pass data to sub-forms.';

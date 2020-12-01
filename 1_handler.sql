@@ -27,6 +27,7 @@ INSERT INTO qz.handler (handler_name) VALUES ('hdrdet');
 INSERT INTO qz.handler (handler_name) VALUES ('none');
 INSERT INTO qz.handler (handler_name) VALUES ('grid');
 INSERT INTO qz.handler (handler_name) VALUES ('menupage');
+INSERT INTO qz.handler (handler_name) VALUES ('callback');
 
 
 --

@@ -13,20 +13,12 @@ CREATE TABLE qz.js (
         etag bigint not null default nextval('qz.etag_seq'::regclass),
         data text );
 
-CREATE TABLE qz.doc (
-    filename text PRIMARY KEY,
-        mimetype text,
-        modtime timestamp,
-        etag bigint not null default nextval('qz.etag_seq'::regclass),
-        data text );
-
 CREATE TABLE qz.page_css (
     form_name qz.variable_name REFERENCES qz.form(form_name),
     sequence integer NOT NULL,
     filename text REFERENCES qz.css(filename),
     PRIMARY KEY (form_name, sequence)
 );
-
 
 CREATE TABLE qz.page_js (
     form_name qz.variable_name REFERENCES qz.form(form_name),

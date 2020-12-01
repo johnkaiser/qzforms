@@ -660,10 +660,15 @@ xmlNodePtr add_select_options(struct prompt_add_args* args){
             gettime(), args->hargs->request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
 
+        if (has_data(args->fvalue)){
+            select_option = xmlNewTextChild(select, NULL, "option", args->fvalue);
+            xmlNewProp(select_option, "selected", "selected");
+        }
         return select;
     }
 
     int n;
+    bool fvalue_found = false;
     for(n=0; args->options[n] != NULL; n++){
 
         // add the option
@@ -678,6 +683,7 @@ xmlNodePtr add_select_options(struct prompt_add_args* args){
         if ((args->fvalue != NULL) &&
             (strcasecmp(args->fvalue, args->options[n]) == 0)){
                 selected = true;
+                fvalue_found = true;
         }
 
         if ((args->pgtype != NULL) && (args->pgtype->is_boolean)){
@@ -685,16 +691,25 @@ xmlNodePtr add_select_options(struct prompt_add_args* args){
                  && (truthishness(args->hargs, args->options[n]) == true)){
                 
                 selected = true;
+                fvalue_found = true;
             }    
             if ((truthishness(args->hargs, args->fvalue) == false) 
                 && (truthishness(args->hargs, args->options[n]) == false)){
 
                 selected = true;
+                fvalue_found = true;
             }    
         }
         if (selected){
             xmlNewProp(select_option, "selected", "selected");
         }
+    }
+    // If the options are comming from a callback, or are not
+    // otherwise available, then the current value must be
+    // explicitly added.
+    if ( ! fvalue_found ){
+        select_option = xmlNewTextChild(select, NULL, "option", args->fvalue);
+        xmlNewProp(select_option, "selected", "selected");
     }
 
     set_common_attributes(args, select);

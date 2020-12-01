@@ -319,6 +319,35 @@ INSERT INTO qz.menu_set
 VALUES
 ('menu_items', 'menu_edit', 'edit');
 
+---
+--- docs
+---
 
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('main', 'inline_doc', 'any'),
+('form_dev', 'inline_doc', 'any'),
+('form_submenu', 'inline_doc', 'any');
 
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, menu_text)
+VALUES
+('form_submenu', '90', 'inline_doc', 'list', 'inline doc');
+
+---
+--- callbacks
+---
+
+INSERT INTO qz.menu_set
+(menu_name, host_form_name, action)
+VALUES
+('main', 'callback', 'any'),
+('form_dev', 'callback', 'any'),
+('form_submenu', 'callback', 'any');
+
+INSERT INTO qz.menu_item
+(menu_name, menu_item_sequence, target_form_name, action, menu_text)
+VALUES
+('form_submenu', '100', 'callback', 'list', 'Callbacks');
 

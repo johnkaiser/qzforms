@@ -8,6 +8,9 @@ CREATE TABLE qz.table_action (
     inline_js text,
     inline_css text,
     clear_context_parameters varchar(63)[],
+    callback_attached_action qz.variable_name,
+    is_callback boolean DEFAULT 'f',
+    callback_response qz.callback_response_type,
     PRIMARY KEY (form_name, action)
 );
 
@@ -227,7 +230,7 @@ VALUES ('table_action_edit', 'edit',
 '{form_name,action}',
   'A table action binds a URL and HTTP post data to an SQL statement.');
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text, inline_js)
 VALUES ('table_action_edit', 'insert',
    $TAI$INSERT INTO qz.table_action
       (form_name, action, helpful_text, sql, fieldnames,
@@ -235,16 +238,18 @@ VALUES ('table_action_edit', 'insert',
       VALUES
       ($1,$2,$3,$4,$5,$6)$TAI$,
 '{form_name,new_action,helpful_text,sql,fieldnames,clear_context_parameters}',
-NULL);
+NULL,
+$TAIJS$ window.addEventListener("DOMContentLoaded",set_action_options, true); $TAIJS$ );
 
-INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
+INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text, inline_js)
 VALUES ('table_action_edit', 'update',
     $TAU$UPDATE qz.table_action
     SET helpful_text=$3,
     sql=$4, fieldnames=$5, clear_context_parameters=$6
     WHERE form_name = $1 AND action = $2 $TAU$,
 '{form_name,action,helpful_text,sql,fieldnames,clear_context_parameters}',
-NULL);
+NULL,
+$TAUJS$ window.addEventListener("DOMContentLoaded",set_action_options, true); $TAUJS$ );
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('table_action_edit', 'delete',
@@ -268,9 +273,10 @@ VALUES ('table_action_edit', 'list',
     FROM qz.table_action ta
     JOIN qz.form fm USING (form_name)
     WHERE form_name = $1
+    AND NOT is_callback
     ORDER BY form_name, action$TAG$,
 '{form_name}', 'Edit the table actions for a given form_name.',
-$TAIJS$ document.addEventListener("DOMContentLoaded",set_action_options, true); $TAIJS$ );
+$TALJS$ window.addEventListener("DOMContentLoaded",set_action_options, true); $TALJS$ );
 
 --
 -- menu_set_edit
@@ -806,7 +812,7 @@ function hide_sections(){
     }
 
 }
-document.addEventListener("DOMContentLoaded", hide_sections, false);
+window.addEventListener("DOMContentLoaded", hide_sections, false);
 $TAINLJS$
 );
 
@@ -963,7 +969,9 @@ $TAJSUP$ UPDATE qz.table_action
 ('inline_js', 'list',
 $TAJSGA$ SELECT form_name, action, inline_js::varchar(30) inline_js_
     FROM qz.table_action
-    WHERE form_name = $1 $TAJSGA$,
+    WHERE form_name = $1
+    AND NOT is_callback
+    ORDER BY action $TAJSGA$,
 '{form_name}'),
 
 ('inline_css', 'edit',
@@ -981,7 +989,9 @@ $TAJSUP$ UPDATE qz.table_action
 ('inline_css', 'list',
 $TAJSGA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
     FROM qz.table_action
-    WHERE form_name = $1 $TAJSGA$,
+    WHERE form_name = $1
+    AND NOT is_callback
+    ORDER BY action $TAJSGA$,
 '{form_name}');
 
 UPDATE qz.table_action
@@ -1045,6 +1055,144 @@ VALUES
 ('menu_menu_page', 'view', 'SELECT 1',
     $MMPV$You can use All Menus to create or modify a menu
     or User Menus to assign a main menu to a user.$MMPV$);
+
+---
+--- docs
+---
+
+INSERT INTO qz.table_action
+(form_name, action, fieldnames, helpful_text, sql)
+VALUES
+
+('inline_doc', 'list', '{form_name}',
+'Use this to attach a bit of html to your form',
+$DTALI$
+SELECT action, div_id
+FROM qz.doc
+WHERE form_name = $1
+ORDER BY action, div_id
+$DTALI$),
+
+('inline_doc', 'edit', '{form_name,action,div_id}', NULL,
+$DTAED$
+SELECT action, div_id, el_class, "data"
+FROM qz.doc
+WHERE form_name = $1
+AND action = $2
+AND div_id = $3
+$DTAED$),
+
+('inline_doc', 'update', '{form_name,action,div_id,el_class,data}', NULL,
+$DTAUP$
+UPDATE qz.doc
+SET
+el_class = $4,
+"data" = $5
+WHERE form_name = $1
+AND action = $2
+AND div_id = $3
+$DTAUP$),
+
+('inline_doc', 'create', '{form_name}', NULL,
+$DTACR$
+SELECT $1::qz.variable_name "form_name",
+''::text "action",
+''::text "div_id",
+''::text "el_class",
+''::text "data"
+$DTACR$),
+
+('inline_doc', 'insert',
+'{form_name, action, div_id, el_class, data}',
+NULL,
+$DTAIN$
+INSERT INTO qz.doc
+(form_name, action, div_id, el_class, data)
+VALUES
+($1,$2,$3,$4,$5)
+$DTAIN$),
+
+('inline_doc', 'delete', '{form_name,action,div_id}', NULL,
+$DTADL$
+DELETE FROM qz.doc
+WHERE
+form_name = $1
+AND action = $2
+AND div_id = $3
+$DTADL$);
+
+---
+--- callbacks
+---
+
+INSERT INTO qz.table_action
+(form_name, action, fieldnames, helpful_text, sql)
+VALUES
+
+('callback', 'list', '{form_name}',
+'Use this to enable javascript to send inquiries to Postgresql',
+$CBL$
+SELECT form_name, action "callback_name"
+FROM qz.table_action
+WHERE form_name = $1
+AND is_callback
+ORDER BY action
+$CBL$),
+
+('callback', 'edit', '{form_name, callback_name}', NULL,
+$CBE$
+SELECT form_name, action "callback_name", sql, fieldnames,
+callback_attached_action, callback_response
+FROM qz.table_action
+WHERE form_name = $1
+AND action = $2
+AND is_callback
+$CBE$),
+
+('callback', 'update', '{form_name, callback_name, sql, fieldnames,
+callback_attached_action, callback_response}', NULL,
+$CBU$
+UPDATE qz.table_action
+SET
+sql = $3,
+fieldnames = $4,
+callback_attached_action = $5,
+callback_response = $6
+WHERE form_name = $1
+AND action = $2
+AND is_callback
+$CBU$),
+
+('callback', 'create', '{form_name}', NULL,
+$CBC$
+SELECT $1::qz.variable_name "form_name",
+''::text "callback_name",
+''::text "sql",
+''::text "fieldnames",
+'any'::text "callback_attached_action",
+''::text "callback_response"
+$CBC$),
+
+('callback', 'insert',
+'{form_name, callback_name, sql, fieldnames, callback_attached_action, callback_response}',
+NULL,
+$CBI$
+INSERT INTO qz.table_action
+(form_name, action, sql, fieldnames, is_callback,
+callback_attached_action, callback_response)
+VALUES
+($1,$2,$3,$4,'t',$5,$6)
+$CBI$),
+
+('callback', 'delete', '{form_name, callback_name}', NULL,
+$CBD$
+DELETE FROM qz.table_action
+WHERE
+form_name = $1
+AND action = $2
+AND is_callback
+$CBD$);
+
 
 ---
 --- Hide from the standard view

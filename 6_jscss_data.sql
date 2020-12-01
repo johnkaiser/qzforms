@@ -100,4 +100,34 @@ INSERT INTO qz.page_css
 VALUES
 ('menu_menu_page', '1', 'qzforms.css');
 
+---
+--- doc
+---
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('inline_doc', '1', 'qzforms.css'),
+('inline_doc', '2', 'form_edit.css');
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('inline_doc', '1', 'qzforms.js');
+
+---
+--- callbacks
+---
+
+INSERT INTO qz.page_css
+(form_name, sequence, filename)
+VALUES
+('callback', '1', 'qzforms.css'),
+('callback', '2', 'form_edit.css');
+
+INSERT INTO qz.page_js
+(form_name, sequence, filename)
+VALUES
+('callback', '1', 'qzforms.js');
+
 

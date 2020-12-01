@@ -29,7 +29,7 @@ function set_action_options(){
 
        // if handler_el is null, don't go whacking the values above.XXXXXXXXXXX
 
-    
+       var newopt;
        for( newopt in allowed_options[handler_el.value] ){
             // add children options
             

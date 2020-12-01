@@ -422,5 +422,41 @@ VALUES
  '^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$'),
 ('user_menus', 'main_menu', 'select_fkey', '63', NULL);
 
+---
+--- templates
+---
 
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type)
+VALUES
+('form', 'xml_template', 'select_fkey');
+
+---
+--- docs
+---
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type, el_class, rows, cols)
+VALUES
+('inline_doc', 'data', 'textarea', 'tinymce', '40', '40');
+
+---
+--- callbacks
+---
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, rows, cols, prompt_type)
+VALUES
+('callback', 'sql', 12, 60, 'textarea');
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, size, prompt_type, regex_pattern)
+VALUES
+('callback', 'fieldnames', 63, 'text_array',
+'^[^\x01-\x2f\x3a-\x40\x5b-\x5e\x7b-\x7f\s\x60]{1,63}$');
+
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type)
+VALUES
+('callback', 'callback_response', 'select_options');
 

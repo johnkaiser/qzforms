@@ -412,6 +412,7 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
         action_target);
 
     set_form_name(form_rec, "insert");
+    callback_adder(h, form_rec, create_ta);
 
     xmlNodePtr button = xmlNewTextChild(form, NULL, "button", "Insert");
     xmlNewProp(button, "type", "submit");

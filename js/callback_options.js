@@ -104,7 +104,9 @@ function callback_options(callback_name, field_name){
                 // Remove the current items 
                 // keeping track of what was selected
                 for (let k = (this_el.options.length - 1); k >= 0; k--){
-                    if (this_el.options[k].selected){
+                    if (this_el.options[k].selected &&
+                        this_el.options[k].value.length > 0){
+
                         selected.push(this_el.options[k].value);
                     }
                     this_el.remove(k);
@@ -121,6 +123,20 @@ function callback_options(callback_name, field_name){
                     this_el[n] = new Option(new_text, new_value);
                     if (selected.includes(new_value)){
                         this_el[n].selected = true;
+                        // remove the new value from selected to detect
+                        // selected not in current options
+                        selected.splice(new_value,1);
+                    }
+                }
+                // It can happen that the selected value is not
+                // in the list of options. Add the selected value.
+                if (selected.length > 0){
+                    console.log('callback_options: current value not used',
+                        selected, selected.length);
+                    for (let op = 0; op < selected.length; op++){
+                        let new_pos =  this_el.options.length;
+                        this_el[new_pos] = new Option(selected[op], selected[op]);
+                        this_el[new_pos].selected = true;
                     }
                 }
             }
