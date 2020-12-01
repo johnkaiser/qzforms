@@ -1,4 +1,15 @@
-
+---
+--- Given a table name and a column name, return a record
+--- describing the attibute. Data is extracted from the
+--- PostgreSQL pg_catalog and the SQL information_schema
+---
+--- The function
+--- get_pgtype_datum(table_name, column_name)
+--- will return a record of type pg_type_datum
+---
+--- Copyright (c) John Kaiser, http://qzforms.com
+--- October 28, 2015
+---
 
 CREATE TYPE qz.pg_type_datum
 AS (
