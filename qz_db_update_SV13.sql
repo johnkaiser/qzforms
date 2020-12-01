@@ -1,5 +1,4 @@
 BEGIN;
-
 INSERT INTO qz.change_history
 (change_description,note)
 VALUES
@@ -49,17 +48,6 @@ ALTER TABLE qz.doc DROP COLUMN mimetype;
 ALTER TABLE qz.doc DROP COLUMN filename;
 
 ALTER TABLE qz.doc ADD PRIMARY KEY (form_name, action, div_id);
-
-
---- DROP TABLE qz.doc;
----
---- CREATE TABLE qz.doc (
---- form_name qz.variable_name REFERENCES qz.form(form_name),
---- action qz.variable_name,
---- div_id qz.variable_name,
---- mimetype text,
---- "data" text,
---- PRIMARY KEY (form_name, action, div_id));
 
 GRANT SELECT ON TABLE qz.doc TO qzuser;
 GRANT ALL ON TABLE qz.doc TO qzdev;
@@ -148,7 +136,9 @@ INSERT INTO qz.menu_item
 VALUES
 ('form_submenu', '90', 'inline_doc', 'list', 'inline doc');
 
+---
 --- page js/css for inline docs
+---
 
 INSERT INTO qz.page_css
 (form_name, sequence, filename)
@@ -281,7 +271,7 @@ VALUES
 
 
 -----
------ Try 2
+----- Callbacks - Try 2
 -----
 
 ALTER TABLE qz.table_action
@@ -306,19 +296,21 @@ INSERT INTO qz.prompt_rule
 VALUES
 ('callback', 'callback_response', 'select_options');
 
-INSERT INTO qz.prompt_rule
-(form_name, fieldname, prompt_type,
+--- WHAT WAS I THINKING????
+--- INSERT INTO qz.prompt_rule
+--- (form_name, fieldname, prompt_type,
+
 ---
 --- No callbacks should be listed in table_action
 ---
-
+--- XXXXXX
 UPDATE qz.table_action
 SET sql = $TAL$ SELECT ta.action, ta.helpful_text,
      fm.handler_name
      FROM qz.table_action ta
      JOIN qz.form fm USING (form_name)
      WHERE form_name = $1
-     AND not is_callback
+     AND NOT is_callback
      ORDER BY form_name, action $TAL$
 WHERE form_name = 'table_action_edit'
 AND action = 'list';
@@ -370,10 +362,36 @@ fieldnames = '{template_name,id}'
 WHERE form_name = 'div_ids'
 AND action = 'delete_row';
 
+---
+--- Make menu build suck less
+---
+
+COMMENT ON COLUMN qz.menu.menu_name IS 'The menu name is used to add the menu to a page.';
+COMMENT ON COLUMN qz.menu.target_div IS 'The div ID where the menu will be placed.';
+COMMENT ON COLUMN qz.menu.description IS 'A handy notation for form developers, does not appear to the user.';
+COMMENT ON COLUMN qz.menu.form_set_name IS 'An optional reference to a form set. A form set allows forms to pass data to sub-forms.';
 
 ---
---- New prompt type input_datalist
+--- Lists should be sorted
 ---
---- not yet, ALTER TYPE qz.prompt_types ADD VALUE 'input_datalist';
+
+UPDATE qz.table_action
+SET sql=$JSLTA$ SELECT form_name, action, inline_js::varchar(30) inline_js_
+   FROM qz.table_action
+   WHERE form_name = $1
+   AND NOT is_callback
+   ORDER BY action $JSLTA$
+WHERE form_name = 'inline_js'
+AND action = 'list';
+
+UPDATE qz.table_action
+SET sql=$CSSLTA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
+   FROM qz.table_action
+   WHERE form_name = $1
+   AND NOT is_callback
+   ORDER BY action $CSSLTA$
+WHERE form_name = 'inline_css'
+AND action = 'list';
+
 
 COMMIT;
