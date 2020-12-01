@@ -1,0 +1,11 @@
+-- Allow users to see into schema qz
+GRANT USAGE ON SCHEMA qz TO qzuser,qzdev;
+
+-- Allow things to work
+GRANT SELECT ON ALL TABLES IN SCHEMA qz TO qzuser;
+GRANT ALL ON ALL TABLES IN SCHEMA qz TO qzdev;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA qz TO qzuser;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA qz TO qzdev;
+
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA qz TO qzuser,qzdev;
