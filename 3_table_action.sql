@@ -1067,19 +1067,19 @@ VALUES
 ('inline_doc', 'list', '{form_name}',
 'Use this to attach a bit of html to your form',
 $DTALI$
-SELECT action, div_id
+SELECT action, id
 FROM qz.doc
 WHERE form_name = $1
-ORDER BY action, div_id
+ORDER BY action, id
 $DTALI$),
 
 ('inline_doc', 'edit', '{form_name,action,div_id}', NULL,
 $DTAED$
-SELECT action, div_id, el_class, "data"
+SELECT action, id, el_class, "data"
 FROM qz.doc
 WHERE form_name = $1
 AND action = $2
-AND div_id = $3
+AND id = $3
 $DTAED$),
 
 ('inline_doc', 'update', '{form_name,action,div_id,el_class,data}', NULL,
@@ -1090,14 +1090,14 @@ el_class = $4,
 "data" = $5
 WHERE form_name = $1
 AND action = $2
-AND div_id = $3
+AND id = $3
 $DTAUP$),
 
 ('inline_doc', 'create', '{form_name}', NULL,
 $DTACR$
 SELECT $1::qz.variable_name "form_name",
 ''::text "action",
-''::text "div_id",
+''::text "id",
 ''::text "el_class",
 ''::text "data"
 $DTACR$),
@@ -1107,7 +1107,7 @@ $DTACR$),
 NULL,
 $DTAIN$
 INSERT INTO qz.doc
-(form_name, action, div_id, el_class, data)
+(form_name, action, id, el_class, data)
 VALUES
 ($1,$2,$3,$4,$5)
 $DTAIN$),
@@ -1118,7 +1118,7 @@ DELETE FROM qz.doc
 WHERE
 form_name = $1
 AND action = $2
-AND div_id = $3
+AND id = $3
 $DTADL$);
 
 ---
