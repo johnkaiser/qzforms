@@ -15,9 +15,9 @@ VALUES
 
 --- But first, add any missing templates
 INSERT INTO qz.template
-SELECT xml_template, 'upgrade' FROM form f
+SELECT xml_template, 'upgrade' FROM qz.form f
 WHERE NOT EXISTS
-(SELECT template_name FROM template t
+(SELECT template_name FROM qz.template t
  WHERE f.xml_template = t.template_name);
 
 ALTER TABLE qz.form
@@ -121,6 +121,19 @@ form_name = $1
 AND action = $2
 AND div_id = $3
 $DTADL$);
+
+UPDATE qz.table_action
+SET inline_js =
+$TAIJSD$
+window.addEventListener("DOMContentLoaded",
+    () => callback_options('get_divids', 'div_id'));
+
+window.addEventListener("DOMContentLoaded",
+    () => callback_options('get_actions', 'action'));
+$TAIJSD$
+WHERE form_name = 'inline_doc'
+AND (action) IN ('create', 'edit');
+
 
 --- Menu stuff for inline_docs
 
@@ -296,14 +309,9 @@ INSERT INTO qz.prompt_rule
 VALUES
 ('callback', 'callback_response', 'select_options');
 
---- WHAT WAS I THINKING????
---- INSERT INTO qz.prompt_rule
---- (form_name, fieldname, prompt_type,
-
 ---
 --- No callbacks should be listed in table_action
 ---
---- XXXXXX
 UPDATE qz.table_action
 SET sql = $TAL$ SELECT ta.action, ta.helpful_text,
      fm.handler_name
@@ -316,9 +324,45 @@ WHERE form_name = 'table_action_edit'
 AND action = 'list';
 
 ---
---- div_id should not be both a field name and a table name
+---  callbacks for inline_doc
 ---
-ALTER TABLE div_id RENAME COLUMN "div_id" TO "id";
+INSERT INTO qz.table_action
+(form_name, action, fieldnames, callback_attached_action, is_callback,
+callback_response, sql)
+VALUES
+('inline_doc', 'get_divids', '{form_name}', 'any', 't', 'qzforms_json',
+$TACBDIVID$
+SELECT d.id "value", d.id || ' - ' || d.notation "text"
+FROM qz.div_id d
+WHERE d.template_name =
+   (SELECT f.xml_template
+    FROM qz.form f
+    WHERE f.form_name = $1
+    )
+ORDER By d.id;
+$TACBDIVID$),
+
+('inline_doc', 'get_actions', '{form_name}', 'any', 't', 'qzforms_json',
+$TACBACT$
+SELECT action "value"
+FROM qz.table_action
+WHERE form_name = $1
+AND NOT is_callback
+$TACBACT$);
+
+---
+---  Update inline_doc prompt rule to select options
+---
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type)
+VALUES
+('inline_doc', 'action', 'select_options'),
+('inline_doc', 'div_id', 'select_options');
+
+---
+---  div_id should not be both a field name and a table name
+---
+ALTER TABLE qz.div_id RENAME COLUMN "div_id" TO "id";
 
 UPDATE qz.table_action
 SET sql=$IDTAE$
@@ -392,6 +436,14 @@ SET sql=$CSSLTA$ SELECT form_name, action, inline_css::varchar(30) inline_css_
    ORDER BY action $CSSLTA$
 WHERE form_name = 'inline_css'
 AND action = 'list';
+
+---
+--- set_action_options needed for additional forms
+---
+UPDATE qz.table_action
+SET inline_js =  'window.addEventListener("DOMContentLoaded",set_action_options, true);'
+WHERE form_name = 'table_action_edit'
+AND (action) IN ('list','insert','update');
 
 ---
 ---  qzforms.js
@@ -749,7 +801,10 @@ function add_textarea(parent_el, fieldname, prompt_rule, row_index){
 
     var textarea = document.createElement("textarea");
     parent_el.appendChild(textarea);
-  
+
+    var id;
+    var name;
+
     if (("expand_percent_n" in prompt_rule) && (prompt_rule.expand_percent_n)){
         id = fieldname.replace("%n", row_index.toString());
         name = fieldname.replace("%n", row_index.toString());
@@ -1025,15 +1080,16 @@ function set_action_options(){
     }
 }
 
-tinymce.init(
- {selector: 'textarea.tinymce',
-  entity_encoding : "numeric",
-  plugins: [ 'lists table code link image' ],
-  toolbar: ['undo redo |styleselect bold italic | bullist numlist blockquote  outdent indent  | link table code | image'],
-  menubar: false,
-  image_uploadtab: false
- });
-
+if (window.hasOwnProperty('tinymce')){
+    tinymce.init(
+     {selector: 'textarea.tinymce',
+      entity_encoding : "numeric",
+      plugins: [ 'lists table code link image' ],
+      toolbar: ['undo redo |styleselect bold italic | bullist numlist blockquote  outdent indent  | link table code | image'],
+      menubar: false,
+      image_uploadtab: false
+     });
+}
 /*
  *  Find and return the array of valid callbacks for a form.
  */
@@ -1148,7 +1204,7 @@ function callback_options(callback_name, field_name){
          */
     
         console.log('set_options for form ' + xhr.form_name + 
-            'field ' + field_name);
+            ' field ' + field_name);
     
         if (xhr.status != 200){
             console.log('set_options exiting xhr_status = ' + xhr.status);
@@ -1281,5 +1337,4 @@ function callback_options(callback_name, field_name){
 }
 $QZJS$ 
  WHERE filename = 'qzforms.js';
-
 COMMIT;
