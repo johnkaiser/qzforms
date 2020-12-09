@@ -133,12 +133,12 @@ VALUES
 CREATE TABLE qz.doc (
     form_name qz.variable_name REFERENCES qz.form(form_name),
     action qz.variable_name,
-    id qz.variable_name,
+    div_id qz.variable_name,
     modtime timestamp without time zone,
     etag bigint,
     data text,
     el_class text,
-    PRIMARY KEY (form_name, action, id));
+    PRIMARY KEY (form_name, action, div_id));
 
 INSERT INTO qz.form
 (form_name, handler_name, schema_name, table_name, xml_template,
