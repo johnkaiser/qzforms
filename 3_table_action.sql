@@ -1056,6 +1056,31 @@ VALUES
     $MMPV$You can use All Menus to create or modify a menu
     or User Menus to assign a main menu to a user.$MMPV$);
 
+
+INSERT INTO qz.table_action
+(form_name, action, fieldnames, callback_attached_action, is_callback, callback_response, sql)
+VALUES
+('inline_doc', 'get_divids', '{form_name}', 'any', 't', 'qzforms_json',
+$TACBIDS$
+SELECT d.id "value", d.id || ' - ' || d.notation "text"
+FROM qz.div_id d
+WHERE d.template_name =
+    (SELECT f.xml_template
+     FROM qz.form f
+     WHERE f.form_name = $1
+     )
+ORDER By d.id;
+$TACBIDS$),
+
+
+('inline_doc', 'get_actions', '{form_name}', 'any', 't', 'qzforms_json',
+$TACBACT$
+    SELECT action "value"
+    FROM qz.table_action
+    WHERE form_name = $1
+    AND NOT is_callback
+$TACBACT$);
+
 ---
 --- docs
 ---
@@ -1067,19 +1092,19 @@ VALUES
 ('inline_doc', 'list', '{form_name}',
 'Use this to attach a bit of html to your form',
 $DTALI$
-SELECT action, id
+SELECT action, div_id
 FROM qz.doc
 WHERE form_name = $1
-ORDER BY action, id
+ORDER BY action, div_id
 $DTALI$),
 
 ('inline_doc', 'edit', '{form_name,action,div_id}', NULL,
 $DTAED$
-SELECT action, id, el_class, "data"
+SELECT action, div_id, el_class, "data"
 FROM qz.doc
 WHERE form_name = $1
 AND action = $2
-AND id = $3
+AND div_id = $3
 $DTAED$),
 
 ('inline_doc', 'update', '{form_name,action,div_id,el_class,data}', NULL,
@@ -1090,14 +1115,14 @@ el_class = $4,
 "data" = $5
 WHERE form_name = $1
 AND action = $2
-AND id = $3
+AND div_id = $3
 $DTAUP$),
 
 ('inline_doc', 'create', '{form_name}', NULL,
 $DTACR$
 SELECT $1::qz.variable_name "form_name",
 ''::text "action",
-''::text "id",
+''::text "div_id",
 ''::text "el_class",
 ''::text "data"
 $DTACR$),
@@ -1107,7 +1132,7 @@ $DTACR$),
 NULL,
 $DTAIN$
 INSERT INTO qz.doc
-(form_name, action, id, el_class, data)
+(form_name, action, div_id, el_class, data)
 VALUES
 ($1,$2,$3,$4,$5)
 $DTAIN$),
@@ -1118,8 +1143,20 @@ DELETE FROM qz.doc
 WHERE
 form_name = $1
 AND action = $2
-AND id = $3
+AND div_id = $3
 $DTADL$);
+
+UPDATE qz.table_action
+SET inline_js =
+$TAIJSD$
+window.addEventListener("DOMContentLoaded",
+    () => callback_options('get_divids', 'div_id'));
+
+window.addEventListener("DOMContentLoaded",
+    () => callback_options('get_actions', 'action'));
+$TAIJSD$
+WHERE form_name = 'inline_doc'
+AND (action) IN ('create', 'edit');
 
 ---
 --- callbacks

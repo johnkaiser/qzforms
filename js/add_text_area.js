@@ -3,7 +3,10 @@ function add_textarea(parent_el, fieldname, prompt_rule, row_index){
 
     var textarea = document.createElement("textarea");
     parent_el.appendChild(textarea);
-  
+
+    var id;
+    var name;
+
     if (("expand_percent_n" in prompt_rule) && (prompt_rule.expand_percent_n)){
         id = fieldname.replace("%n", row_index.toString());
         name = fieldname.replace("%n", row_index.toString());

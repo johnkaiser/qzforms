@@ -25,7 +25,7 @@ function callback_options(callback_name, field_name){
          */
     
         console.log('set_options for form ' + xhr.form_name + 
-            'field ' + field_name);
+            ' field ' + field_name);
     
         if (xhr.status != 200){
             console.log('set_options exiting xhr_status = ' + xhr.status);

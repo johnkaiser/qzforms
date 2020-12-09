@@ -440,6 +440,12 @@ INSERT INTO qz.prompt_rule
 VALUES
 ('inline_doc', 'data', 'textarea', 'tinymce', '40', '40');
 
+INSERT INTO qz.prompt_rule
+(form_name, fieldname, prompt_type)
+VALUES
+('inline_doc', 'action', 'select_options'),
+('inline_doc', 'div_id', 'select_options');
+
 ---
 --- callbacks
 ---
