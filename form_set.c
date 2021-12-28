@@ -187,7 +187,7 @@ void save_context_parameters(struct handler_args* h,
         // Nothing to do.
         return;
     }
-    // This will happen when save_contest_parameters is called
+    // This will happen when save_content_parameters is called
     // for an empty result set. It is not an error.
     if (new_form_rec == NULL){
         pthread_mutex_lock(&log_mutex);
