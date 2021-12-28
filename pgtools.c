@@ -45,6 +45,7 @@ char* get_value(const PGresult* rs, int row_nbr, char* col_name){
     if (col_name == NULL) return empty;
     if (col_name[0] == '\0') return empty;
     if (row_nbr < 0) return empty;
+    if (rs == NULL) return empty;
 
     if ( ((fnbr = PQfnumber(rs, col_name)) >= 0) && 
         (PQgetlength(rs, row_nbr, fnbr) > 0) ){
