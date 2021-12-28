@@ -118,9 +118,9 @@ struct form_record* register_form(struct handler_args* h,
         char* hex_form_id = uchar_to_hex(form_rec->form_id, 16);
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d form_id = %s\n",
+        fprintf(h->log, "%f %d %s:%d action=%s form_id=%s\n",
             gettime(), h->request_id, __func__, __LINE__,
-            hex_form_id);
+            form_action, hex_form_id);
         pthread_mutex_unlock(&log_mutex);
 
         free(hex_form_id);
@@ -341,6 +341,10 @@ void refresh_one_tag(struct handler_args* h, char* form_id, char* form_tag){
         error_page(h, SC_BAD_REQUEST, "Invalid form tag submitted to refresh");
         return;
     }
+
+    // XXXXXXXXX The risk of 2 threads setting ->expires is low,
+    // XXXXXXXXX the consequence would only be a race condition for
+    // XXXXXXXXX the new value, still a mutex would be proper here.
 
     this_form = (struct form_record*) xmlHashLookup(h->session->form_tags,
         payload);
