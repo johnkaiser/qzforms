@@ -277,7 +277,6 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     }
 
     setting = xmlHashLookup(conf_hash, "NUMBER_OF_USERS");
-    printf("NUMBER_OF_USERS=%s\n", setting);
     if (setting == NULL) setting = xmlHashLookup(conf_hash, "QZ_NUMBER_OF_USERS");
     if (setting == NULL) setting = getenv("NUMBER_OF_USERS");
     if ((setting != NULL) && (strlen(setting) > 0)){
