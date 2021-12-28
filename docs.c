@@ -56,6 +56,13 @@ void init_doc(struct handler_args* h){
     pthread_mutex_unlock(&log_mutex);
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare fetch_doc failed");
+        return;
+    }
+
+
     PQclear(rs);
 }
 
