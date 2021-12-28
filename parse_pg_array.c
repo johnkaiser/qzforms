@@ -398,12 +398,12 @@ char* str_ar_to_json(char* ar[]){
            memcpy(st, ", ", 2);
            st+=2;
        }
-       st[0] = '"';
+       st[0] = '\"';
        st++;
        st_len = strlen(ar[n]);
        memcpy(st, ar[n], st_len);
        st += st_len;
-       st[0] = '"';
+       st[0] = '\"';
        st++;
     }
     st[0] = ']';
