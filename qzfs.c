@@ -196,13 +196,13 @@ void qzfs(struct handler_args* h){
        return;
     }
 
-    char* mimetype = PQgetvalue(rs, 0, PQfnumber(rs, "mimetype"));
+    char* mimetype = get_value(rs, 0, "mimetype");
     if ((mimetype != NULL) && strlen(mimetype)>0){
        content_type(h, mimetype);
     }
 
     // Set the outgoing etag header.
-    char* etag_str = PQgetvalue(rs, 0, PQfnumber(rs, "etag"));
+    char* etag_str = get_value(rs, 0, "etag");
     if (has_data(etag_str)){
         // etag_header calls make_etag
         etag_header(h, etag_str);
@@ -223,10 +223,12 @@ void qzfs(struct handler_args* h){
 
     // It.
     h->data = xmlBufferCreate();
-    //xmlBufferCat(h->data, PQgetvalue(rs, 0, PQfnumber(rs, "data")));
     int fn = PQfnumber(rs, "data");
-    int xbufrc =
-    xmlBufferAdd(h->data, PQgetvalue(rs,0,fn), PQgetlength(rs,0,fn));
+    int xbufrc = -1;
+    if (fn >= 0){
+        xbufrc = xmlBufferAdd(h->data, PQgetvalue(rs,0,fn),
+            PQgetlength(rs,0,fn));
+    }
 
     pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d fs serve output %s pg size=%d "
