@@ -1506,7 +1506,9 @@ char**  fetch_options(
                 pthread_mutex_lock(&log_mutex);
                 fprintf(h->log, "%f %d %s:%d fkey %s\n", 
                     gettime(), h->request_id, __func__, __LINE__,
-                        ((new_options != NULL) && (new_options[0] != '\0')) ?
+                        ((new_options != NULL) &&
+                         (new_options[0] != NULL) &&
+                         (new_options[0][0] != '\0')) ?
                             "OK":"foreign_key_list fail");
                 pthread_mutex_unlock(&log_mutex);
             }
