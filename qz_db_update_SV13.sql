@@ -16,7 +16,9 @@ VALUES
 --- But first, add any missing templates
 INSERT INTO qz.template
 SELECT xml_template, 'upgrade' FROM qz.form f
-WHERE NOT EXISTS
+WHERE
+xml_template IS NOT NULL
+AND NOT EXISTS
 (SELECT template_name FROM qz.template t
  WHERE f.xml_template = t.template_name);
 
