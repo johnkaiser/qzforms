@@ -58,11 +58,11 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
-	form_tag.c prompt_rule.c grid.c form_set.c docs.c logview.py \
+	form_tag.c prompt_rule.c grid.c form_set.c docs.c qzflogview \
     json-parser/json.c json-parser/json.h \
     json-parser/LICENSE json-parser/AUTHORS \
     json-builder/json-builder.c json-builder/json-builder.h \
-    json-builder/LICENSE json-builder/AUTHORS \
+    json-builder/json.h json-builder/LICENSE json-builder/AUTHORS \
 
 SQL=0_init.sql 1_handler.sql 2_objects.sql 3_table_action.sql \
 	4_prompt_rule.sql 5_jscss.sql 6_jscss_data.sql 7_menu.sql \
