@@ -42,6 +42,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include <pthread.h>
+#include <poll.h>
 
 extern pthread_mutex_t log_mutex;
 extern double gettime(void);
@@ -216,8 +217,8 @@ void process_requests(struct tag_data_conf* tagdat){
              // use a local log var and toss it on every round
              qzlog = fopen(tagdat->conf->logfile_name, "a");
         }
-        incoming = accept(tagdat->sock, (struct sockaddr*) &(tagdat->addr),
-            &(tagdat->sock_len));
+        incoming = accept4(tagdat->sock, (struct sockaddr*) &(tagdat->addr),
+            &(tagdat->sock_len), SOCK_NONBLOCK);
 
         if (incoming == -1){
 
@@ -235,6 +236,10 @@ void process_requests(struct tag_data_conf* tagdat){
                 gettime(), request_id, __func__, __LINE__, incoming);
             pthread_mutex_unlock(&log_mutex);
         }
+        pollfd_t fds[2];
+        fds[0].fd = incoming;
+        fds[0].events = POLLIN | POLLRDNORM | POLLPRI;
+        poll(fds, 1, 0);
         bytesread = read(incoming, inbuf, TAGBUF-1);
 
         if (log_tagger_details){
@@ -458,6 +463,12 @@ int open_client_socket(char* sockname){
 void make_etag(char* tagbuf, char* sockname,
      uint64_t domain_token, char payload[16]){
 
+    bzero(tagbuf, ETAG_STR_LEN);
+
+    if ((payload == NULL) || (payload[0] == '\0')){
+        return;
+    }
+
     int socket = open_client_socket(sockname);
 
     struct cryptotag ctag;
@@ -467,7 +478,6 @@ void make_etag(char* tagbuf, char* sockname,
     //DEBUG(stdout, "make_etag:%d domain_token %"PRIu64" payload %s\n",
     //    __LINE__, ctag.domain_token, ctag.payload);
 
-    bzero(tagbuf, ETAG_STR_LEN);
     write(socket, &ctag, sizeof(ctag));
     read(socket, tagbuf, ETAG_STR_LEN);
     tagbuf[ETAG_STR_LEN] = '\0';
@@ -577,6 +587,11 @@ int main(int argc, char* argv[]){
     char tagbuf[1024];
 
     clock_gettime(CLOCK_REALTIME, &start);
+
+    bzero(payload, 16);
+    make_etag(tagbuf, conf->tagger_socket_path, domain_token, NULL);
+    make_etag(tagbuf, conf->tagger_socket_path, domain_token, payload);
+    validate_etag(payload, conf->tagger_socket_path, domain_token, tagbuf);
 
     for (k=1; k<10000; k++){
     //for (k=1; k<4; k++){
