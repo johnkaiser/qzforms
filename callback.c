@@ -100,11 +100,12 @@ char* callback_enum_lookup(enum callback_response_type cb_response){
  *     3. to javascript __EVENTS__ section as an addEventListener call
  *
  *  <button
- *    id="1734eff3a19dd84f57b9ac011fc803df.90636a742c54eb24b1b20a12edf5546da939776097398aa81c666f633e60bd7f"
+ *    id="__cbid0"
  *    formaction="/qz/worktasks/project"
  *    type="button"
  *    class="callbacks"
  *    hidden="hidden"
+ *    x_form_tag="1734eff3a19dd84f57b9ac011fc803df.90636a742c54eb24b1b20a12edf5546da939776097398aa81c666f633e60bd7f"
  *  >
  *
  *  There are 2 table_action records in this function.
@@ -159,7 +160,7 @@ void callback_adder(struct handler_args* h, struct form_record* form_rec,
             pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d %s\n",
                 gettime(), h->request_id, __func__, __LINE__,
-                "cb_form_rec is null");
+                "fail cb_form_rec is null");
         }else{
             if (h->conf->log_callback_details){
                 pthread_mutex_lock(&log_mutex);
@@ -169,7 +170,7 @@ void callback_adder(struct handler_args* h, struct form_record* form_rec,
                 pthread_mutex_unlock(&log_mutex);
             }
         }
-        // the form tag encodes the form_id
+
         make_etag(tagbuf, h->conf->tagger_socket_path,
             h->session->form_tag_token, cb_form_rec->form_id);
 
@@ -330,6 +331,7 @@ void callback_html_table(struct handler_args* h, PGresult* cb_rs){
     return;
 }
 
+// XXXXXXXXXX I think this is dead code.
 PGresult* server_callback(struct handler_args* h, PGresult* form_rs, int row,
     char* form_name, char* callback_name){
 

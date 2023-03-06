@@ -28,11 +28,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+// for accept4 
+#define _GNU_SOURCE
+
 #include "tagger.h"
 #include "qzrandom.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <openssl/blowfish.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -235,7 +239,8 @@ void process_requests(struct tag_data_conf* tagdat){
                 gettime(), request_id, __func__, __LINE__, incoming);
             pthread_mutex_unlock(&log_mutex);
         }
-        pollfd_t fds[2];
+        // XXX linux vs bsd pollfd_t fds[2];
+        struct pollfd fds[2];
         fds[0].fd = incoming;
         fds[0].events = POLLIN | POLLRDNORM | POLLPRI;
         poll(fds, 1, 0);
