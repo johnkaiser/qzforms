@@ -44,7 +44,7 @@ void init_open_table(struct handler_args* h){
 
     // But first, check schema version for trouble.
     char schema_version_query[] =
-        "SELECT schema_version,  $1::int expected_verion, "
+        "SELECT schema_version,  $1::int expected_version, "
         "$1::int = schema_version does_match "
         "FROM qz.constants";
 
@@ -54,6 +54,11 @@ void init_open_table(struct handler_args* h){
 
     PGresult* sv_rs = PQprepare(h->session->conn, "schema_version",
         schema_version_query, 0, NULL);
+
+    if (PQresultStatus(sv_rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare schema_version failed");
+        return;
+    }
 
     rs = PQexecPrepared(h->session->conn, "schema_version", 1,
         (const char * const *) &sv_ver, NULL, NULL, 0);
@@ -144,6 +149,12 @@ void init_open_table(struct handler_args* h){
     pthread_mutex_unlock(&log_mutex);
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare fetch_table_action failed");
+        return;
+    }
+
     PQclear(rs);
 
     // fetch_datum
@@ -174,6 +185,11 @@ void init_open_table(struct handler_args* h){
         error_msg);
     pthread_mutex_unlock(&log_mutex);
 
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare fetch_datum failed");
+        return;
+    }
+ 
     free(error_msg);
     error_msg = NULL;
     PQclear(rs);
@@ -200,6 +216,11 @@ void init_open_table(struct handler_args* h){
         error_msg);
     pthread_mutex_unlock(&log_mutex);
 
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare fetch_table_action_etag failed");
+        return;
+    }
+ 
     free(error_msg);
     error_msg = NULL;
     PQclear(rs);
@@ -223,7 +244,7 @@ void init_open_table(struct handler_args* h){
     error_msg = nlfree_error_msg(rs);
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d fetch_rule"
+    fprintf(h->log, "%f %d %s:%d fetch_rule "
         "resStatus:%s cmdStatus:%s %s%s\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(rs)),
@@ -234,6 +255,41 @@ void init_open_table(struct handler_args* h){
 
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare fetch_rule failed");
+        return;
+    }
+
+    PQclear(rs);
+
+    char table_action_exists[] =
+        "SELECT form_name, action "
+        "FROM qz.table_action "
+        "WHERE form_name = $1 "
+        "AND action = $2";
+
+    rs = PQprepare(h->session->conn, "table_action_exists",
+        table_action_exists, 0, NULL);
+
+    error_msg = nlfree_error_msg(rs);
+
+    pthread_mutex_lock(&log_mutex);
+    fprintf(h->log, "%f %d %s:%d table_action_exists "
+        "resStatus:%s cmdStatus:%s %s%s\n",
+        gettime(), h->request_id, __func__, __LINE__,
+        PQresStatus(PQresultStatus(rs)),
+        PQcmdStatus(rs),
+        (strlen(error_msg) > 0) ? "ErrorMessage:" : "",
+        error_msg);
+    pthread_mutex_unlock(&log_mutex);
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare table_action_exists failed");
+        return;
+    }
+
+    free(error_msg);
     PQclear(rs);
 
     return;
@@ -789,6 +845,7 @@ void init_table_entry(struct handler_args* hargs,
             callback_name_lookup(callback_response);
     }
 
+
     // Set the check token
     new_table_action->integrity_token = hargs->session->integrity_token;
 
@@ -1323,7 +1380,17 @@ void close_table(struct handler_args* h, char* form_name, char* action){
 
         return;
     }
+    if (strstr(table_action_ptr->prepare_name, "\"") != NULL){
 
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d  close_table fail - "
+            "double quote in name %s, %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            form_name, action);
+        pthread_mutex_unlock(&log_mutex);
+
+        return;
+    }
     // deallocate the prepared statement
     PGresult* rs;
 
@@ -1399,6 +1466,30 @@ void close_all_tables(struct handler_args* h, struct session* this_session){
     return;
 }
 
+bool table_action_exists(struct handler_args* h,
+    char* form_name, char* action){
+
+    char* paramValues[3];
+    paramValues[0] = form_name;
+    paramValues[1] = action;
+    paramValues[2] = NULL;
+
+    PGresult* rs;
+
+    rs = PQexecPrepared(h->session->conn, "table_action_exists", 2,
+        (const char * const *) &paramValues, NULL, NULL, 0);
+
+    bool it_exists = false;
+    if ((rs != NULL) &&
+       (PQresultStatus(rs) == PGRES_TUPLES_OK) &&
+       (PQntuples(rs) == 1)){
+
+           it_exists = true;
+    }
+    PQclear(rs);
+
+    return it_exists;
+}
 
 #ifdef OPENTABLE_TEST
 

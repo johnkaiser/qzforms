@@ -45,7 +45,7 @@ void add_header(struct handler_args* h, char* key, char* value){
     xmlBufferCat(h->headers, new_hdr);
     free(new_hdr);
 
-    return; 
+    return;
 }
 
 /*
@@ -56,12 +56,12 @@ void add_header(struct handler_args* h, char* key, char* value){
  */
 char* get_uri_part(struct handler_args* h, u_int position){
     if ( position < h->nbr_uri_parts ){
-        if (strlen( h->uri_parts[ position ] ) <= MAX_SEGMENT_LENGTH ){ 
+        if (strlen( h->uri_parts[ position ] ) <= MAX_SEGMENT_LENGTH ){
             return h->uri_parts[ position ];
-        }else{ 
+        }else{
             pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d fail URI segment %d exceeds "
-                "MAX_SEGMENT_LENGTH\n", 
+                "MAX_SEGMENT_LENGTH\n",
                 gettime(), h->request_id, __func__, __LINE__,
                 position);
             pthread_mutex_unlock(&log_mutex);
@@ -70,7 +70,7 @@ char* get_uri_part(struct handler_args* h, u_int position){
         }
     }else{
         return NULL;
-    } 
+    }
 }
 
 /*
@@ -88,7 +88,7 @@ bool uri_part_n_is(struct handler_args* h, u_int n, char* part){
     uri_part = get_uri_part(h,n);
 
     if (uri_part == NULL) return false;
-    
+
     return ( strncmp(uri_part, part, MAX_SEGMENT_LENGTH) == 0);
 }
 
@@ -98,24 +98,24 @@ bool uri_part_n_is(struct handler_args* h, u_int n, char* part){
  *  Add a location header for a redirect.
  */
 void location(struct handler_args* h, char* new_url){
-    add_header(h, "Location", new_url); 
+    add_header(h, "Location", new_url);
     add_header(h, "Status", "302");
     FCGX_SetExitStatus(SC_FOUND, h->out);
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d location: %s\n", 
+    fprintf(h->log, "%f %d %s:%d location: %s\n",
         gettime(), h->request_id, __func__, __LINE__, new_url);
     pthread_mutex_unlock(&log_mutex);
     return;
 }
 
 
-/* 
+/*
  *  build_path
  *
  *  Given an array of strings, pack them into a buffer separated by /
  *  Kinda like python "/".join([]) but with a leading /
- *  Returned buffer must be freed by the calling code. 
+ *  Returned buffer must be freed by the calling code.
  *
  *  Use asprintf instead.
  */
@@ -127,7 +127,7 @@ char* build_path(char* str_ar[]){
     char* new_path;
 
     for (k=0; str_ar[k]!=NULL; k++){
-        path_len+= strlen(str_ar[k]) + 2; 
+        path_len+= strlen(str_ar[k]) + 2;
         if (k>MAX_NBR_SEGMENTS) return NULL;
     }
 
@@ -140,7 +140,7 @@ char* build_path(char* str_ar[]){
            new_path[place++] = str_ar[k][j];
        }
     }
-    return new_path; 
+    return new_path;
 }
 
 /*
@@ -152,7 +152,7 @@ char* build_path(char* str_ar[]){
 void append_class(xmlNodePtr the_node, xmlChar* new_class){
 
     xmlChar* html_class = xmlGetProp(the_node, "class");
-    
+
     if (html_class == NULL){
         // A simple add
         xmlNewProp(the_node, "class", new_class);
@@ -171,7 +171,7 @@ void append_class(xmlNodePtr the_node, xmlChar* new_class){
             }
         }
         free(class_ar);
-        
+
         if (found){
             xmlFree(html_class);
             return;
@@ -185,8 +185,8 @@ void append_class(xmlNodePtr the_node, xmlChar* new_class){
         xmlFree(html_class);
         free(new_class_list);
 
-        return; 
-    }    
+        return;
+    }
 }
 
 /*
@@ -205,10 +205,10 @@ void add_jscss_links(struct handler_args* h){
     if (h->page_ta  == NULL){
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d page_ta is null\n", 
+        fprintf(h->log, "%f %d %s:%d page_ta is null\n",
             gettime(), h->request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
-    
+
         return;
     }
 
@@ -216,7 +216,7 @@ void add_jscss_links(struct handler_args* h){
     if (head == NULL){
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d failed to find head for script\n", 
+        fprintf(h->log, "%f %d %s:%d failed to find head for script\n",
             gettime(), h->request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
 
@@ -239,6 +239,7 @@ void add_jscss_links(struct handler_args* h){
             // html script tags in xml are empty text.
             script_el = xmlNewTextChild(head, NULL, "script", "\n");
             xmlNewProp(script_el, "src", script);
+            xmlNodeAddContent(script_el, "\n");
 
             pthread_mutex_lock(&log_mutex);
             fprintf(h->log, "%f %d %s:%d add script %s\n",
@@ -293,6 +294,7 @@ void add_jscss_links(struct handler_args* h){
             xmlNewTextChild(head, NULL, "script", h->page_ta->inline_js);
 
         xmlNewProp(new_script, "type", "text/javascript");
+        xmlNodeAddContent(new_script, "\n");
     }
     if (has_data(h->page_ta->inline_css)){
         xmlNodePtr new_style =
@@ -309,12 +311,12 @@ void add_jscss_links(struct handler_args* h){
  *  add_helpful_text
  *
  *  If the table action has a value for helpful_text,
- *  add it to the element with the id of "helpful_text" 
+ *  add it to the element with the id of "helpful_text"
  */
- 
+
 void add_helpful_text(struct handler_args* h, struct table_action* ta){
 
-    if ((ta == NULL) || (ta->helpful_text == NULL) || 
+    if ((ta == NULL) || (ta->helpful_text == NULL) ||
         (ta->helpful_text[0] == '\0')){
 
         return;
@@ -398,12 +400,12 @@ void log_file_rotation(struct qz_config* conf, char* logfile_name){
 
             while ((dent = readdir(logdp)) != NULL){
                 // the filename must  be the same as the base name...
-                if (strncmp(logbasename, dent->d_name, 
+                if (strncmp(logbasename, dent->d_name,
                     baselen) == 0){
-                    
+
                     // ... and be at least 2 chars longer for ".1"...
                     if (strlen(dent->d_name) >= baselen + 2){
-                        
+
                         // ...then if it's a number...
                         char* nbr_start = dent->d_name + baselen + 1;
                         filenbr = strtol(nbr_start, NULL, 10);
@@ -415,18 +417,18 @@ void log_file_rotation(struct qz_config* conf, char* logfile_name){
                             min_filenbr = filenbr;
                             if (smallest  != NULL) free(smallest);
                             asprintf(&smallest, "%s/%s", logdirname, dent->d_name);
-                        }    
+                        }
                         if ((filenbr > 0) && (filenbr > max_filenbr)){
                             max_filenbr = filenbr;
-                        }    
+                        } 
                     }
-                }    
+                }
             } // while
             // .. so move log file to new numbered name
             char* newlogname;
             asprintf(&newlogname, "%s.%d", logfile_name,
                 max_filenbr + 1);
-            
+
             link(logfile_name, newlogname);
             unlink(logfile_name);
             free(newlogname);
@@ -434,7 +436,7 @@ void log_file_rotation(struct qz_config* conf, char* logfile_name){
 
             if ((nbrcount >= conf->max_log_file_count) &&
                 (smallest != NULL)){
-               
+
                 if (unlink(smallest) != 0){
                     FILE* log = fopen(logfile_name, "a");
                     pthread_mutex_lock(&log_mutex);
@@ -484,39 +486,113 @@ xmlNodePtr qzGetElementByID(struct handler_args* h, xmlChar* id){
 }
 
 /*
- *  add_listenr
+ *  get_events_node
  *
- *  Add an addEventListener js call to <src id=__EVENTS__...
+ *  find or create events node in head
  */
-void add_listener(struct handler_args* h, char* id, char* event, char* action){
+
+xmlNodePtr get_events_node(struct handler_args* h){
 
     xmlNodePtr events_node = qzGetElementByID(h, "__EVENTS__");
+    char use_strict[] = "\"use strict\";\n"  ;
+
     if (events_node == NULL){
         xmlNodePtr head = qzGetElementByID(h, "__HEAD__");
         if (head == NULL){
             // log it and give up.
-            return;
+            pthread_mutex_lock(&log_mutex);
+
+            fprintf(h->log, "%f %d %s:%d %s\n",
+                gettime(), 0, __func__, __LINE__,
+               "failed to find head - can not add event listener");
+
+            pthread_mutex_unlock(&log_mutex);
+            return NULL;
         }
         events_node = xmlNewChild(head, NULL, "script", "\n");
         xmlNewProp(events_node, "id", "__EVENTS__");
         xmlNewProp(events_node, "type", "text/javascript");
 
+        xmlNodeAddContent(events_node , use_strict);
+
         add_to_id_index(h, events_node);
+
     }
-    char* content;
+    return events_node;
+}
 
-    if (id == NULL){
-        asprintf(&content, "document.addEventListener(\"%s\",%s);\n",
-            event, action);
 
-    }else{
+/*
+ *  add_listener_for_* doc, id, name
+ *
+ *  Add an addEventListener js call to <src id=__EVENTS__...
+ */
+
+void add_listener_for_doc(struct handler_args* h, char* event, char* js){
+
+    xmlNodePtr events_node = get_events_node(h);
+    if (events_node != NULL){
+
+        char* content;
         asprintf(&content,
-            "document.getElementById(\"%s\").addEventListener(\"%s\",%s);\n",
-            id, event, action);
+            "document.addEventListener(\"%s\", () => %s);\n", event, js);
+
+        xmlNodeAddContent(events_node , content);
+        free(content);
     }
-    xmlNodeAddContent(events_node, content);
-    free(content);
-    return;
+}
+
+void add_listener_for_id(struct handler_args* h, char* id, char* event,
+    char* js){
+
+    xmlNodePtr events_node = get_events_node(h);
+    if (events_node != NULL){
+
+        char* content;
+        asprintf(&content,
+            "document.getElementById(\"%s\").addEventListener(\"%s\", () => %s);\n",
+            id, event, js);
+
+        xmlNodeAddContent(events_node , content);
+        free(content);
+    }
+}
+
+void add_listener_for_name(struct handler_args* h, char* form_name,
+    char* field_name, char* event, char* js){
+
+    xmlNodePtr events_node = get_events_node(h);
+    if (events_node != NULL){
+
+        char* content;
+        asprintf(&content,
+            "document.forms[\"%s\"][\"%s\"].addEventListener(\"%s\", () => %s);\n",
+            form_name, field_name, event, js);
+
+        xmlNodeAddContent(events_node , content);
+        free(content);
+    }
+}
+
+void add_dom_content_loaded(struct handler_args* h, char* id, char* js){
+
+    xmlNodePtr events_node = get_events_node(h);
+    if (events_node != NULL){
+
+        char* content;
+        asprintf(&content,
+            "document.addEventListener(\"DOMContentLoaded\", "
+            "() => %s.bind(document.getElementById(\"%s\"))());\n",
+             js, id);
+
+        xmlNodeAddContent(events_node , content);
+        free(content);
+    }else{
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail no events node for id %s\n",
+            gettime(), h->request_id, __func__, __LINE__, id);
+        pthread_mutex_unlock(&log_mutex);
+    }
 }
 
 /*

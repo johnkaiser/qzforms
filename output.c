@@ -38,13 +38,13 @@
  *  otherwise look for an xmlBuffer in handler_args data.
  */
 
-void serve_output( struct handler_args* hargs ){ 
+void serve_output( struct handler_args* hargs ){
 
     if (hargs==NULL) return;
     if (hargs->error_exists) return;
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(hargs->log, "%f %d %s:%d %s\n", 
+    fprintf(hargs->log, "%f %d %s:%d %s\n",
         gettime(), hargs->request_id, __func__, __LINE__,
         "function serve_output");
     pthread_mutex_unlock(&log_mutex);
@@ -54,11 +54,11 @@ void serve_output( struct handler_args* hargs ){
     }
 
     if (hargs->doc != NULL){
-       
+
         xmlBufferPtr xbuf = xmlBufferCreate();
-        if (xbuf == NULL){ 
+        if (xbuf == NULL){
             pthread_mutex_lock(&log_mutex);
-            fprintf(hargs->log, "%f %d %s:%d %s\n", 
+            fprintf(hargs->log, "%f %d %s:%d %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 "xbuf from xmlBufferCreate is null\n");
             pthread_mutex_unlock(&log_mutex);
@@ -66,13 +66,13 @@ void serve_output( struct handler_args* hargs ){
             error_page(hargs, SC_INTERNAL_SERVER_ERROR, "xmlBufferCreate failed");
             return;
         }
-    
-        xmlSaveCtxtPtr ctxt = xmlSaveToBuffer(xbuf, "UTF-8", 
+
+        xmlSaveCtxtPtr ctxt = xmlSaveToBuffer(xbuf, "UTF-8",
              XML_SAVE_FORMAT|XML_SAVE_NO_DECL|XML_SAVE_AS_HTML);
 
-        if ((ctxt == NULL) && (hargs->log != NULL)){ 
+        if ((ctxt == NULL) && (hargs->log != NULL)){
             pthread_mutex_lock(&log_mutex);
-            fprintf(hargs->log, "%f %d %s:%d %s\n", 
+            fprintf(hargs->log, "%f %d %s:%d %s\n",
                 gettime(), hargs->request_id, __func__, __LINE__,
                 "ctxt is null");
             pthread_mutex_unlock(&log_mutex);
@@ -82,7 +82,7 @@ void serve_output( struct handler_args* hargs ){
         xmlSaveClose(ctxt);
 
         FCGX_FPrintF(hargs->out, "%s", xbuf->content);
-        
+
         xmlBufferFree(xbuf);
 
     } else if (hargs->data != NULL){
@@ -126,7 +126,7 @@ void expires(struct handler_args* h, time_t expires_t){
 
 /*
  *  error_page
- *  
+ *
  *  Declare an error condition by setting error_exists, and
  *  immediately sending out an error page.
  *  Setting error_exists will stop the normal output of docs
@@ -166,7 +166,7 @@ void error_page( struct handler_args* h, int status_code, const char* msg ){
         h->error_exists = true;
     }else{
         FCGX_FPrintF(h->out, "\r\n");
-    }    
+    }
 #endif
 
     return;
@@ -174,34 +174,34 @@ void error_page( struct handler_args* h, int status_code, const char* msg ){
 
 /*
  *  catch_notifies
- *  
+ *
  *  Polls pg for notifications.
  */
 
 void catch_notifies(struct handler_args* h){
-    
+
     PGnotify   *notify;
 
     while ((notify = PQnotifies(h->session->conn)) != NULL){
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log,"%f %d %s:%d notify relname=%s be_pid=%d extra=%s\n", 
+        fprintf(h->log,"%f %d %s:%d notify relname=%s be_pid=%d extra=%s\n",
             gettime(), h->request_id, __func__, __LINE__,
             notify->relname, notify->be_pid, notify->extra);
         pthread_mutex_unlock(&log_mutex);
 
-        if (strcmp("pg_db_change",  notify->relname) == 0){ 
+        if (strcmp("pg_db_change",  notify->relname) == 0){
                 // Just notified the database definition has been updated.
-                // Drop the pgtype_datum's and reload them on each new 
+                // Drop the pgtype_datum's and reload them on each new
                 // request.
                 close_all_pgtype_datums(h->session);
 
                 pthread_mutex_lock(&log_mutex);
-                fprintf(h->log,"%f %d %s:%d datum hash emptied\n", 
+                fprintf(h->log,"%f %d %s:%d datum hash emptied\n",
                     gettime(), h->request_id, __func__, __LINE__);
                 pthread_mutex_unlock(&log_mutex);
 
-        }    
+        }
     }
 }
 
@@ -229,54 +229,62 @@ bool form_tag_required(char* handler_name){
  *
  */
 void do_page( struct handler_args* hargs ){
-    
+
+    static char view_txt[] = "view";
+    static char builtin_txt[] = "builtin";
+    static char* builtins[] = {"login","logout","refresh","status", NULL};
+
     // This can happen if non-utf8 data is posted,
     // or if content length is not bytes read.
     if (hargs->error_exists){
         return;
     }
+
     bool has_valid_form_tag = false;
+    bool is_builtin = false;
+    char* form_name = NULL;
+    char* action = NULL;
+
+    form_name = get_uri_part(hargs, QZ_URI_FORM_NAME);
+    action = get_uri_part(hargs, QZ_URI_ACTION);
+
+    if (form_name == NULL){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(hargs->log, "%f %d %s:%d fail form_name not present\n",
+                gettime(), hargs->request_id, __func__, __LINE__);
+            pthread_mutex_unlock(&log_mutex);
+
+            error_page(hargs, SC_NOT_FOUND, "not found");
+            return;
+    }
+
+    // The handler name will come from qz.form unless it is a builtin.
+    is_builtin = item_in_list(form_name, builtins);
 
     // Check the post data for being legal
     // It must contain a name 'form_tag' with value
     // that passes the test for being a valid etag.
-    // Requests without postdata such as qzfs requests requests
+    // Requests without postdata such as qzfs requests
     // do not post anything, so skip this.
 
     if (hargs->postdata != NULL){
-        if (!post_contains_valid_form_tag(hargs)){
+        if ( ! post_contains_valid_form_tag(hargs)){
 
             pthread_mutex_lock(&log_mutex);
-            fprintf(hargs->log, "%f %d %s:%d fail post contains invalid form_tag\n", 
+            fprintf(hargs->log, "%f %d %s:%d fail post contains invalid form_tag\n",
                 gettime(), hargs->request_id, __func__, __LINE__);
             pthread_mutex_unlock(&log_mutex);
 
-            // This was a hard error, but it happens too frequently for that. 
-            logout(hargs);
+            // This was a hard error, but it happens too frequently for that.
+            error_page(hargs, 404, "invalid request");
             return;
         }else{
             has_valid_form_tag = true;
         }
     }
 
-    // The handler name will come from qz.form unless it is a builtin.
-    static char* builtins[] = {"login","logout","refresh","status", NULL};
-
-    static char menu_txt[] = "menupage";
-    
-    char* form_name = get_uri_part(hargs, QZ_URI_FORM_NAME);
-
-    if (form_name == NULL){
-            pthread_mutex_lock(&log_mutex);
-            fprintf(hargs->log, "%f %d %s:%d fail form_name not present\n", 
-                gettime(), hargs->request_id, __func__, __LINE__);
-            pthread_mutex_unlock(&log_mutex);
-        
-            error_page(hargs, SC_NOT_FOUND, "not found");
-            return;
-    }
-    
-    if (strncmp("refresh", form_name, MAX_SEGMENT_LENGTH) == 0){
+    if ((has_valid_form_tag) &&
+        (strncmp("refresh", form_name, MAX_SEGMENT_LENGTH) == 0)){
 
         // A refresh request to extend the expire time on a form
         // does not need to talk to postgres, so does not need the
@@ -289,18 +297,18 @@ void do_page( struct handler_args* hargs ){
         // Get that session mutex
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(hargs->log, "%f %d %s:%d request session mutex\n", 
+        fprintf(hargs->log, "%f %d %s:%d request session mutex\n",
             gettime(), hargs->request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
-        
-        // mutex lock and wait for session 
+
+        // mutex lock and wait for session
         pthread_mutex_lock(&(hargs->session->session_lock));
         /*************** Inside Mutex ******************************/
-    
+
         pthread_mutex_lock(&log_mutex);
-        fprintf(hargs->log, "%f %d %s:%d session mutex acquired\n", 
+        fprintf(hargs->log, "%f %d %s:%d session mutex acquired\n",
             gettime(), hargs->request_id, __func__, __LINE__);
-        fflush(hargs->log);    
+        fflush(hargs->log);
         pthread_mutex_unlock(&log_mutex);
 
         // It is possible that a logout happened while this
@@ -309,96 +317,89 @@ void do_page( struct handler_args* hargs ){
 
             hargs->session->last_activity_time = time(NULL);
 
+            if ((action == NULL) && (form_name_is_menu(hargs))){
+                action = view_txt;
+            }
             // Identify the handler
 
-            int n;
-            char* handler_name = NULL;
             struct table_action* page_ta = NULL;
 
-            for(n=0; builtins[n] != NULL; n++){
-                if (strncmp(form_name, builtins[n], MAX_SEGMENT_LENGTH) == 0){
-                    handler_name = builtins[n];         
-                    break;
-                }    
-            }
-
-            char* action = get_uri_part(hargs, QZ_URI_ACTION);
-
-            // Note that builtins do not need an action but anything
-            // from a table_action must have an action or it won't
-            // be called.
-
-            if ((handler_name == NULL) && (action != NULL)){ 
-                // not in builtins from above
+            if (is_builtin){
+                hargs->handler_name = get_uri_part(hargs, QZ_URI_FORM_NAME);
+                action = builtin_txt;
+            }else{
 
                 page_ta = open_table(hargs, form_name, action);
                 if (page_ta != NULL){
-                    handler_name = page_ta->handler_name;
-                    // page_ta can be used without checking for null
-                    // because it is now known to exist unless it's a menu.
+                    hargs->handler_name = page_ta->handler_name;
                     hargs->page_ta = page_ta;
-                }    
-            }
-            if ((handler_name == NULL) && (action == NULL)){
-               // like a menu page
-               if (form_name_is_menu(hargs)){
-                   handler_name = menu_txt;
-                   hargs->page_ta = open_table(hargs, form_name, "view");
-               }    
-            }
-
-            if (handler_name == NULL){
-                pthread_mutex_lock(&log_mutex);
-                fprintf(hargs->log, "%f %d %s:%d fail handler not found\n", 
-                    gettime(), hargs->request_id, __func__, __LINE__);
-                pthread_mutex_unlock(&log_mutex);
-        
-                error_page(hargs, SC_NOT_FOUND, "not found");
-
-            }else{ // have a handler name
-
-                pthread_mutex_lock(&log_mutex);
-                fprintf(hargs->log, "%f %d %s:%d do_page handler %s, %s\n", 
-                    gettime(), hargs->request_id, __func__, __LINE__,
-                    handler_name, action);
-                pthread_mutex_unlock(&log_mutex);
-    
-                struct handler* handler;
-                handler = xmlHashLookup(handler_hash, handler_name);
-
-                if (form_tag_required(handler_name) && ! has_valid_form_tag ){
+                }else{
 
                     pthread_mutex_lock(&log_mutex);
-                    fprintf(hargs->log, "%f %d %s:%d fail form tag not found\n",
+                    fprintf(hargs->log, "%f %d %s:%d open table fail "
+                        "on [%s] [%s] \n",
+                        gettime(), hargs->request_id, __func__, __LINE__,
+                        form_name, action);
+                    pthread_mutex_unlock(&log_mutex);
+
+                    error_page(hargs, SC_NOT_FOUND, "not found");
+                }
+            }
+            if ( ! hargs->error_exists){
+                if (hargs->handler_name == NULL){
+                    pthread_mutex_lock(&log_mutex);
+                    fprintf(hargs->log, "%f %d %s:%d fail handler not found\n",
                         gettime(), hargs->request_id, __func__, __LINE__);
                     pthread_mutex_unlock(&log_mutex);
 
-                    error_page(hargs, SC_BAD_REQUEST, "validation failed");
-                }
+                    error_page(hargs, SC_NOT_FOUND, "not found");
 
-                if ( ! hargs->error_exists && (handler != NULL) ){
-                    catch_notifies(hargs);
-                    handler->count++;
+                }else{ // have a handler name
 
-                    hargs->handler_name = handler->name;
+                    pthread_mutex_lock(&log_mutex);
+                    fprintf(hargs->log, "%f %d %s:%d do_page handler %s, %s\n",
+                        gettime(), hargs->request_id, __func__, __LINE__,
+                        hargs->handler_name, action);
+                    pthread_mutex_unlock(&log_mutex);
 
-                    if ( check_postdata(hargs) ){
-                       // Execute the selected handler
-                        handler->handler( hargs );
+                    struct handler* handler;
+                    handler = xmlHashLookup(handler_hash, hargs->handler_name);
+
+                    if (form_tag_required(hargs->handler_name) &&
+                        ! has_valid_form_tag ){
+
+                        pthread_mutex_lock(&log_mutex);
+                        fprintf(hargs->log, "%f %d %s:%d fail form tag not found\n",
+                            gettime(), hargs->request_id, __func__, __LINE__);
+                        pthread_mutex_unlock(&log_mutex);
+
+                        error_page(hargs, SC_BAD_REQUEST, "validation failed");
+                    }
+
+                    if ( ! hargs->error_exists && (handler != NULL) ){
+                        catch_notifies(hargs);
+                        handler->count++;
+
+                        hargs->handler_name = handler->name;
+
+                        if ( check_postdata(hargs) ){
+                           // Execute the selected handler
+                            handler->handler( hargs );
+                        }
                     }
                 }
-            }
+            } // not error_exists
         }else{
              error_page(hargs, SC_UNAUTHORIZED, "session logged out");
         }
 
-        // Release session mutex 
+        // Release session mutex
         pthread_mutex_unlock(&(hargs->session->session_lock));
         /*************** Outside Mutex *****************************/
         pthread_mutex_lock(&log_mutex);
-        fprintf(hargs->log, "%f %d %s:%d session mutex released\n", 
+        fprintf(hargs->log, "%f %d %s:%d session mutex released\n",
             gettime(), hargs->request_id, __func__, __LINE__);
-        fflush(hargs->log);    
+        fflush(hargs->log);
         pthread_mutex_unlock(&log_mutex);
     }
     return;

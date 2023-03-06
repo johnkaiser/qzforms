@@ -39,8 +39,29 @@
 void menupage( struct handler_args* h ){
 
     xmlNodePtr divqz;
+    static char view_txt[] = "view\0";
 
-    doc_from_file(h, "base.xml");
+    char* form_name = get_uri_part(h, QZ_URI_FORM_NAME);
+    char* action = get_uri_part(h, QZ_URI_ACTION);
+    if ( ! has_data(action) ){
+        action = view_txt;
+    }
+
+    struct table_action* this_ta = open_table(h, form_name, action);
+
+    if (this_ta == NULL){
+
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail table_action (%s,%s) not found\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            form_name, action);
+        pthread_mutex_unlock(&log_mutex);
+
+        error_page(h, SC_BAD_REQUEST, "no menu action");
+        return;
+
+    }
+    doc_from_file(h, this_ta->xml_template);
     if (h->error_exists) return;
 
     content_type(h, "text/html");
@@ -76,6 +97,7 @@ bool form_name_is_menu(struct handler_args* h){
     char* params[2];
     params[0] = get_uri_part(h, QZ_URI_FORM_NAME);
     params[1] = NULL;
+    if (params[0] == NULL) return false;
 
     PGresult* menu_exists_rs = PQexecPrepared(h->session->conn,
         "menu_exists_check", 1, (const char * const*) params, NULL, NULL, 0);
@@ -88,12 +110,12 @@ bool form_name_is_menu(struct handler_args* h){
     }
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(h->log, "%f %d %s:%d menu_name_exists_rs is %s, %s tuples %d "
+    fprintf(h->log, "%f %d %s:%d menu_exists_rs is %s, %s tuples %d "
         "fields %d (0,0) %s %d\n",
         gettime(), h->request_id, __func__, __LINE__,
         PQresStatus(PQresultStatus(menu_exists_rs)),
         error_msg, PQntuples(menu_exists_rs), PQnfields(menu_exists_rs),
-        PQgetvalue(menu_exists_rs, 0, 0), does_exist);
+        get_value(menu_exists_rs, 0, "exists"), does_exist);
     pthread_mutex_unlock(&log_mutex);
 
     free(error_msg);
@@ -137,6 +159,12 @@ void init_menu(struct handler_args* hargs){
 
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(hargs, SC_INTERNAL_SERVER_ERROR, "prepare fetch_menu_items failed");
+        return;
+    }
+
     PQclear(rs);
     rs = NULL;
 
@@ -168,6 +196,12 @@ void init_menu(struct handler_args* hargs){
 
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(hargs, SC_INTERNAL_SERVER_ERROR, "prepare fetch_menu_set failed");
+        return;
+    }
+
     PQclear(rs);
     rs = NULL;
 
@@ -191,6 +225,12 @@ void init_menu(struct handler_args* hargs){
 
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(hargs, SC_INTERNAL_SERVER_ERROR, "prepare fetch_fixed_parameters failed");
+        return;
+    }
+
     PQclear(rs);
     rs = NULL;
 
@@ -214,6 +254,12 @@ void init_menu(struct handler_args* hargs){
 
     free(error_msg);
     error_msg = NULL;
+
+    if (PQresultStatus(rs) != PGRES_COMMAND_OK){
+        error_page(hargs, SC_INTERNAL_SERVER_ERROR, "prepare menu_exists_check failed");
+        return;
+    }
+
     PQclear(rs);
     rs = NULL;
 }
@@ -239,7 +285,7 @@ void context_parameter_input_node_scanner(void* payload, void* data,
     xmlNewProp(input_el, "value", value);
 }
 
-/*  
+/*
  *  add_menu
  *
  *  Add one menu to the indicated node.
@@ -285,7 +331,7 @@ void add_menu(struct handler_args* hargs,
 
         }else{
 
-            asprintf(&action_target, "/%s/%s",
+            asprintf(&action_target, "/%s/%s/view",
                 get_uri_part(hargs, QZ_URI_BASE_SEGMENT),
                 target_form_name);
 
@@ -306,13 +352,13 @@ void add_menu(struct handler_args* hargs,
         // Add a hidden form field for each context parameter in the form set
 
         if (hargs->current_form_set != NULL){
-   
-            // The menu form gets data from the current context. 
+
+            // The menu form gets data from the current context.
             // get from page_ta char** context_parameters;
             // if page_ta clear_context_parameters is set then skip.
             // But first...
 
-            if ( ! form_set_is_valid(hargs, hargs->current_form_set)){ 
+            if ( ! form_set_is_valid(hargs, hargs->current_form_set)){
                  pthread_mutex_lock(&log_mutex);
                  fprintf(hargs->log, "%f %d %s:%d fail current form set "
                      "is invalid\n",
@@ -321,28 +367,28 @@ void add_menu(struct handler_args* hargs,
 
                  error_page(hargs, SC_INTERNAL_SERVER_ERROR, "bad token");
                  return;
-            }     
+            }
 
             char** params = hargs->page_ta->context_parameters;
-            
+
             if (params != NULL){
                 int p;
                 for (p=0; params[p]!=NULL; p++){
-   
+
                     char* pvalue = xmlHashLookup(
                       hargs->current_form_set->context_parameters, params[p]);
-                    
+
                     if ((pvalue != NULL) &&
                         ( ! item_in_list(params[p],
                            hargs->page_ta->clear_context_parameters))){
-   
+
                       xmlNodePtr input_el = xmlNewChild(form, NULL, "input", NULL);
                       xmlNewProp(input_el, "type", "hidden");
                       xmlNewProp(input_el, "name", params[p]);
                       xmlNewProp(input_el, "value", pvalue);
-   
+
                     }else{
-   
+
                       // This is probably bad.
                       pthread_mutex_lock(&log_mutex);
                       fprintf(hargs->log, "%f %d %s:%d warning menu %s param %s "
@@ -365,29 +411,29 @@ void add_menu(struct handler_args* hargs,
             fixed_params[0] = get_value(menu_rs, row, "menu_name");
             fixed_params[1] = get_value(menu_rs, row, "menu_item_sequence");
             fixed_params[2] = NULL;
-    
-            PGresult* fixed_params_rs = PQexecPrepared(hargs->session->conn, 
-                "fetch_fixed_parameter", 2, 
-                (const char * const *) fixed_params, 
+
+            PGresult* fixed_params_rs = PQexecPrepared(hargs->session->conn,
+                "fetch_fixed_parameter", 2,
+                (const char * const *) fixed_params,
                 NULL, NULL, 0);
-    
+
             if ((PQresultStatus(fixed_params_rs) == PGRES_TUPLES_OK) &&
                 (PQntuples(fixed_params_rs) > 0)){
-    
+
                int fpn;
                for(fpn=0; fpn < PQntuples(fixed_params_rs); fpn++){
-    
+
                    xmlNodePtr fp_node = xmlNewChild(form, NULL, "input", NULL);
                    xmlNewProp(fp_node, "type", "hidden");
-                   xmlNewProp(fp_node, "name", 
+                   xmlNewProp(fp_node, "name",
                        get_value(fixed_params_rs, fpn, "parameter_key"));
-    
-                   xmlNewProp(fp_node, "value", 
+
+                   xmlNewProp(fp_node, "value",
                        get_value(fixed_params_rs, fpn, "parameter_value"));
                }
             }
             PQclear(fixed_params_rs);
-        }    
+        }
 
         // The menu form has a button.
         xmlNodePtr submit_button = xmlNewChild(form, NULL, "input", NULL);
@@ -410,7 +456,7 @@ void add_menu(struct handler_args* hargs,
 
 void context_variable_logging_scanner(void* payload, void* data,
     const xmlChar* name){
- 
+
     struct handler_args* hargs = data;
     char* value = payload;
 
@@ -421,7 +467,7 @@ void context_variable_logging_scanner(void* payload, void* data,
     pthread_mutex_unlock(&log_mutex);
 }
 void log_context_variables(struct handler_args* hargs){
- 
+
     if ((hargs->current_form_set != NULL) &&
         (hargs->current_form_set->context_parameters != NULL)){
 
@@ -430,8 +476,8 @@ void log_context_variables(struct handler_args* hargs){
             gettime(), hargs->request_id, __func__, __LINE__,
             xmlHashSize(hargs->current_form_set->context_parameters));
         pthread_mutex_unlock(&log_mutex);
-         
-         xmlHashScan(hargs->current_form_set->context_parameters, 
+
+         xmlHashScan(hargs->current_form_set->context_parameters,
              (void*) context_variable_logging_scanner, hargs);
 
     }else{
@@ -442,7 +488,7 @@ void log_context_variables(struct handler_args* hargs){
         pthread_mutex_unlock(&log_mutex);
      }
 }
- 
+
 
 /*
  *  add_all_menus
@@ -457,7 +503,7 @@ void add_all_menus(struct handler_args* hargs){
 
     double start_time = gettime();
 
-    if ((hargs->current_form_set != NULL) && 
+    if ((hargs->current_form_set != NULL) &&
         ( ! form_set_is_valid(hargs, hargs->current_form_set) )){
 
         error_page(hargs, SC_INTERNAL_SERVER_ERROR, "form set invalid");

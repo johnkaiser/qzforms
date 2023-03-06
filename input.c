@@ -209,6 +209,13 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
         XML_PARSE_NOERROR|XML_PARSE_NOWARNING|XML_PARSE_NONET);
 
     if (h->doc == NULL){
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail %s %s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            "xmlCtxxReadFile returned null on file",
+            full_path);
+        pthread_mutex_unlock(&log_mutex);
+
         error_page(h, SC_INTERNAL_SERVER_ERROR, "xmlParseFile failed");
         free(full_path);
         full_path = NULL;
@@ -232,10 +239,10 @@ void doc_from_file( struct handler_args* h, char* requested_docname ){
         (uri_part_n_is(h, QZ_URI_FORM_NAME, "login") ||
          uri_part_n_is(h, QZ_URI_FORM_NAME, "logout")) ){
 
-        asprintf(&form_refresh, "function(){form_refresh_init(%d*1000);}",
+        asprintf(&form_refresh, "form_refresh_init(%d*1000)",
             h->conf->form_duration*95/300);
 
-        add_listener(h, NULL, "DOMContentLoaded", form_refresh);
+        add_listener_for_doc(h, "DOMContentLoaded", form_refresh);
 
         free(form_refresh);
     }

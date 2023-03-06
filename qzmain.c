@@ -225,6 +225,7 @@ struct handler_args* init_handler(FCGX_Request *request, char *envpmain[],
     hargs->doc = NULL;
     hargs->data = NULL;
     hargs->session = NULL;
+    hargs->counter = 0;
     return hargs;
 }
 
@@ -383,7 +384,8 @@ void launch_connection_thread(void* data){
                         req_login(hargs);
 
                     }else{
-                        location(hargs, logout_uri);
+                        //location(hargs, logout_uri);
+                        error_page(hargs, SC_UNAUTHORIZED, "No Session");
                     }
                     break;
 
@@ -464,6 +466,13 @@ void launch_connection_thread(void* data){
 
         } // FCGX_Accept >= 0
     } // f(;;)
+    FILE* freshlog = fopen(thread_dat->conf->logfile_name, "a");
+    pthread_mutex_lock(&log_mutex);
+    fprintf(freshlog, "%f %d %s:%d fail - exited forever loop\n",
+        gettime(), 0, __func__, __LINE__);
+    pthread_mutex_unlock(&log_mutex);
+    fclose(freshlog);
+
 }
 
 int main(int argc, char* argv[], char* envpmain[]){
@@ -614,7 +623,7 @@ int main(int argc, char* argv[], char* envpmain[]){
         free_handler(housekeeper);
     }
 
-    fprintf(log, "%f %d %s:%d Exited main while loop\n",
+    fprintf(log, "%f %d %s:%d fail - Exited main while loop\n",
                  gettime(), next_id, __func__, __LINE__);
     exit(0);
 }

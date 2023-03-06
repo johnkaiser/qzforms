@@ -294,6 +294,7 @@ void req_login( struct handler_args* h ){
         xmlNewProp(user, "type", "text");
         xmlNewProp(user, "id", "user");
         xmlNewProp(user, "name", "user");
+        xmlNewProp(user, "autofocus", "autofocus");
          
         xmlNewTextChild(list, NULL, "li", "password");
 
@@ -342,7 +343,7 @@ void redirect_to_menu(struct handler_args* h){
     if (divqz !=  NULL){
 
         char* action;
-        asprintf(&action, "/%s/menu", h->uri_parts[QZ_URI_BASE_SEGMENT]);
+        asprintf(&action, "/%s/menu/view", h->uri_parts[QZ_URI_BASE_SEGMENT]);
 
         form = xmlNewChild(divqz, NULL, "form", NULL);
         register_form(h, form, SUBMIT_ONLY_ONCE, action);
@@ -361,13 +362,9 @@ void redirect_to_menu(struct handler_args* h){
 
         content_type(h, "text/html");
 
-        char* js_func =
-            "function(){ "
-            "console.log('loaded'); "
-            "document.getElementById('menu').submit(); "
-            "}";
+        char* js_func = "document.getElementById('menu').submit()";
 
-        add_listener(h, NULL, "DOMContentLoaded", js_func);
+        add_listener_for_doc(h, "DOMContentLoaded", js_func);
     }else{
         pthread_mutex_lock(&log_mutex);
         fprintf(h->log, "%f %d %s:%d Element with id qz not found\n",

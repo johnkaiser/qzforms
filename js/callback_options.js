@@ -1,19 +1,20 @@
 /*
- *  Use callback_name to get the options for node field_name.
- *  field_name may refer to a SELECT tag or an INPUT tag.
- *  The callback must have a field "value", which will be the
+ *  callback_el is the button created by QZForms, Forms, Callbacks
+ *  this_el is any form element
+ *  The results of the callback will set the options for this_el. 
+ * 
+ *  The PostgreSQL callback must have a field "value", which will be the
  *  value of the created options.
+ * 
  *  In the case of a SELECT tag, the callback may have a field "text",
  *  which will be the text displayed in the drop down list.
  *
- *  To use, add a line of javascript like this:
- *
- *  window.addEventListener("DOMContentLoaded", 
- *  () => callback_options('my_callback_name', 'my_input_or_select_name'));
  */
 
-function callback_options(callback_name, field_name){
+function callback_options(callback_el, this_el){
 
+    console.log('callback_options: callback_el.id = ' + callback_el.id);
+    console.log('callback_options: this_el.name = ' + this_el.name);
     var xhr = new XMLHttpRequest();
 
     function set_options(){
@@ -25,7 +26,7 @@ function callback_options(callback_name, field_name){
          */
     
         console.log('set_options for form ' + xhr.form_name + 
-            ' field ' + field_name);
+            ' field ' + this_el.field_name);
     
         if (xhr.status != 200){
             console.log('set_options exiting xhr_status = ' + xhr.status);
@@ -36,14 +37,13 @@ function callback_options(callback_name, field_name){
          */
         let new_options = JSON.parse(xhr.responseText);
         let this_form = false;
-        let this_el = false;
         let match_found = false;
         
         let selected = [];
     
         if (new_options){
     
-            this_el = document.forms[xhr.form_name][field_name];
+            // XXXX delete this_el = document.forms[xhr.form_name][field_name];
             if (this_el){
                 console.log('new_options found, tag name = ' + this_el.tagName);
             }else{
@@ -145,8 +145,8 @@ function callback_options(callback_name, field_name){
              */
             if ( ! match_found ){
                 console.log('set_options failed to find an input or select node.',
-                    ' looked for form "' + xhr.form_name + '" field "',
-                    field_name + '"');
+                    '" looked in field "', this_el.name, 
+                    '" found tag "', this_el.tagName , '"');
             }
         }else{
             // new_options is false
@@ -154,5 +154,5 @@ function callback_options(callback_name, field_name){
         }
     }
 
-    setup_callback(callback_name, set_options, xhr);
+    setup_callback(callback_el, set_options, xhr);
 }

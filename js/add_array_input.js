@@ -7,6 +7,8 @@
  */
 function add_array_input(rule_esc){
     var rule = JSON.parse(decodeURIComponent(rule_esc));
+    if ( ! rule) return;
+
     console.log("add_array_input rule.fieldname");
 
     var ul_el = document.getElementById(rule.fieldname);

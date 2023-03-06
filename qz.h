@@ -142,6 +142,7 @@ struct handler_args {
     xmlBufferPtr data;
     enum precheck_status regex_check;
     enum precheck_status pkey_check;
+    unsigned int counter;
     bool error_exists;
     uint64_t integrity_token;
 };
@@ -751,8 +752,18 @@ extern PGresult* perform_action(struct handler_args* h,
  *  Like perform_post_action, but on only one row
  *  in the result set.
  */
-extern PGresult* perform_post_row_action(struct handler_args* h, 
+extern PGresult* perform_post_row_action(struct handler_args* h,
     struct table_action* ta, int row);
+
+/*
+ *  table_action_exists
+ *  opentable.c
+ *
+ *  Quickly check for the existance of a table action
+ */
+
+bool table_action_exists(struct handler_args* h,
+    char* form_name, char* action);
 
 /*
  *  rs_to_table
@@ -1075,11 +1086,15 @@ extern void save_pkey_values(struct handler_args* h,
 extern void log_file_rotation(struct qz_config* conf, char* logfile_name);
 
 /*
- *  add_listener
+ *  add_listener_for_*
  *  utility.c
  */
-extern void add_listener(struct handler_args* h, char* id, char* event, char* action);
+void add_listener_for_doc(struct handler_args* h, char* event, char* js);
+void add_listener_for_id(struct handler_args* h, char* id, char* event, char* js);
+void add_listener_for_name(struct handler_args* h, char* form_name,
+    char* field_name, char* event, char* js);
 
+void add_dom_content_loaded(struct handler_args* h, char* id, char* js);
 
 /*
  *  add_to_id_index
@@ -1122,8 +1137,8 @@ void doc_adder(struct handler_args* h);
  *  callback_adder
  *  callback.c
  */
-extern void callback_adder(struct handler_args* h,
-    struct form_record* form_rec, struct table_action* ta);
+extern void callback_adder(struct handler_args* h, struct form_record* form_rec,
+    xmlNodePtr form_node,  struct table_action* ta);
 
 /*
  *  callback_name_lookup

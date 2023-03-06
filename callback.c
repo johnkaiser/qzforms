@@ -96,47 +96,56 @@ char* callback_enum_lookup(enum callback_response_type cb_response){
  *  callback_adder
  *  Add a callback:
  *     1. to registered forms
- *     2. to html head as json
+ *     2. to form as unnamed button
+ *     3. to javascript __EVENTS__ section as an addEventListener call
  *
- *  var callbacks = {
- *      "mycallback1": {
- *         "form_action": "/qz/myform/mycallback1",
- *         "form_tag":  fe556c105ee2d21b72ed37ecef4a9c57.f34dbd0a7e4cb621810b5df193432ab7ef4c7830e8870ebc2cb135182b0dd6a8",
-           "fieldnames": ["one", "two", "three"]
- *      },
- *      "mycallback2": {
- *         "form_action": "/qz/myform/mycallback2",
- *         "form_tag": "b2e56e0157fd50e2274ab679a932a1a0.20cd13a2f9aabddf16b045837d3cb00bab9ebd42d79518dcfd005501aa71e65a",
-           "fieldnames": ["one", "two", "three"]
- *      }
- *  }
+ *  <button
+ *    id="1734eff3a19dd84f57b9ac011fc803df.90636a742c54eb24b1b20a12edf5546da939776097398aa81c666f633e60bd7f"
+ *    formaction="/qz/worktasks/project"
+ *    type="button"
+ *    class="callbacks"
+ *    hidden="hidden"
+ *  >
  *
- *
+ *  There are 2 table_action records in this function.
+ *  ta is for the form being added
+ *  cb_ta is for the callback being added
  */
 void callback_adder(struct handler_args* h, struct form_record* form_rec,
-    struct table_action* ta){
+    xmlNodePtr form_node, struct table_action* ta){
 
-    if ((ta == NULL) || (ta->callbacks == NULL) || (form_rec == NULL)) return;
+    if ((ta == NULL) || (ta->callbacks == NULL) || (form_rec == NULL) ||
+        (form_node == NULL)){
+
+        pthread_mutex_lock(&log_mutex);
+        fprintf(h->log, "%f %d %s:%d fail NULL value: %s%s%s%s\n",
+            gettime(), h->request_id, __func__, __LINE__,
+            (ta == NULL) ? "ta ":"",
+            ((ta != NULL) && (ta->callbacks == NULL)) ? "ta->callbacks ":"",
+            (form_rec == NULL) ? "form_rec":"",
+            (form_node == NULL) ? "node":"");
+        pthread_mutex_unlock(&log_mutex);
+        return;
+    }
 
     if (h->conf->log_callback_details){
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d form_name=%s form_action=%s %c\n",
+        fprintf(h->log, "%f %d %s:%d form_name=%s form_action=%s\n",
             gettime(), h->request_id, __func__, __LINE__,
-            form_rec->form_name, form_rec->form_action,
-            (has_data(form_rec->form_name)) ? 't':'f' );
+            form_rec->form_name, form_rec->form_action);
         pthread_mutex_unlock(&log_mutex);
     }
-    struct json_serialize_opts opts;
-    opts.mode = json_serialize_mode_multiline;
-    opts.opts = json_serialize_opt_CRLF;
-    opts.indent_size = 2;
-
-    json_value* jsonobj = json_object_new(0);
 
     int cbn;
     for (cbn=0; ta->callbacks[cbn] != NULL; cbn++){
         char* form_action;
         char tagbuf[ETAG_MAX_LENGTH];
+
+        char* cbid;
+        asprintf(&cbid, "__cbid%d", h->counter++);
+
+        struct table_action* cb_ta =
+            open_table(h, ta->form_name, ta->callbacks[cbn]);
 
         // register the form
 
@@ -146,48 +155,49 @@ void callback_adder(struct handler_args* h, struct form_record* form_rec,
         struct form_record* cb_form_rec =
             register_form(h, NULL, false, form_action);
 
+        if (cb_form_rec == NULL){
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d %s\n",
+                gettime(), h->request_id, __func__, __LINE__,
+                "cb_form_rec is null");
+        }else{
+            if (h->conf->log_callback_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d callback form registererd %s\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                     cb_form_rec->form_name);
+                pthread_mutex_unlock(&log_mutex);
+            }
+        }
         // the form tag encodes the form_id
         make_etag(tagbuf, h->conf->tagger_socket_path,
             h->session->form_tag_token, cb_form_rec->form_id);
 
-        // Build the json object
-        json_value* acb = json_object_new(0);
-        json_object_push(acb, "form_action", json_string_new(form_action));
-        json_object_push(acb, "form_tag", json_string_new(tagbuf));
+        xmlNodePtr callback_button = xmlNewChild(form_node, NULL, "button", "\n");
+        xmlNewProp(callback_button, "id", cbid);
+        xmlNewProp(callback_button, "formaction", form_action);
+        xmlNewProp(callback_button, "type", "button");
+        xmlNewProp(callback_button, "class", "__CALLBACKS__");
+        xmlNewProp(callback_button, "hidden", "hidden");
+        xmlNewProp(callback_button, "x-form_tag", tagbuf);
+        xmlNewProp(callback_button, "value", ta->callbacks[cbn]);
+        xmlNodeAddContent(callback_button, ta->callbacks[cbn]);
+        xmlAddNextSibling(callback_button, xmlNewText("\n"));
 
-        if (has_data(form_rec->form_name)){
-            json_object_push(acb, "form_name",
-                json_string_new(form_rec->form_name));
+        char* fields = str_ar_to_json(cb_ta->fieldnames);
+        if (fields != NULL){
+            xmlNewProp(callback_button, "x-fieldnames", fields);
+            if (h->conf->log_callback_details){
+                pthread_mutex_lock(&log_mutex);
+                fprintf(h->log, "%f %d %s:%d callback fieldnames %s\n",
+                    gettime(), h->request_id, __func__, __LINE__,
+                    fields);
+                pthread_mutex_unlock(&log_mutex);
+            }
+            free(fields);
         }
-
-        json_value* fieldname_array = json_array_new(ta->nbr_params);
-
-        // add an array element for the name of each input variable
-        int nparam;
-        for(nparam=0; nparam < ta->nbr_params; nparam++){
-            json_array_push(fieldname_array,
-                json_string_new(ta->fieldnames[nparam]));
-        }
-
-        json_object_push(acb, "fieldnames", fieldname_array);
-        json_object_push(jsonobj, ta->callbacks[cbn], acb);
-
         free(form_action);
     }
-
-    char* jsonbuf = malloc(json_measure_ex(jsonobj, opts));
-    json_serialize_ex(jsonbuf, jsonobj, opts);
-
-    xmlNodePtr head = qzGetElementByID(h, "__HEAD__");
-    xmlNodePtr callback_node;
-    callback_node = xmlNewChild(head, NULL, "script", "\n");
-    xmlNewProp(callback_node, "id", "__CALLBACKS__");
-    xmlNewProp(callback_node, "type", "text/javascript");
-    xmlNodeAddContent(callback_node, jsonbuf);
-    xmlNodeAddContent(callback_node, "\n");
-
-    free(jsonbuf);
-    json_builder_free(jsonobj);
 }
 
 /*

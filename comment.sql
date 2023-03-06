@@ -39,3 +39,4 @@ COMMENT ON COLUMN qz.menu.menu_name IS 'The menu name is used to add the menu to
 COMMENT ON COLUMN qz.menu.target_div IS 'The div ID where the menu will be placed.';
 COMMENT ON COLUMN qz.menu.description IS 'A handy notation for form developers, does not appear to the user.';
 COMMENT ON COLUMN qz.menu.form_set_name IS 'An optional reference to a form set. A form set allows forms to pass data to sub-forms.';
+COMMENT ON COLUMN qz.table_action.callback_attached_action IS 'Not yet implemented';

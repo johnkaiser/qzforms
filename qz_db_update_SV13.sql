@@ -294,6 +294,7 @@ ADD COLUMN is_callback boolean DEFAULT 'f';
 
 ALTER TABLE qz.table_action
 ADD COLUMN callback_attached_action qz.variable_name;
+COMMENT ON COLUMN qz.table_action.callback_attached_action IS 'Not yet implemented';
 
 INSERT INTO qz.handler
 (handler_name)
