@@ -4,7 +4,11 @@ Each user login is a database login with a dedicated database process.
 
 There is additional information at http://qzforms.com
 
+QZForms will maintain and run the data entry forms. Your database tables should
+be setup using psql or pgadmin.
+
 Building
+--------
 
 There is no configure script.  
 You have to edit the Makefile to select the randomness source and compiler.
@@ -30,6 +34,7 @@ make will produce the executable, qzforms.fcgi and will assemble the
 database install script.
 
 Installation
+------------
 
 The install directory must exist before running the install script
 qzforms_install.sh. At the top of qzforms_install.sh are user and group
@@ -45,6 +50,7 @@ The install script will:
    - Create an sql directory with database setup and update scripts.
 
 Configuration
+-------------
 
 config/qzforms.conf controls how qzforms.fcgi talks to the database and
 how it runs. How the webserver talks to qzforms.fcgi is set in qzforms.init
@@ -60,6 +66,7 @@ required to scale to your needs. QZ Forms uses one thread from the time
 of each request through serving up the current page. 
 
 Startup Script
+--------------
 
 qzforms.fcgi does not know how to start itself.  It needs spawn-fcgi.
 
@@ -70,6 +77,7 @@ contains an Options section which will contain some of the same data
 as used in the install script, set the values to match.
 
 Web Server
+----------
 
 QZForms does not care what the hostname is, nor the first segment.
 In a URL such as https://example.com/qz/edit/stuff,
@@ -83,6 +91,13 @@ location /qz/ {
     fastcgi_pass 127.0.0.1:9074;
     fastcgi_buffering off;
 }
+
+The location can also contain wildcards. For example:
+
+    location ~ /qz[0-9]/...
+
+Because the first segment identifies the HTTP session, this will allow a single
+web browser to log in multiple times with the same or different user names.
 
 Use a port number that suits you, or use a unix domain socket.
 
@@ -98,6 +113,61 @@ Use the concatenation of the document root and the first segment.
 QZForms will work with TCP or UNIX domain sockets.
 
 Database
+--------
+
+Preinstall Permissions
+
+You may or may not need to change dbadmin.
+dbadmin can be anything, but will always be dbadmin in the docs.
+qzuser and qzdev must exist or upgrades which add tables will glitch.
+Obviously, substitute YOURDATABASENAME with what it says.
+
+The database, if it does not yet exist, can be created with:
+
+    CREATE DATABASE YOURDATABASENAME 
+    WITH OWNER dbadmin ENCODING 'UTF-8'; 
+
+dbadmin can be created with:
+
+    CREATE ROLE dbadmin NOLOGIN;
+    GRANT ALL ON DATABASE YOURDATABASENAME TO dbadmin WITH GRANT OPTION;
+
+qzuser can select and use but not modify forms created with qzforms.
+qzdev can modify forms and also includes qzuser.
+These are not created by the db install script because they may already exist.
+
+The existance of qzuser and qzdev  can be tested with:
+
+    SELECT rolname, rolcanlogin, rolsuper
+    FROM pg_roles
+    WHERE (rolname) IN ('qzuser','qzdev');
+
+which should produce:    
+
+ rolname | rolcanlogin | rolsuper 
+---------+-------------+----------
+ qzuser  | f           | f
+ qzdev   | f           | f
+(2 rows)
+
+The roles can be created with:
+
+    CREATE ROLE qzdev  NOLOGIN;
+    CREATE ROLE qzuser NOLOGIN;
+    GRANT qzuser TO qzdev;
+    GRANT CONNECT, TEMP ON DATABASE YOURDATABASENAME TO qzuser;
+
+The roles qzuser or qzdev must be granted to your specific user ids.
+For example, to allow user quasimodo to use forms
+
+    GRANT qzuser to quasimodo;
+
+or to allow user quasimodo to maintain the forms for his database,
+
+    GRANT qzdev to quasimodo
+
+Installing to the database
+--------------------------
 
 You must run the install script on the database. The database install
 script will have the Schema Version as part of the name, such as _SV10.
@@ -107,23 +177,8 @@ and the necessary tables and types in the current database.
 qz_examples.sql will install the sample applications
 stuff and gridle with the tables in the public schema.
 
-User Permissions
-
-QZ Forms users must have a login to PostgreSQL valid from the 
-host running QZ Forms configured in the PostgreSQL pg_hba.conf file.
-
-The simpliest case is for the form developer to be the database owner.
-A more structured approach to managing permissions is at 
-https://qzforms.com/users.html
-
-The simplest case for user quasimodo, who is not a form developer, 
-
-    GRANT USAGE ON SCHEMA qz TO USER quasimodo;
-    GRANT SELECT ON ALL TABLES IN SCHEMA qz TO quasimodo;
-    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA qz TO quasimodo;
-    GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA qz TO quasimodo;
-
 Updates
+-------
 
 The version of the executable, qzforms.fcgi, and the data in the PostgreSQL
 qz schema must be kept in sync. The Schema Version is a monotonically 
@@ -138,6 +193,7 @@ The current version of QZ Forms and the Schema Version expected vs installed
 is on the Form Development menu on the Status page.
 
 Making A Form
+-------------
 
 This is the short version. More detailed documention is at 
 https://qzforms.com/form_development.html
@@ -175,6 +231,5 @@ Menu Menu, All Menus, select a menu perhaps main, then menu items.
 Creating Forms
 John Kaiser 2015-10-5
 Revised 2017-07-30
-
-
+Revised 2023-03-07
 
