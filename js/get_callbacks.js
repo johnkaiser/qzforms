@@ -22,7 +22,7 @@ function get_callback(a_form_element, callback_name){
     let cb_class = this_form.getElementsByClassName('__CALLBACKS__')
     let cb_el = false;
 
-    for (let el_cnt = 0; cb_class.length < el_cnt; el_cnt++){
+    for (let el_cnt = 0; el_cnt < cb_class.length; el_cnt++){
         if (cb_class.item(el_cnt).value.trim() == callback_name){
             cb_el = cb_class.item(el_cnt);
             break;

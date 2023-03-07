@@ -14,7 +14,7 @@
 function callback_options(callback_el, this_el){
 
     console.log('callback_options: callback_el.id = ' + callback_el.id);
-    console.log('callback_options: this_el.name = ' + this_el.name);
+    console.log('callback_options: this_el.value = ' + this_el.value);
     var xhr = new XMLHttpRequest();
 
     function set_options(){
@@ -145,7 +145,7 @@ function callback_options(callback_el, this_el){
              */
             if ( ! match_found ){
                 console.log('set_options failed to find an input or select node.',
-                    '" looked in field "', this_el.name, 
+                    '" looked in field "', this_el.value, 
                     '" found tag "', this_el.tagName , '"');
             }
         }else{

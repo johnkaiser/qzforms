@@ -14,6 +14,8 @@
  */
 function setup_callback(callback_el, func, xhr, args={}){
 
+   console.log('setup_callback for ' + callback_el.value);
+
    if ( ! callback_el){
       console.log('setup_callback: callback_el is false');
       return;
@@ -27,7 +29,6 @@ function setup_callback(callback_el, func, xhr, args={}){
    let formaction = callback_el.getAttribute('formaction');
    console.log('setup_callback: callback_el.id = ' + callback_el.id);
    console.log('setup_callback: formaction = ' + formaction);
-   console.log('setup_callback: form_tag = ' + form);
    let form_fields = form_tag;
  
    //  The callback object will have a list of fields for the
