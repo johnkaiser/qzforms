@@ -351,7 +351,10 @@ void add_menu(struct handler_args* hargs,
 
         // Add a hidden form field for each context parameter in the form set
 
-        if (hargs->current_form_set != NULL){
+        char* menu_form_set = get_value(menu_rs, row, "form_set_name");
+        if ((hargs->current_form_set != NULL) &&
+           (menu_form_set != NULL) &&
+           (strcmp(hargs->current_form_set->name, menu_form_set) == 0)){
    
             // The menu form gets data from the current context. 
             // get from page_ta char** context_parameters;
