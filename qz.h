@@ -1137,8 +1137,8 @@ void doc_adder(struct handler_args* h);
  *  callback_adder
  *  callback.c
  */
-extern void callback_adder(struct handler_args* h, struct form_record* form_rec,
-    xmlNodePtr form_node,  struct table_action* ta);
+extern void callback_adder(struct handler_args* h, xmlNodePtr form_node,
+    struct table_action* ta);
 
 /*
  *  callback_name_lookup
@@ -1151,3 +1151,10 @@ enum callback_response_type callback_name_lookup(char* type_name);
  *  callback.c
  */
 char* callback_enum_lookup(enum callback_response_type cb_response);
+
+/*
+ *  add_parameter_table
+ *  utility.c
+ */
+void add_parameter_table(struct handler_args* h,
+    struct table_action* ta, xmlNodePtr addnode, char* new_id);
