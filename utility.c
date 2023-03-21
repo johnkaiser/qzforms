@@ -652,6 +652,52 @@ char* array_base(const char* name){
     }
 }
 
+/*
+ *  add_parameter_table
+ *
+ *  Show parameters in as name value pairs in a 2 column table.
+ */
+void add_parameter_table(struct handler_args* h,
+    struct table_action* ta, xmlNodePtr addnode, char* new_id){
+
+    if ((ta != NULL) && (ta->nbr_params > 0)){
+        // check to see if at least one parameter has a value
+        int p;
+        bool data_exists = false;
+        for (p = 0; p < ta->nbr_params; p++){
+            char* value = xmlHashLookup(h->postdata, ta->fieldnames[p]);
+            if (has_data(value)) data_exists = true;
+        }
+        if ( ! data_exists ) return;
+
+        // table setup
+        xmlNodePtr ct_tbl = xmlNewChild(addnode, NULL, "table", NULL);
+        xmlNewProp(ct_tbl, "class", "parameters");
+        xmlNewProp(ct_tbl, "id", new_id);
+        xmlNodePtr ct_bd = xmlNewChild(ct_tbl, NULL, "tbody", NULL);
+
+        // for each parameter, add a fieldname and value cell
+        for (p = 0; p < ta->nbr_params; p++){
+
+             char* fname = ta->fieldnames[p];
+             char* value = xmlHashLookup(h->postdata, fname);
+             if ( ! has_data(value) ) continue;
+
+             xmlNodePtr ct_row = xmlNewChild(ct_bd, NULL, "tr", NULL);
+
+             // add fieldname: to a cell
+             xmlNodePtr ct_name = xmlNewTextChild(ct_row, NULL, "td", fname);
+             xmlNodeAddContent(ct_name, ":");
+
+             // add value to a cell
+             if (value != NULL){
+                 xmlNodePtr ct_val = xmlNewTextChild(ct_row, NULL, "td", value);
+                 xmlNewProp(ct_val, "name", fname);
+             }
+        }
+    }
+}
+
 #ifdef ARRAY_BASE_TEST
 pthread_mutex_t log_mutex;
 

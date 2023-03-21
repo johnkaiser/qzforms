@@ -281,6 +281,9 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     free(table_name);
     table_name = NULL;
 
+    // Show passed in parameters.
+    add_parameter_table(h, grid_edit_ta, divqz, "main_form_parameters");
+
     // The presence of the insert action determines if
     // new rows are allowed to be inserted.
     struct table_action* grid_insert_row_ta;
@@ -353,27 +356,6 @@ void grid_edit(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     // XXXXXXX This is all fields, should this be limited to fields
     // XXXXXXX used and listed in table_action->fieldnames????
 
-    //Z if parameters exist add a dl container
-    if (grid_edit_ta->nbr_params > 0){
-        xmlNodePtr dl = xmlNewChild(form, NULL, "dl", NULL);
-        xmlNewProp(dl, "class", "parameters");
-        int p;
-        //Z for each parameter
-        for (p=0; p<grid_edit_ta->nbr_params; p++){
-
-             //Z add prompt name in a dt
-             char* fname = grid_edit_ta->fieldnames[p];
-             if (fname == NULL) break;  // should not happen
-
-             xmlNewTextChild(dl, NULL, "dt", fname);
-
-             //Z add value in a dd
-             char* value = xmlHashLookup(h->postdata, fname);
-             if (value != NULL){
-                 xmlNewTextChild(dl, NULL, "dd", value);
-             }
-        }
-    }
 
     struct table_constant_adder_data data = {
         .form_name = form_name,

@@ -55,10 +55,10 @@ void add_context_param_input_field(struct handler_args* h, xmlNodePtr here,
                 char* clearparam = h->page_ta->clear_context_parameters[m];
                 if (strncmp(ctxparam, clearparam, 64) == 0){
 
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d %s in clear list\n",
-            gettime(), h->request_id, __func__, __LINE__, ctxparam);
-        pthread_mutex_unlock(&log_mutex);
+                    pthread_mutex_lock(&log_mutex);
+                    fprintf(h->log, "%f %d %s:%d %s in clear list\n",
+                       gettime(), h->request_id, __func__, __LINE__, ctxparam);
+                    pthread_mutex_unlock(&log_mutex);
 
                     continue;
                 }
@@ -93,7 +93,7 @@ void add_context_param_input_field(struct handler_args* h, xmlNodePtr here,
             xmlNodePtr pk_input = xmlNewChild(here, NULL, "input", NULL);
             xmlNewProp(pk_input, "type", "hidden");
             xmlNewProp(pk_input, "name", ctxparam);
-            xmlNewProp(pk_input, "id", ctxparam);
+            //xmlNewProp(pk_input, "id", ctxparam);
             xmlNewProp(pk_input, "value", fvalue);
         }
     }
@@ -227,7 +227,7 @@ void edit_form(struct handler_args* h, char* next_action,
     action_name = NULL;
 
     save_context_parameters(h, form_rec, edit_rs, 0);
-    callback_adder(h, form_rec, form, edit_ta);
+    callback_adder(h, form, edit_ta);
 
     save_pkey_values(h, form_rec, edit_ta, edit_rs, 0);
 
@@ -413,7 +413,7 @@ void add_insert_button(struct handler_args* h, xmlNodePtr before_here){
         action_target);
 
     set_form_name(form_rec, "insert");
-    callback_adder(h, form_rec, form, create_ta);
+    callback_adder(h, form, create_ta);
 
     xmlNodePtr button = xmlNewTextChild(form, NULL, "button", "Insert");
     xmlNewProp(button, "type", "submit");
@@ -477,26 +477,7 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     add_helpful_text(h, list_ta);
 
     // Show passed in parameters.
-    if (list_ta->nbr_params > 0){
-        xmlNodePtr dl = xmlNewChild(divqz, NULL, "dl", NULL);
-        xmlNewProp(dl, "class", "parameters");
-        int p;
-        // for each parameter
-        for (p=0; p<list_ta->nbr_params; p++){
-
-             // add prompt name in a dt
-             char* fname = list_ta->fieldnames[p];
-             if (fname == NULL) break;  // should not happen
-
-             xmlNewTextChild(dl, NULL, "dt", fname);
-
-             // add value in a dd
-             char* value = xmlHashLookup(h->postdata, fname);
-             if (value != NULL){
-                 xmlNewTextChild(dl, NULL, "dd", value);
-             }
-        }
-    }
+    add_parameter_table(h, list_ta, divqz, "main_form_parameters");
 
     // In order to have an edit button, there must be a
     // table action for edit.
@@ -505,29 +486,12 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
     if (getone_ta != NULL) has_edit_button = true;
 
-    // XXXXXXXXX  Create a form node
-    // XXXXXXXXX  Register form and callback_adder call with this node
+    if ( ! has_edit_button ){
+        xmlNodePtr list_top_cb = xmlNewChild(divqz, NULL, "form", NULL);
+        xmlNewProp(list_top_cb, "id", "list_callbacks");
+        callback_adder(h, list_top_cb, list_ta);
+    }
 
-    //xmlNodePtr form_node;
-    //form_node = xmlNewChild(divqz, NULL, "form", NULL);
-    //there is no form action or method as for an edit form
-
-    //char* action_name;
-    //asprintf(&action_name, "%s_list", form_name);
-    //xmlNewProp(form_node, "name", action_name);
-    //xmlNewProp(form_node, "id", action_name);
-
-    //struct form_record* list_form_rec =
-    //    register_form(h, form_node, SUBMIT_MULTIPLE, action_name);
-
-    //save_pkey_values(h, list_form_rec, list_ta, list_rs, 0);
-    //add_context_param_input_field(h, form_node, list_rs);
-
-    // This cb adder is for the list.
-    // The one for each edit button is below.
-    //callback_adder(h, list_form_rec, list_ta);
-
-    //xmlNodePtr table = xmlNewChild(form_node, NULL, "table", NULL);
     xmlNodePtr table = xmlNewChild(divqz, NULL, "table", NULL);
     xmlNewProp(table, "class", "tablesorter");
     xmlNewProp(table, "named", "list");
@@ -595,7 +559,7 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
 
             // This is the cb adder for the edit button.
             // The one for the list as a whole is above.
-            //callback_adder(h, edit_form_rec, getone_ta);
+            callback_adder(h, form_node, getone_ta);
 
             if (h->current_form_set == NULL){
                 save_context_parameters(h, edit_form_rec, list_rs, -1);
