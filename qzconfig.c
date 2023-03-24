@@ -580,6 +580,12 @@ struct qz_config* init_config(void){
         }else{
             // stat on config file name has failed.
             perror("No configuration file");
+            fprintf(stderr,
+                "qzforms uses the environment variable QZ_CONFIG_FILE [%s]\n"
+                "if that is not set, the default %s is used.\n",
+                getenv("QZ_CONFIG_FILE"),
+                DEFAULT_CONFIG_FILE);
+
             exit(35);
         }
     }
