@@ -482,6 +482,12 @@ int main(int argc, char* argv[], char* envpmain[]){
     init_login_tracker();
     xmlInitParser();
 
+    // This keeps failed read/writes of etags from killing everything.
+    sigset_t nosigpipe;
+    sigemptyset(&nosigpipe);
+    sigaddset(&nosigpipe, SIGPIPE);
+    sigprocmask(SIG_BLOCK, &nosigpipe, NULL);
+
     next_id = 0;
     log_file_rotation(conf, conf->logfile_name);
     FILE* log = fopen(conf->logfile_name,"a");
