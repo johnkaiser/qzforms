@@ -174,6 +174,7 @@ validate_crypto_etag(unsigned char key[16], uint64_t server_token, char* etag){
     struct cryptotag ctag;
     struct cryptotag errortag;
     bzero(&errortag, sizeof(struct cryptotag));
+    errortag.domain_token = 0xffffffffffffffff;
     int rc;
 
     DEBUG(errlog, "%f %d %s:%d validate_crypto_etag %s\n",
