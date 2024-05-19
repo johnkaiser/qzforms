@@ -35,23 +35,22 @@
  *
  *  There are three sources of randomness available.
  *
- *    1. arc4random library call
- *    2. Device file
- *    3a. OpenSSL RAND_bytes library call without seeding
- *    3b. OpenSSL RAND_bytes library call seeding with a local program
+ *    1. arc4random for BSD systems
+ *    2. getrandom system call for linux systems
+ *    3. Device file
  *
- *
- *  If QZ_ARC4RANDOM is set, then arc4random_buf will be called
+ *  If QZ_ARC4RANDOM is defined, then arc4random_buf will be called
  *  from stdlib.h.
  *
- *  If QZ_RAND_DEV is a character device file, then it is set
- *  in the application as the source of randomness.
+ *  If QZ_GETRANDOM is defined then syscall(SYS_getrandom...) will be called
  *
- *  arc4random is recommended if available.  A device file will work
- *  just fine.
+ *  If QZ_RAND_DEV is defined, then it is opened as a file and read
+ *
+ *  qzrandom64 will never return all zeros or all ones
  *
  *  John Kaiser
  *  2013-11-11
+ *  2024-02-23
  */
  
 #include <stdbool.h>
@@ -74,8 +73,10 @@
     void qzrandom_init(void){ return; }
 
     uint64_t qzrandom64(void){
-        uint64_t rnbr;
-        arc4random_buf(&rnbr, sizeof(rnbr));
+        uint64_t rnbr = 0;
+        while ((rnbr == 0) || (rnbr == 0xffffffffffffffff)){
+            arc4random_buf(&rnbr, sizeof(rnbr));
+        }
         return rnbr;
     }
 
@@ -97,11 +98,12 @@
     void qzrandom_init(void){ return; }
 
     uint64_t qzrandom64(void){
-        uint64_t rnbr;
+        uint64_t rnbr = 0;
         int gr;
 
-        gr = syscall(SYS_getrandom, &rnbr, sizeof(rnbr), 0);
-
+        while ((rnbr == 0) || (rnbr == 0xffffffffffffffff)){
+            gr = syscall(SYS_getrandom, &rnbr, sizeof(rnbr), 0);
+        }
         if (gr == sizeof(rnbr)){
             return rnbr;
         }else{
@@ -138,13 +140,14 @@
 
     uint64_t qzrandom64(void){
 
-        uint64_t rnbr;
+        uint64_t rnbr = 0;
         ssize_t bytesread;
 
-        bytesread = read(randdev_fd, &rnbr, 8);
-        if (bytesread != 8){
-            perror(QZ_RAND_DEV);
-            exit(42);
+        while ((rnbr == 0) || (rnbr == 0xffffffffffffffff)){
+            bytesread = read(randdev_fd, &rnbr, 8);
+            if (bytesread != 8){
+                rnbr = 0;
+            }
         }
         return rnbr;
     }
@@ -261,7 +264,8 @@ int main(void){
     char keybuf[32];
     gen_random_key(keybuf, 32);
 
-    printf( "gen_random_key=%s\n", keybuf);
+    printf("gen_random_key=%s\n", keybuf);
+    printf("qzrandom64()=%"PRIx64"\n", qzrandom64());
 
     unsigned char chd[16];
     unsigned char* hex;
