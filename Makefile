@@ -103,7 +103,7 @@ qzforms.fcgi: $(OBJ) qzmain.o
 	$(CC)   -o qzforms.fcgi $(OBJ) qzmain.o \
 		$(CFLAGS) $(LFLAGS) \
 		-I$(PGINCLUDEDIR) -L$(PGLIBDIR) \
-		$(XMLLIBDIR) $(PCRELIBS) \
+		$(XMLLIBDIR) $(PCRELIBS) $(QZRANDOM) \
 		-lpq
 
 qzmain.o: qzmain.c qz.h
@@ -218,7 +218,7 @@ qzfs.o: qzfs.c qz.h
 qzrandom.o: qzrandom.c qzrandom.h
 	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom.c
 
-test_qzrandom: qzrandom.c qzrandom.h hex_to_uchar.o
+test_qzrandom: qzrandom.c qzrandom.h hex_to_uchar.o qzrandom.o
 	echo "\n\tIf this fails then edit Makefile and set QZRANDOM\n"
 	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DTEST_QZRANDOM  qzrandom.c \
 	hex_to_uchar.o \
@@ -243,15 +243,24 @@ tagger.o:tagger.c
 
 # launch tagger process and test against it.
 tagger_test: tagger.c qzrandom.o crypto_etag.o hex_to_uchar.o qzconfig.o gettime.o
-	$(CC) -Wall -g -lcrypto  -DTAGGER_MAIN tagger.c \
+	$(CC) -Wall -g -lcrypto  -DTAGGER_TEST tagger.c \
 	qzrandom.o crypto_etag.o qzconfig.o hex_to_uchar.o gettime.o \
-	$(XMLCFLAGS) $(XMLLIBDIR)\
+	$(XMLCFLAGS) $(XMLLIBDIR) \
 	-o tagger_test
 
 # send tests to a running tagger
-test_tagger: tagger.c
-	$(CC) -Wall -g -lcrypto  -DTEST_TAGGER tagger.c qzrandom.o crypto_etag.o \
-	gettime.o hex_to_uchar.o -o test_tagger
+tagger_client: tagger.c \
+	qzrandom.o crypto_etag.o gettime.o hex_to_uchar.o qzconfig.o
+	$(CC) -Wall -g -lcrypto  -DTAGGER_CLIENT tagger.c qzrandom.o crypto_etag.o \
+	gettime.o hex_to_uchar.o $(LFLAGS) -o tagger_client
+
+# starts a standalone server
+tagger_server: tagger.c \
+	qzrandom.o crypto_etag.o gettime.o hex_to_uchar.o qzconfig.o
+	$(CC) -Wall -g -lcrypto  -DTAGGER_SERVER tagger.c qzrandom.o crypto_etag.o \
+	gettime.o hex_to_uchar.o qzconfig.o \
+	$(XMLCFLAGS) $(XMLLIBDIR) $(LFLAGS) \
+	-o tagger_server
 
 qzconfig.o:qzconfig.c qzconfig.h 
 	$(CC) $(CFLAGS)  -Wall -c qzconfig.c 
@@ -365,5 +374,6 @@ tar:
 clean:
 	rm -f $(OBJ) qzmain.o qzforms.fcgi qzforms.core test_parse_pg_array \
 	testopentable test_qzrandom crypto_etag_test test_prompt_rule \
-	hex_to_uchar_test qzforms.js.sql qz_db_install_SV$(SCHEMA_VERSION).sql \
+	hex_to_uchar_test qzforms.js.sql tagger_test tagger_client tagger_server \
+	qz_db_install_SV$(SCHEMA_VERSION).sql \
 	qzforms_examples.sql
