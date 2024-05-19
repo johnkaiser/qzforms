@@ -18,5 +18,5 @@ extern void make_etag(char* tagbuf, char* sockname, uint64_t domain_token,
 /*
  * Call this to get the 128 bits of payload from an etag
  */
-extern void validate_etag(char* payload, char* sockname,
+extern void validate_etag(char payload[16], char* sockname,
     uint64_t domain_token, char* etag);

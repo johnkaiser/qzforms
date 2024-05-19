@@ -36,7 +36,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <openssl/blowfish.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -46,17 +45,20 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include <poll.h>
+#include <sched.h>
+#include <errno.h>
 
 extern pthread_mutex_t log_mutex;
 extern double gettime(void);
 static int request_id;
+static char taglog_filename[MAXPATHLEN+2];
 
 #define SOCKET_BACKLOG 32
 #define TAGBUF 128
+#define ERRORBUFMAX 1024
 
 struct tag_data_conf {
     struct qz_config* conf;
-    FILE* log;
     uint64_t server_token;
     unsigned char server_key[16];
     int sock;
@@ -83,14 +85,14 @@ void set_server_token(struct tag_data_conf* tagdat){
     }
 
     if (tagdat->server_token == 0){
-        FILE* qzlog = fopen( tagdat->conf->logfile_name, "a");
+        FILE* qzflog = fopen( tagdat->conf->logfile_name, "a");
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(qzlog, "%f %d %s:%d fail - bad server token in config\n",
+        fprintf(qzflog, "%f %d %s:%d fail - bad server token in config\n",
             gettime(), request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
 
-        fflush(qzlog);
+        fflush(qzflog);
         exit(21);
     }
 }
@@ -125,14 +127,14 @@ void set_server_key(struct tag_data_conf* tagdat){
     if ((rnbr[0] > 0) && (rnbr[1] > 0)) {
         memcpy(tagdat->server_key, rnbr, 16);
     }else{
-        FILE* qzlog = fopen( tagdat->conf->logfile_name, "a");
+        FILE* qzflog = fopen( tagdat->conf->logfile_name, "a");
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(qzlog, "%f %d %s:%d fail - bad server key in config\n",
+        fprintf(qzflog, "%f %d %s:%d fail - bad server key in config\n",
             gettime(), request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
 
-        fflush(qzlog);
+        fflush(qzflog);
         exit(20);
     }
 }
@@ -201,56 +203,93 @@ void process_requests(struct tag_data_conf* tagdat){
     struct cryptotag ctag;
     struct cryptovalidate* valtag;
     unsigned char blank[16] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    uint8_t ff = 0xff;
+    unsigned char ones[16] = {ff, ff, ff, ff, ff, ff, ff, ff,
+                              ff, ff, ff, ff, ff, ff, ff, ff};
+
     bool log_tagger_details = tagdat->conf->log_tagger_details;
+    FILE* qzflog;
+    char errorbuf[ERRORBUFMAX+2];
 
     if (log_tagger_details){
-        fprintf(tagdat->log, "%f %d %s:%d server ready\n",
+        // use a local log var and toss it on every use 
+        qzflog = fopen(tagdat->conf->logfile_name, "a");
+
+        fprintf(qzflog, "%f %d %s:%d server ready\n",
            gettime(), request_id, __func__, __LINE__);
 
-        fclose(tagdat->log);
-        tagdat->log = NULL;
+        fclose(qzflog);
     }
 
     for(;;){
         bzero(inbuf, TAGBUF);
+        errorbuf[0] = '\0';
         output = NULL;
-        FILE* qzlog = NULL;
+        FILE* qzflog = NULL;
 
         if (log_tagger_details){
-             // use a local log var and toss it on every round
-             qzlog = fopen(tagdat->conf->logfile_name, "a");
+            qzflog = fopen(tagdat->conf->logfile_name, "a");
+
+            pthread_mutex_lock(&log_mutex);
+            fprintf(qzflog, "%f %d %s:%d calling accept4\n",
+                gettime(), request_id, __func__, __LINE__);
+            pthread_mutex_unlock(&log_mutex);
+            fclose(qzflog);
         }
         incoming = accept4(tagdat->sock, (struct sockaddr*) &(tagdat->addr),
             &(tagdat->sock_len), SOCK_NONBLOCK);
 
         if (incoming == -1){
+            strerror_r(errno, errorbuf, ERRORBUFMAX);
+            qzflog = fopen(tagdat->conf->logfile_name, "a");
 
             pthread_mutex_lock(&log_mutex);
-            fprintf(qzlog, "%f %d %s:%d tagger server accept failed\n",
-                gettime(), request_id, __func__, __LINE__);
+            fprintf(qzflog, "%f %d %s:%d tagger server accept failed %s\n",
+                gettime(), request_id, __func__, __LINE__, errorbuf);
             pthread_mutex_unlock(&log_mutex);
-
-            fclose(qzlog);
+            fclose(qzflog);
+            errorbuf[0] = '\0';
             continue;
         }
         if (log_tagger_details){
+            qzflog = fopen(tagdat->conf->logfile_name, "a");
+
             pthread_mutex_lock(&log_mutex);
-            fprintf(qzlog, "%f %d %s:%d accept socket %d\n",
+            fprintf(qzflog, "%f %d %s:%d accept socket %d\n",
                 gettime(), request_id, __func__, __LINE__, incoming);
             pthread_mutex_unlock(&log_mutex);
+            fclose(qzflog);
         }
         // XXX linux vs bsd pollfd_t fds[2];
         struct pollfd fds[2];
         fds[0].fd = incoming;
         fds[0].events = POLLIN | POLLRDNORM | POLLPRI;
-        poll(fds, 1, 0);
-        bytesread = read(incoming, inbuf, TAGBUF-1);
+        if (poll(fds, 1, 0) < 0){
 
-        if (log_tagger_details){
+            strerror_r(errno, errorbuf, ERRORBUFMAX);
+            qzflog = fopen(tagdat->conf->logfile_name, "a");
+
             pthread_mutex_lock(&log_mutex);
-            fprintf(qzlog, "%f %d %s:%d server read %d bytes\n",
-                gettime(), request_id, __func__, __LINE__, bytesread);
+            fprintf(qzflog, "%f %d %s:%d poll fail: %s\n",
+                gettime(), request_id, __func__, __LINE__,
+                errorbuf);
             pthread_mutex_unlock(&log_mutex);
+            fclose(qzflog);
+            errorbuf[0] = '\0';
+        }
+        bytesread = read(incoming, inbuf, TAGBUF-1);
+        if (bytesread < 1) strerror_r(errno, errorbuf, ERRORBUFMAX);
+
+        if ((log_tagger_details) || (bytesread < 1)){
+            qzflog = fopen(tagdat->conf->logfile_name, "a");
+
+            pthread_mutex_lock(&log_mutex);
+            fprintf(qzflog, "%f %d %s:%d%s server server read %d bytes %s\n",
+                gettime(), request_id, __func__, __LINE__,
+                (errorbuf[0] == '\0') ? "":" fail",
+                bytesread, errorbuf);
+            pthread_mutex_unlock(&log_mutex);
+            fclose(qzflog);
         }
         switch (bytesread){
 
@@ -258,20 +297,25 @@ void process_requests(struct tag_data_conf* tagdat){
                 memcpy(&ctag, inbuf, sizeof(struct cryptotag));
 
                 if (log_tagger_details){
+                    qzflog = fopen(tagdat->conf->logfile_name, "a");
+
                     pthread_mutex_lock(&log_mutex);
-                    fprintf(qzlog, "%f %d %s:%d make_crypto_etag \n",
+                    fprintf(qzflog, "%f %d %s:%d make_crypto_etag \n",
                         gettime(), request_id, __func__, __LINE__);
                     pthread_mutex_unlock(&log_mutex);
+                    fclose(qzflog);
                 }
 
                 output = make_crypto_etag(tagdat->server_key, tagdat->server_token,
                     ctag.domain_token, ctag.payload);
 
                 if (log_tagger_details){
+                    qzflog = fopen(tagdat->conf->logfile_name, "a");
                     pthread_mutex_lock(&log_mutex);
-                    fprintf(qzlog, "%f %d %s:%d OK\n",
+                    fprintf(qzflog, "%f %d %s:%d OK\n",
                         gettime(), request_id, __func__, __LINE__);
                     pthread_mutex_unlock(&log_mutex);
+                    fclose(qzflog);
                 }
                 if (output != NULL){
                     write(incoming, output, ETAG_STR_LEN);
@@ -286,46 +330,56 @@ void process_requests(struct tag_data_conf* tagdat){
                 valtag = (void*) inbuf;
 
                 if (log_tagger_details){
+                    qzflog = fopen(tagdat->conf->logfile_name, "a");
+
                     pthread_mutex_lock(&log_mutex);
-                    fprintf(qzlog, "%f %d %s:%d validate_crypto_etag domain_token=%"PRIu64"\n",
+                    fprintf(qzflog, "%f %d %s:%d validate_crypto_etag "
+                        "domain_token=%"PRIx64"\n",
                         gettime(), request_id, __func__, __LINE__,
                         valtag->domain_token);
                     pthread_mutex_unlock(&log_mutex);
+                    fclose(qzflog);
                 }
 
-                ctag = validate_crypto_etag(tagdat->server_key, tagdat->server_token, valtag->etag);
+                ctag = validate_crypto_etag(tagdat->server_key,
+                    tagdat->server_token, valtag->etag);
 
                 if (ctag.domain_token == valtag->domain_token){
                     write(incoming, &ctag.payload, 16);
                 }else{
-                    write(incoming, blank, sizeof(blank));
+                    write(incoming, ones, sizeof(ones));
 
                     if (log_tagger_details){
+                        qzflog = fopen(tagdat->conf->logfile_name, "a");
+
                         pthread_mutex_lock(&log_mutex);
-                        fprintf(qzlog, "%f %d %s:%d domain_token validate failed %"PRIu64" != %"PRIu64" payload=%s\n",
+                        fprintf(qzflog, "%f %d %s:%d domain_token validate "
+                            "failed %"PRIx64" != %"PRIx64" payload=%s\n",
                             gettime(), request_id, __func__, __LINE__,
                             ctag.domain_token, valtag->domain_token, ctag.payload);
                         pthread_mutex_unlock(&log_mutex);
+                        fclose(qzflog);
                     }
                 }
                 break;
 
             default:
-                write(incoming, blank, sizeof(blank));
 
                 if (log_tagger_details){
+                    qzflog = fopen(tagdat->conf->logfile_name, "a");
+
                     pthread_mutex_lock(&log_mutex);
-                    fprintf(qzlog, "%f %d %s:%d unexpected read length\n",
-                        gettime(), request_id, __func__, __LINE__);
+                    fprintf(qzflog, "%f %d %s:%d unexpected read length %d\n",
+                        gettime(), request_id, __func__, __LINE__, bytesread);
                     pthread_mutex_unlock(&log_mutex);
+                    fclose(qzflog);
                 }
+                write(incoming, blank, sizeof(blank));
+
                 break;
         }
 
         close(incoming);
-        if (log_tagger_details){
-            fclose(qzlog);
-        }
     }
 }
 
@@ -339,18 +393,19 @@ void process_requests(struct tag_data_conf* tagdat){
 void tagger_serve(struct qz_config* conf, bool debug){
 
     struct tag_data_conf tagdat;
-
-    tagdat.log = NULL;
+    FILE* qzflog;
     tagdat.conf = conf;
 
     if (tagdat.conf->log_tagger_details){
-        tagdat.log = fopen(conf->logfile_name, "a");
+        qzflog = fopen(conf->logfile_name, "a");
 
-        fprintf(tagdat.log, "%f %d %s:%d begin tagger_serve\n",
+        fprintf(qzflog, "%f %d %s:%d begin tagger_serve\n",
             gettime(), request_id, __func__, __LINE__);
 
-        fprintf(tagdat.log, "%f %d %s:%d qzrandom64 %"PRIx64"\n",
+        fprintf(qzflog, "%f %d %s:%d qzrandom64 %"PRIx64"\n",
             gettime(), request_id, __func__, __LINE__, qzrandom64());
+
+        fclose(qzflog);
     }
 
     // Get the server token from config or make one up.
@@ -379,7 +434,8 @@ pid_t tagger_init(struct qz_config* conf, char* argv[]){
     pid_t pid;
     static char* tagger = "tagger";
 
-    unlink(conf->tagger_socket_path);
+    // this is so that make_etag and validate_etag can log errors
+    snprintf(taglog_filename, MAXPATHLEN, "%s", conf->logfile_name);
 
     if ((pid = fork()) < 0){
         fprintf(stderr, "tagger fork failed\n");
@@ -479,11 +535,45 @@ void make_etag(char* tagbuf, char* sockname,
     ctag.domain_token = domain_token,
     memcpy(ctag.payload, payload, 16);
 
-    //DEBUG(stdout, "make_etag:%d domain_token %"PRIu64" payload %s\n",
-    //    __LINE__, ctag.domain_token, ctag.payload);
+    int err_cnt = 0;
+    while ((tagbuf[0] == '\0') && (err_cnt < 20)){
+        while ( (write(socket, &ctag, sizeof(ctag)) < 0) && (err_cnt < 20)){
+            FILE* taglog = fopen(taglog_filename, "a");
+            char err_buf[1024];
+            bzero(err_buf, 1024);
+            strerror_r(errno, err_buf, 1024);
+            err_cnt++;
 
-    write(socket, &ctag, sizeof(ctag));
-    read(socket, tagbuf, ETAG_STR_LEN);
+            pthread_mutex_lock(&log_mutex);
+            fprintf(taglog, "%f %d %s:%d %s %d %s\n",
+                gettime(), request_id, __func__, __LINE__,
+                "make_etag write to socket failed",
+                err_cnt,
+                err_buf);
+            pthread_mutex_unlock(&log_mutex);
+            fclose(taglog);
+
+            close(socket);
+            struct timespec ts = {.tv_sec = 0, .tv_nsec = 1000*err_cnt};
+            nanosleep(&ts,NULL);
+            sched_yield();
+            socket = open_client_socket(sockname);
+        }
+        if (read(socket, tagbuf, ETAG_STR_LEN) < 0){
+            char err_buf[1024];
+            bzero(err_buf, 1024);
+            strerror_r(errno, err_buf, 1024);
+            FILE* taglog = fopen(taglog_filename, "a");
+            pthread_mutex_lock(&log_mutex);
+            fprintf(taglog, "%f %d %s:%d %s %s\n",
+                gettime(), request_id, __func__, __LINE__,
+                "make_etag read from socket failed",
+                err_buf);
+            pthread_mutex_unlock(&log_mutex);
+            fclose(taglog);
+
+        }
+    }
     tagbuf[ETAG_STR_LEN] = '\0';
 
     close(socket);
@@ -495,14 +585,17 @@ void make_etag(char* tagbuf, char* sockname,
  *  Given an etag, decrypt it and decide to reply with the
  *  with the 128 bits of payload or not depending on the
  *  domain_token matching.
+ *
+ *  A payload of either all zeros or all ones is an error condition
+ *  All zeros is a communication failure with the tagger process.
+ *  All ones is a successful processing of an invalid etag.
  */
 void validate_etag(char payload[16], char* sockname, uint64_t domain_token, char* etag){
 
     bzero(payload, 16);
+    unsigned char zeros[16] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
     if ((etag == NULL) || (strlen(etag) == 0)) return;
-
-    int socket = open_client_socket(sockname);
 
     struct cryptovalidate valtag;
     bzero(&valtag, sizeof(valtag));
@@ -531,19 +624,43 @@ void validate_etag(char payload[16], char* sockname, uint64_t domain_token, char
             return;
     }
     memcpy(valtag.etag, etag, ETAG_STR_LEN);
-    write(socket, &valtag, sizeof(valtag));
-    read(socket, payload, 16);
+
+    int socket = open_client_socket(sockname);
+
+    ssize_t bytesread = 0;
+    int err_cnt = 0;
+    do{
+        while (write(socket, &valtag, sizeof(valtag)) < 0){
+            perror("validate_etag write to socket failed");
+            err_cnt++;
+            if (err_cnt > 20) break;
+            struct timespec ts = {.tv_sec = 0, .tv_nsec = 1000*err_cnt};
+            nanosleep(&ts,NULL);
+            close(socket);
+            sched_yield();
+            socket = open_client_socket(sockname);
+        }
+        if ((bytesread = read(socket, payload, 16)) < 0){
+            perror("validate_etag read from socket failed");
+        }
+    } while ((bytesread != 16) &&  (memcmp(payload, zeros, 16) != 0));
 
     close(socket);
 }
 
-#ifdef TAGGER_MAIN
+#ifdef TAGGER_TEST
 
 #include <signal.h>
 #include <fcntl.h>
+#include <string.h>
 pthread_mutex_t log_mutex;
 
 int main(int argc, char* argv[]){
+
+    sigset_t nosigpipe;
+    sigemptyset(&nosigpipe);
+    sigaddset(&nosigpipe, SIGPIPE);
+    sigprocmask(SIG_BLOCK, &nosigpipe, NULL);
 
     request_id = 0;
     pthread_mutex_init(&log_mutex,NULL);
@@ -557,6 +674,7 @@ int main(int argc, char* argv[]){
     struct cryptotag ctag;
 
     struct qz_config* conf = init_config();
+    snprintf(taglog_filename, MAXPATHLEN, "%s", conf->logfile_name);
 
     double begin_fopen = gettime();
     FILE* log = fopen(conf->logfile_name, "a");
@@ -587,38 +705,44 @@ int main(int argc, char* argv[]){
     pthread_mutex_unlock(&log_mutex);
 
     uint64_t k;
-    char payload[16];
+    char out_payload[18];
+    char in_payload[18];
     char tagbuf[1024];
 
     clock_gettime(CLOCK_REALTIME, &start);
 
-    bzero(payload, 16);
+    bzero(out_payload, 16);
     make_etag(tagbuf, conf->tagger_socket_path, domain_token, NULL);
-    make_etag(tagbuf, conf->tagger_socket_path, domain_token, payload);
-    validate_etag(payload, conf->tagger_socket_path, domain_token, tagbuf);
+    make_etag(tagbuf, conf->tagger_socket_path, domain_token, out_payload);
+    validate_etag(in_payload, conf->tagger_socket_path, domain_token, tagbuf);
 
-    for (k=1; k<10000; k++){
-    //for (k=1; k<4; k++){
+    int rounds = 10000;
+    int success_count = 0;
+    for (k=1; k<rounds; k++){
         request_id++;
 
-        snprintf(payload, 16, "%"PRIu64, k);
+        bzero(out_payload,16);
+        snprintf(out_payload, 16, "%"PRIu64, k);
 
         bzero(tagbuf, 1024);
-        make_etag(tagbuf, conf->tagger_socket_path, domain_token, payload);
+        make_etag(tagbuf, conf->tagger_socket_path, domain_token, out_payload);
 
         pthread_mutex_lock(&log_mutex);
         fprintf(log, "%f %d %s:%d etag %s %s\n",
             gettime(), request_id, __func__, __LINE__,
-            payload, tagbuf);
+            out_payload, tagbuf);
         pthread_mutex_unlock(&log_mutex);
 
         bzero(&ctag, sizeof(ctag));
-        validate_etag(payload, conf->tagger_socket_path, domain_token, tagbuf);
+        bzero(in_payload,16);
+        validate_etag(in_payload, conf->tagger_socket_path, domain_token, tagbuf);
+        int cmp_rslt;
+        if ((cmp_rslt = strncmp(out_payload, in_payload, 16)) == 0 ) success_count++;
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(log, "%f %d %s:%d payload=%s\n",
+        fprintf(log, "%f %d %s:%d payload=%s%s\n",
             gettime(), request_id, __func__, __LINE__,
-            payload);
+            out_payload, (cmp_rslt == 0) ? "" : " fail payload mismatch");
         pthread_mutex_unlock(&log_mutex);
     }
 
@@ -628,9 +752,9 @@ int main(int argc, char* argv[]){
     delta_time += ((double)(fin.tv_nsec - start.tv_nsec))*0.000000001;
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(log, "%f %d %s:%d run time: %g\n",
+    fprintf(log, "%f %d %s:%d run time: %g success count %d out of %d\n",
         gettime(), request_id, __func__, __LINE__,
-        delta_time);
+        delta_time, success_count, rounds-1);
     pthread_mutex_unlock(&log_mutex);
 
     if (false){
@@ -672,7 +796,7 @@ int main(int argc, char* argv[]){
             gettime(), request_id, __func__, __LINE__);
         pthread_mutex_unlock(&log_mutex);
 
-        validate_etag(payload, conf->tagger_socket_path, 1, tagbuf);
+        validate_etag(test_payload, conf->tagger_socket_path, 1, tagbuf);
 
         pthread_mutex_lock(&log_mutex);
         fprintf(log, "%f %d %s:%d fail test 3 - domain_token=%"PRIu64" payload=%s\n",
@@ -689,7 +813,7 @@ int main(int argc, char* argv[]){
         make_etag(tagbuf, conf->tagger_socket_path, domain_token, headace);
 
         bzero(&ctag, sizeof(ctag));
-        validate_etag(payload, conf->tagger_socket_path, 1, tagbuf);
+        validate_etag(test_payload, conf->tagger_socket_path, 1, tagbuf);
 
         pthread_mutex_lock(&log_mutex);
         fprintf(log, "%f %d %s:%d fail test 4 - domain_token=%"PRIu64" payload=%s\n",
@@ -706,48 +830,202 @@ int main(int argc, char* argv[]){
 #endif
 
 
-#ifdef TEST_TAGGER
+#ifdef TAGGER_CLIENT
+
+#include "hex_to_uchar.h"
+#include <signal.h>
+
+pthread_mutex_t log_mutex;
 
 /*
- *  test_tagger
+ *  tagger_client
  *
  *  A stand alone little ditty to send test data to a running tagger.
  */
 int main(int argc, char* argv[]){
 
-    qzrandom_init();
-    uint64_t domain_token = qzrandom64();
+    double start = gettime();
+    pthread_mutex_init(&log_mutex, NULL);
 
-    char* sockname = getenv("QZ_TAGGER_SOCKET");
+    sigset_t nosigpipe;
+    sigemptyset(&nosigpipe);
+    sigaddset(&nosigpipe, SIGPIPE);
+    sigprocmask(SIG_BLOCK, &nosigpipe, NULL);
+
+    qzrandom_init();
+    uint64_t domain_token = 0;
+
+    int ch;
+    int n=1;
+    char* sockname = NULL;
+    char* testdata = NULL;
+    char* logfile = "logs/tagger_client.log";
+    snprintf(taglog_filename, MAXPATHLEN, "%s", logfile);
+
+    while ((ch = getopt(argc, argv, "h?d:l:n:s:t:")) != -1) {
+        switch(ch){
+            case 'l':
+                logfile = optarg;
+                break;
+
+            case 'n':
+                n=atoi(optarg);
+                break;
+
+            case 's':
+                sockname = optarg;
+                break;
+           
+            case 't':
+                testdata = optarg;
+                break;
+
+            case 'd':
+                domain_token =  strtoul(optarg, NULL, 16);
+                break;
+
+            case 'h':
+            case '?':
+                printf("This will send test data to a running tagger\n");
+                printf("Use -s <socketname> or the environment variable\n");
+                printf("TAGGER_SOCKET to identify the server.\n");
+                printf("Use -n <count> to set the number of tests to run.\n");
+                printf("Use -t <testdata> to send specific data to the server.\n");
+                printf("Use -d <domain_token> to set the domain token to a\n");
+                printf("specific hex value. A random value will be used if this\n");
+                printf("is not set.\n");
+                exit(0);
+        }
+    }
+
     if (sockname == NULL){
-        fprintf(stderr, "Set QZ_TAGGER_SOCKET in the environment\n");
+        sockname = getenv("TAGGER_SOCKET");
+    }    
+    if (sockname == NULL){
+    
+        fprintf(stderr, "Set TAGGER_SOCKET in the environment\n");
+        fprintf(stderr, "or set -s <sockname> on the command line.\n");
         exit(29);
     }
-    uint64_t payload[2];
-    payload[0] = 0;
-    payload[1] = 0;
-    char tagbuf[1024];
 
-    if (argc != 2){
-        printf("%s will send test data to a running tagger\n", argv[0]);
-        printf("It takes one argument.\n");
-        printf("If it is 16 characters long then it is encoded\n");
-        printf("other wise it is decoded\n");
-        exit(30);
+    if (domain_token == 0){
+        domain_token = qzrandom64();
     }
-    if (strlen(argv[1]) == 16){
-        printf("make_etag(%s, %s, %"PRIx64" %s)\n","tagbuf", sockname, domain_token, argv[1]);
-        payload[0] = strtoull(argv[1], NULL, 16);
-        printf( "payload=%"PRIx64"\n", payload);
-        make_etag(tagbuf, sockname, domain_token, (void*) payload);
-        printf("etag=%s\n", tagbuf);
-    }else{
-        printf("validate_etag(%s, %s)\n", sockname, argv[1]);
-        validate_etag(payload, sockname, domain_token, argv[1]);
-        printf( "payload=%"PRIx64" %"PRIx64"\n", payload[0], payload[1]);
+
+    FILE* log = fopen(logfile, "a");
+
+    char tagbuf[1024];
+    bzero(tagbuf, 1024);
+    char payload[18];
+    bzero(payload, 18);
+    
+    if (testdata != NULL){
+
+        if (strlen(testdata) == 16){
+
+            fprintf(log, "%f %d %s:%d payload %s\n",
+                gettime(), 16, __func__, __LINE__, testdata);
+
+            make_etag(tagbuf, sockname, domain_token, testdata);
+
+            fprintf(log, "%f %d %s:%d etag %s\n",
+                gettime(), 16, __func__, __LINE__, 
+                (tagbuf[0] == '\0') ? "tag is null":tagbuf);
+
+            validate_etag(payload, sockname, domain_token, tagbuf);
+
+            fprintf(log, "%f %d %s:%d validate %s\n",
+                gettime(), 16, __func__, __LINE__, 
+                (payload[0] == '\0') ? "payload is null":payload);
+
+            n--;
+        }
+
+        if (strlen(testdata) == 97){
+
+            validate_etag(payload, sockname, domain_token, testdata);
+
+            fprintf(log, "%f %d %s:%d validate %s\n",
+                gettime(), 97, __func__, __LINE__, 
+                (payload[0] == '\0') ? "payload is null":payload);
+
+            n--;
+        }    
     }
+
+    int error_count = 0;
+    while (n>0){
+
+        snprintf(payload, 16, "%d", n);
+        request_id = n;
+
+        fprintf(log, "\n%f %d %s:%d payload %s\n",
+            gettime(), request_id , __func__, __LINE__, payload);
+
+        make_etag(tagbuf, sockname, domain_token, payload);
+
+        fprintf(log, "%f %d %s:%d etag %s\n",
+            gettime(), request_id, __func__, __LINE__, 
+            (tagbuf[0] == '\0') ? "fail tag is null":tagbuf);
+
+        validate_etag(payload, sockname, domain_token, tagbuf);
+
+        fprintf(log, "%f %d %s:%d validate %s\n",
+            gettime(), request_id, __func__, __LINE__,
+            (payload[0] == '\0') ? "fail payload is null":payload);
+
+        if (atoi(payload) != n){
+            error_count++;
+            fprintf(log, "%f %d %s:%d fail payload does not match test data\n",
+                gettime(), n, __func__, __LINE__);
+
+        }
+        n--;
+    }
+    fprintf(log, "%f %d %s:%d error_count %d\n",
+        gettime(), 0, __func__, __LINE__, error_count);
+
+    fprintf(log, "%f %d %s:%d run_time %f\n",
+        gettime(), 0, __func__, __LINE__, gettime() - start);
 
     return 0;
+}
+
+#endif
+
+
+#ifdef TAGGER_SERVER
+pthread_mutex_t log_mutex;
+
+int main(void){
+
+    struct tag_data_conf tagdat;
+    FILE* qzflog;
+
+    pthread_mutex_init(&log_mutex, NULL);
+
+    tagdat.conf = init_config();
+    qzflog = fopen(tagdat.conf->logfile_name, "a");
+
+    fprintf(qzflog, "%f %d %s:%d begin tagger_server\n",
+        gettime(), request_id, __func__, __LINE__);
+
+    fprintf(qzflog, "%f %d %s:%d qzrandom64 %"PRIx64"\n",
+        gettime(), request_id, __func__, __LINE__, qzrandom64());
+
+    fclose(qzflog);
+    // Get the server token from config or make one up.
+    set_server_token(&tagdat);
+
+    // Fill in the server key from config or one made up.
+    set_server_key(&tagdat);
+
+    // setup socket
+    open_server_socket(&tagdat);
+
+    // Does not return
+    process_requests(&tagdat);
+
 }
 
 #endif
