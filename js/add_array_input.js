@@ -33,6 +33,7 @@ function add_array_input(rule_esc){
     new_input.setAttribute("id", new_id);
     new_input.setAttribute("name", new_id);
 
+    var attr;
     for(attr in rule){
         if(attr != "fieldname"){
             attr_val = rule[attr];

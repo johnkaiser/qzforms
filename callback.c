@@ -112,29 +112,19 @@ char* callback_enum_lookup(enum callback_response_type cb_response){
  *  ta is for the form being added
  *  cb_ta is for the callback being added
  */
-void callback_adder(struct handler_args* h, struct form_record* form_rec,
-    xmlNodePtr form_node, struct table_action* ta){
+void callback_adder(struct handler_args* h, xmlNodePtr form_node,
+    struct table_action* ta){
 
-    if ((ta == NULL) || (ta->callbacks == NULL) || (form_rec == NULL) ||
-        (form_node == NULL)){
+    if ((ta == NULL) || (ta->callbacks == NULL) || (form_node == NULL)){
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d fail NULL value: %s%s%s%s\n",
+        fprintf(h->log, "%f %d %s:%d fail NULL value: %s%s%s\n",
             gettime(), h->request_id, __func__, __LINE__,
             (ta == NULL) ? "ta ":"",
             ((ta != NULL) && (ta->callbacks == NULL)) ? "ta->callbacks ":"",
-            (form_rec == NULL) ? "form_rec":"",
             (form_node == NULL) ? "node":"");
         pthread_mutex_unlock(&log_mutex);
         return;
-    }
-
-    if (h->conf->log_callback_details){
-        pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s:%d form_name=%s form_action=%s\n",
-            gettime(), h->request_id, __func__, __LINE__,
-            form_rec->form_name, form_rec->form_action);
-        pthread_mutex_unlock(&log_mutex);
     }
 
     int cbn;
@@ -148,6 +138,16 @@ void callback_adder(struct handler_args* h, struct form_record* form_rec,
         struct table_action* cb_ta =
             open_table(h, ta->form_name, ta->callbacks[cbn]);
 
+        if (cb_ta == NULL){
+
+            pthread_mutex_lock(&log_mutex);
+            fprintf(h->log, "%f %d %s:%d open_table %s failed \n",
+                gettime(), h->request_id, __func__, __LINE__,
+                ta->callbacks[cbn]);
+            pthread_mutex_unlock(&log_mutex);
+
+            return;
+        }
         // register the form
 
         asprintf(&form_action, "/%s/%s/%s", h->uri_parts[0],

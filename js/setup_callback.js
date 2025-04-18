@@ -42,21 +42,29 @@ function setup_callback(callback_el, func, xhr, args={}){
     }catch(e){
         console.log(e);
     }
-   var form_name = callback_el.form.name;
 
-   for (let n=0; n < fn_len; n++){
-       let fn = fieldnames[n];
-       console.log("n="+n + " fn="+fn);
+    var form_present = (callback_el.form !== undefined) &&
+           (callback_el.form !== null) &&
+           (callback_el.form.name !== undefined)
+           (callback_el.form.name !== null) ;
 
-       // args take precendence over form data
-       if ( ! (fn in args)){
-           // find the fieldname in the form
-           let el = callback_el.form[fn];
-           if (el){
-               args[fn] = el.value;
-               console.log(fn + " = " + args[fn] + " tagname = " + el.tagName );
-           }else{
-               console.log("element " + fn + " not found");
+   if ( form_present ){
+       var form_name = callback_el.form.name;
+
+       for (let n=0; n < fn_len; n++){
+           let fn = fieldnames[n];
+           console.log("n="+n + " fn="+fn);
+
+           // args take precendence over form data
+           if ( ! (fn in args)){
+               // find the fieldname in the form
+               let el = callback_el.form[fn];
+               if (el){
+                   args[fn] = el.value;
+                   console.log(fn + " = " + args[fn] + " tagname = " + el.tagName );
+               }else{
+                   console.log("element " + fn + " not found");
+               }
            }
        }
    }

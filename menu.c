@@ -80,6 +80,7 @@ void menupage( struct handler_args* h ){
     add_all_menus(h);
 
     doc_adder(h);
+    callback_adder(h, divqz, this_ta);
 
     return;
 }

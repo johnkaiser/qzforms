@@ -8,7 +8,7 @@ function get_callback(a_form_element, callback_name){
 
     let this_form = false;
 
-    if ((a_form_element) && (a_form_element.tagName == 'form')){
+    if ((a_form_element) && (a_form_element.tagName == 'FORM')){
         this_form = a_form_element;
     }else{
         this_form = a_form_element.form;
