@@ -239,7 +239,7 @@ int main(void){
 
     int j;
     int rounds = 1000000;
-    uint64_t rnd;
+    uint64_t rnd = 0;
     struct timeval start_init;
     struct timeval fin_init;
     struct timeval complete;
@@ -250,9 +250,10 @@ int main(void){
 
     // Time a bunch of rounds.
     for(j=0; j<rounds; j++){
-        rnd = qzrandom64();
+        rnd += qzrandom64();
     }
     gettimeofday(&complete, NULL);
+    printf("%"PRIX64"\n", rnd);
 
     printf("init time %f\n", timeval_diff(&start_init, &fin_init));
 
