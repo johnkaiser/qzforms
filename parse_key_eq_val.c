@@ -40,7 +40,6 @@ bool percent_unescape(char* buf){
     char* to=buf;
     char conv_buf[4] = {'\0','\0','\0','\0'};
     enum {normal, has_percent, has_first_digit, conv_error} conv_state = normal;
-    int append_nulls = 0;
 
     FILE* db_log = NULL;
     if (DEBUG) db_log = fopen(DEBUG_LOG, "a");
@@ -79,7 +78,6 @@ bool percent_unescape(char* buf){
                 if ( isxdigit(*from) ){
                      conv_buf[1] = *from;
                      *to++ = (char) strtol(conv_buf, NULL, 16);
-                     append_nulls += 2; // 3 chars -> 1 leaves 2
                      conv_state = normal;
                 }else{
                      conv_state = conv_error;
@@ -96,6 +94,9 @@ bool percent_unescape(char* buf){
             return false;
         }    
     }
+
+    // When conv_buf has no % codes, this will rewrite then existing
+    // ending \0 with \0, otherwise it will shorten the string.
     *to++ = '\0';
 
     if (DEBUG){ fclose(db_log); db_log = NULL;};
@@ -341,7 +342,7 @@ pthread_mutex_t log_mutex;
 void error_page( struct handler_args* hargs, int status_code, const char* msg ){
     printf("error_page status=%d msg=%s\n", status_code, msg);
 }
-void ht_scanner(void* val, void* ignore, xmlChar* key){
+void ht_scanner(void* val, void* ignore, const xmlChar* key){
     printf( "key=[%s], val=[%s]\n", key, (char*) val );
 }
 int main(int argc, char* argv[]){
@@ -378,12 +379,35 @@ int main(int argc, char* argv[]){
     }
 
        printf("testing [%s]\n", somedata);
-       testdata = calloc(1, strlen(somedata) + 2 );
-       strcpy(testdata, somedata);
+       int datasize = strlen(somedata);
+       testdata = calloc(1, datasize + 2 );
+       strlcpy(testdata, somedata, datasize + 1);
 
        ht = parse_key_eq_val(&shargs, testdata, fieldsep, true);
        xmlHashScan(ht, ht_scanner, NULL);
        free(testdata);
+
+
+    printf("\npercent_unescape test:\n");
+    char* test_data =  "percent_unescape_exc-%21_hash-%23_dol-%24_amp-%26_"
+        "qu-%27_op-%28_cp-%29_ast-%2A_plus-%2B_com-%2C_sl-%2F_col-%3A_sco-%3B_"
+        "eq-%3D_ques-%3F_at-%40_obkt-%5B_cbkt-%5D_sp-+XXX";
+
+    char* test_buf;
+    asprintf(&test_buf, "%s", test_data);
+    printf("test_data=|%s|\nstrlen=%lu\n", test_buf, strlen(test_buf));
+    percent_unescape(test_buf);
+    printf("unescaped=|%s|\nstrlen=%lu\n", test_buf, strlen(test_buf));
+
+    free(test_buf);
+
+    printf("\npercent_unescape no percents\n");
+    asprintf(&test_buf, "ABCDEFG");
+    test_buf[7]='X';
+
+    printf("test_data=|%s|\n", test_buf );
+    percent_unescape(test_buf);
+    printf("unescaped=|%s|\nstrlen=%lu\n", test_buf, strlen(test_buf));
 
     return 0;
 }
