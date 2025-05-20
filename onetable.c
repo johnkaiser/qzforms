@@ -197,17 +197,18 @@ void edit_form(struct handler_args* h, char* next_action,
     xmlNodePtr form;
     xmlNodePtr input;
 
-    xmlNewTextChild(divqz, NULL, "h2", form_name);
+    xmlNodePtr h2_form_name = xmlNewTextChild(divqz, NULL, "h2", form_name);
+    append_class(h2_form_name, "form_name");
+    append_class(h2_form_name, form_name);
 
     add_helpful_text(h, edit_ta);
-
 
     char* form_target;
 
     asprintf(&form_target, "/%s/%s/%s",
         get_uri_part(h, QZ_URI_BASE_SEGMENT),
         get_uri_part(h, QZ_URI_FORM_NAME),
-        next_action);
+        (next_action == NULL) ? "null":next_action);
 
     form = xmlNewChild(divqz, NULL, "form", NULL);
     xmlNewProp(form, "action", form_target);
@@ -216,11 +217,10 @@ void edit_form(struct handler_args* h, char* next_action,
     asprintf(&action_name, "%s_it", next_action);
     xmlNewProp(form, "name", action_name);
     xmlNewProp(form, "id", action_name);
-
     xmlNewProp(form, "enctype", "application/x-www-form-urlencoded");
 
     struct form_record* form_rec = register_form(h, form, SUBMIT_MULTIPLE,
-        form_target);
+    form_target);
 
     set_form_name(form_rec, action_name);
     free(action_name);
@@ -565,43 +565,37 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                 save_context_parameters(h, edit_form_rec, list_rs, -1);
             }
 
-            // add a hidden field for each part of the primary key
-            for(k=0; k<list_ta->nbr_pkeys; k++){
-                input = xmlNewChild(form_node, NULL, "input", NULL);
-                xmlNewProp(input, "type", "hidden");
-                int f_nbr = PQfnumber(list_rs, list_ta->pkeys[k]);
+            // add a hidden field for each specified fieldname
+            if (list_ta->fieldnames != NULL) {
+                for(k=0; list_ta->fieldnames[k] != NULL; k++){
 
-                if (PQfname(list_rs, f_nbr) != NULL){
-                    xmlNewProp(input, "name", list_ta->pkeys[k]);
-
-                    char* key_name_nbr;
-                    asprintf(&key_name_nbr, "%s[%d]",list_ta->pkeys[k], row);
-                    xmlNewProp(input, "id", key_name_nbr);
-                    free(key_name_nbr);
-
-                    xmlNewProp(input, "value",
-                        PQgetvalue(list_rs,row, f_nbr));
-
-                }else{
-                    // The primary key was not in the returned data, but
-                    // it was requested.  Perhaps it's in the passed in data.
-                    char* passed_in = xmlHashLookup(h->postdata,
-                        list_ta->pkeys[k]);
-
-                    if (passed_in != NULL){
-                        xmlNewProp(input, "name", list_ta->pkeys[k]);
-
-                        char* key_name_nbr;
-                        asprintf(&key_name_nbr, "%s[%d]",
-                            list_ta->pkeys[k], row);
-
-                        xmlNewProp(input, "id", key_name_nbr);
-                        free(key_name_nbr);
-
-                        xmlNewProp(input, "value", passed_in);
+                    char* fname = list_ta->fieldnames[k];
+                    char* fvalue = NULL;
+                    // the value could be in the result set
+                    int f_nbr = PQfnumber(list_rs, fname);
+                    if (f_nbr >= 0){
+                        fvalue = PQgetvalue(list_rs, row, f_nbr);
+                    }else{
+                        // not there, perhaps it is the passed in data.
+                        fvalue = xmlHashLookup(h->postdata, fname);
                     }
-                 }
-            }
+
+                    if (fvalue != NULL){
+                        input = add_hidden_input(h, form_node,
+                            list_ta->fieldnames[k], row, fvalue);
+                    }else{
+                        // asked to include a field in the post data,
+                        // that was not found.
+                        pthread_mutex_lock(&log_mutex);
+                        fprintf(h->log, "%f %d %s %d fail %s %s [%s]\n",
+                            gettime(), h->request_id, __func__, __LINE__,
+                            "requested data field not found in postgresql result",
+                            "nor in post data", fname);
+                        pthread_mutex_unlock(&log_mutex);
+                    }
+                } // for k
+            } // fieldnames not null
+
             save_pkey_values(h, edit_form_rec, list_ta, list_rs, row);
 
             // The button itself
@@ -753,7 +747,8 @@ void onetable_create(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     if (PQntuples(create_rs) != 1){
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(h->log, "%f %d %s %d Wrong data count %d should be 1.\n",
+        fprintf(h->log, "%f %d %s %d Wrong data count %d onetable create "
+            "must return one row.\n",
             gettime(), h->request_id, __func__, __LINE__,
             PQntuples(create_rs));
         pthread_mutex_unlock(&log_mutex);

@@ -1168,3 +1168,12 @@ void add_parameter_table(struct handler_args* h,
  */
 xmlNodePtr add_hidden_input(struct handler_args* h,
     xmlNodePtr form_node, char* name, int row_nbr, char* value);
+
+/*
+ *  edit_form
+ *
+ *  Add the given form to the page.
+ */
+ void edit_form(struct handler_args* h, char* next_action,
+    struct table_action* edit_ta, PGresult* edit_rs, char* form_name,
+    xmlNodePtr divqz);
