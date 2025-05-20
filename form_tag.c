@@ -67,21 +67,22 @@ struct form_record* register_form(struct handler_args* h,
 
     snprintf(form_rec->form_action, action_url_len+1, "%s", form_action);
 
+    // Delete these commented lines if nothing crashes.
     // Set the form set name if appropriate
-    char* posted_form_set_name = NULL;
-    char* new_form_set_name = NULL;
+    // char* posted_form_set_name = NULL;
 
-    if ((h != NULL) && (h->posted_form != NULL) &&
-        (h->posted_form->form_set != NULL)){
+    // if ((h != NULL) && (h->posted_form != NULL) &&
+    //    (h->posted_form->form_set != NULL)){
 
-            posted_form_set_name = h->posted_form->form_set->name;
-    }
+    //        posted_form_set_name = h->posted_form->form_set->name;
+    //}
 
-    if ((h != NULL) && (h->page_ta != NULL) &&
-        (h->page_ta->form_set_name[0] != '\0')){
+    // char* new_form_set_name = NULL;
+    // if ((h != NULL) && (h->page_ta != NULL) &&
+    //     (h->page_ta->form_set_name[0] != '\0')){
 
-            new_form_set_name = h->page_ta->form_set_name;
-    }
+    //        new_form_set_name = h->page_ta->form_set_name;
+    //}
 
     // save the record.
     xmlHashAddEntry(h->session->form_tags, form_rec->form_id, form_rec);
