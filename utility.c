@@ -698,6 +698,34 @@ void add_parameter_table(struct handler_args* h,
     }
 }
 
+/*
+ *  add_hidden_input
+ *
+ *  Add a hidden input element under the named form.
+ *  If row_nbr >= 0, then the id is in the form name[0],
+ *  otherwise the id is the name.
+ */
+xmlNodePtr add_hidden_input(struct handler_args* h,
+    xmlNodePtr form_node, char* name, int row_nbr, char* value){
+
+    xmlNodePtr input;
+    input = xmlNewChild(form_node, NULL, "input", NULL);
+    xmlNewProp(input, "type", "hidden");
+    xmlNewProp(input, "name", name);
+
+    if (row_nbr >= 0){
+         char* field_name_nbr;
+         asprintf(&field_name_nbr, "%s[%d]", name, row_nbr);
+         xmlNewProp(input, "id", field_name_nbr);
+         free(field_name_nbr);
+    }else{
+        xmlNewProp(input, "id", name);
+    }
+    xmlNewProp(input, "value", value);
+
+    return input;
+}
+
 #ifdef ARRAY_BASE_TEST
 pthread_mutex_t log_mutex;
 

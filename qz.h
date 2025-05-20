@@ -1158,3 +1158,13 @@ char* callback_enum_lookup(enum callback_response_type cb_response);
  */
 void add_parameter_table(struct handler_args* h,
     struct table_action* ta, xmlNodePtr addnode, char* new_id);
+
+/*
+ *  add_hidden_input
+ *
+ *  Add a hidden input element under the named form.
+ *  If row_nbr >= 0, then the id is in the form name[0],
+ *  otherwise the id is the name.
+ */
+xmlNodePtr add_hidden_input(struct handler_args* h,
+    xmlNodePtr form_node, char* name, int row_nbr, char* value);
