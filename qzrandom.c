@@ -154,6 +154,27 @@
 
 #endif
 
+#ifdef QZ_RAND_OPENSSL
+#include <openssl/rand.h>
+
+    void qzrandom_init(void){ return; }
+
+    uint64_t qzrandom64(void){
+        uint64_t rnbr = 0;
+        unsigned char rbytes[8];
+        int rc;
+
+        rc = RAND_bytes(rbytes, 8);
+        if (rc != 1){
+            return 0;
+        }else{
+            memcpy(&rnbr, rbytes, 8);
+            return rnbr;
+        }
+    }
+
+#endif
+
 /*
  *  qzrandomch
  *

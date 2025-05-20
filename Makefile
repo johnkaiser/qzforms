@@ -1,5 +1,5 @@
 
-## One source of randomness must be selected.
+## One source of randomness must be selected by uncommenting QZRANDOM
 
 ## Use arc4random for BSD systems that support arc4random()
 ## QZRANDOM=-DQZ_ARC4RANDOM
@@ -7,8 +7,8 @@
 ## Use getrandom system call for Linux systems with kernel > 4.17
 ## QZRANDOM=-DQZ_GETRANDOM
 
-## Use a device file (or perhaps a unix domain socket). 
-## QZRANDOM=-DQZ_RAND_DEV=\"/dev/urandom\"
+## Use Openssl RAND_bytes
+## QZRANDOM=-DQZ_RAND_OPENSSL
 
 ## Optionally choose either gcc or clang for the compiler
 ## CC=clang
@@ -16,7 +16,7 @@
 
 ## It has happened that "-L/usr/local/lib" is required here.
 #LFLAGS=-L/usr/local/lib -lfcgi -lpthread -lcrypto -lxml2 
-LFLAGS=-lfcgi -lpthread -lcrypto -lxml2 
+LFLAGS=-lfcgi -lpthread -lcrypto 
 
 ## End of common changes.
 
