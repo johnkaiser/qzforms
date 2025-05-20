@@ -112,7 +112,7 @@ void doc_adder(struct handler_args* h){
                          XML_PARSE_NOERROR|XML_PARSE_NOWARNING|XML_PARSE_NONET,
                          &newnode);
                          
-                     xmlErrorPtr xerr = xmlCtxtGetLastError(h->ctx);
+                     const xmlError* xerr = xmlCtxtGetLastError(h->ctx);
                      if (xerr != NULL){ 
                          pthread_mutex_lock(&log_mutex);
                          fprintf(h->log, "%f %d %s:%d xml parse error %s\n",
