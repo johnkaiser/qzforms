@@ -34,7 +34,8 @@
 /* Requires json.h from json-parser
  * https://github.com/udp/json-parser
  */
-#include "json.h"
+// #include <json.h>
+#include "../json-parser/json.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -100,7 +101,6 @@ void json_object_sort (json_value * object, json_value * proto);
 json_value * json_string_new (const json_char *);
 json_value * json_string_new_length (unsigned int length, const json_char *);
 json_value * json_string_new_nocopy (unsigned int length, json_char *);
-json_value * json_number_string_new(const json_char*);
 
 
 /*** Everything else

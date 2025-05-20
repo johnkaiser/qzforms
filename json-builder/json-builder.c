@@ -32,6 +32,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #ifdef _MSC_VER
@@ -308,15 +309,6 @@ json_value * json_string_new_nocopy (unsigned int length, json_char * buf)
    value->u.string.length = length;
    value->u.string.ptr = buf;
 
-   return value;
-}
-
-json_value * json_number_string_new(const json_char* buf)
-{
-   unsigned int length = strlen (buf);
-   json_value * value = json_string_new_length(length, buf);
-
-   value->type = json_number_string;
    return value;
 }
 
@@ -649,10 +641,6 @@ size_t json_measure_ex (json_value * value, json_serialize_opts opts)
             total += measure_string (value->u.string.length, value->u.string.ptr);
             break;
 
-         case json_number_string:
-            total += measure_string (value->u.string.length, value->u.string.ptr);
-            break;
-
          case json_integer:
 
             integer = value->u.integer;
@@ -859,10 +847,6 @@ void json_serialize_ex (json_char * buf, json_value * value, json_serialize_opts
             *buf ++ = '\"';
             break;
 
-         case json_number_string:
-            buf += serialize_string (buf, value->u.string.length, value->u.string.ptr);
-            break;
-
          case json_integer:
 
             integer = value->u.integer;
@@ -989,7 +973,6 @@ void json_builder_free (json_value * value)
             value = value->u.object.values [value->u.object.length].value;
             continue;
 
-         case json_number_string:
          case json_string:
 
             free (value->u.string.ptr);
