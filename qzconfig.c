@@ -259,7 +259,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     conf->log_cookie_details = DEFAULT_LOG_COOKIE_DETAILS;
     conf->log_doc_details = DEFAULT_LOG_DOC_DETAILS;
     conf->log_cookie_details = DEFAULT_LOG_COOKIE_DETAILS;
-    conf->log_post_data = DEFAULT_LOG_POST_DATA;
+    conf->log_post_details = DEFAULT_LOG_POST_DETAILS;
 
     snprintf(conf->logfile_name, MAXPATHLEN, "%s", DEFAULT_LOGFILE_NAME);
     snprintf(conf->stderr_file, MAXPATHLEN, "%s", DEFAULT_STDERR_FILE);
@@ -471,10 +471,10 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
     if ((setting != NULL) && (strlen(setting) > 0)){
         conf->log_doc_details = is_true(setting);
     }
-    setting = xmlHashLookup(conf_hash, "LOG_POST_DATA");
-    if (setting == NULL) setting = getenv("LOG_POST_DATA");
+    setting = xmlHashLookup(conf_hash, "LOG_POST_DETAILS");
+    if (setting == NULL) setting = getenv("LOG_POST_DETAILS");
     if ((setting != NULL) && (strlen(setting) > 0)){
-        conf->log_post_data = is_true(setting);
+        conf->log_post_details = is_true(setting);
     }
     // Put postgres vars into environment.
     setenv("PGAPPNAME", "qzforms", 0);
@@ -496,7 +496,7 @@ void set_config(struct qz_config* conf, xmlHashTablePtr conf_hash){
         "PGREQUIREPEER",
         "PGREQUIRESSL",
         "PGSERVICE",
-        "PGSERVICEFILE",
+
         "PGSSLCERT",
         "PGSSLCRL",
         "PGSSLKEY",
@@ -655,7 +655,7 @@ int main(int argc, char* argv[], char* env[]){
     printf("log_callback_details=%c\n", (config->log_callback_details) ? 't':'f');
     printf("log_cookie_details=%c\n", (config->log_cookie_details) ? 't':'f');
     printf("log_doc_details=%c\n", (config->log_doc_details) ? 't' : 'f');
-    printf("log_post_data=%c\n", (config->log_post_data) ? 't' : 'f');
+    printf("log_post_details=%c\n", (config->log_post_details) ? 't' : 'f');
 
     char* allowed_vars[] = {
         "PGAPPNAME",
