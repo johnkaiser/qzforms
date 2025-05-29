@@ -482,9 +482,9 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
     // In order to have an edit button, there must be a
     // table action for edit.
     bool has_edit_button = false;
-    struct table_action* getone_ta = open_table(h, form_name, "edit");
+    struct table_action* edit_ta = open_table(h, form_name, "edit");
 
-    if (getone_ta != NULL) has_edit_button = true;
+    if (edit_ta != NULL) has_edit_button = true;
 
     if ( ! has_edit_button ){
         xmlNodePtr list_top_cb = xmlNewChild(divqz, NULL, "form", NULL);
@@ -555,46 +555,78 @@ void onetable_list(struct handler_args* h, char* form_name, xmlNodePtr divqz){
                 register_form(h, form_node, SUBMIT_MULTIPLE, action_target);
 
             set_form_name(edit_form_rec, form_prop_name);
-            free(form_prop_name);
 
             // This is the cb adder for the edit button.
             // The one for the list as a whole is above.
-            callback_adder(h, form_node, getone_ta);
+            callback_adder(h, form_node, edit_ta);
 
             if (h->current_form_set == NULL){
                 save_context_parameters(h, edit_form_rec, list_rs, -1);
             }
 
             // add a hidden field for each specified fieldname
-            if (list_ta->fieldnames != NULL) {
-                for(k=0; list_ta->fieldnames[k] != NULL; k++){
+            if (edit_ta->fieldnames != NULL) {
+                for(k=0; edit_ta->fieldnames[k] != NULL; k++){
 
-                    char* fname = list_ta->fieldnames[k];
+                    char* fname = edit_ta->fieldnames[k];
                     char* fvalue = NULL;
-                    // the value could be in the result set
+                    char* field_src = "unk";
+
+                    // the value could be in the pg result set
                     int f_nbr = PQfnumber(list_rs, fname);
                     if (f_nbr >= 0){
                         fvalue = PQgetvalue(list_rs, row, f_nbr);
-                    }else{
-                        // not there, perhaps it is the passed in data.
-                        fvalue = xmlHashLookup(h->postdata, fname);
+                        static char pg_rs[] = "pg result set";
+
+                        if (fvalue != NULL){
+                            // found it
+                            input = add_hidden_input(h, form_node,
+                                fname, row, fvalue);
+
+                            field_src = pg_rs;
+                        }
                     }
 
-                    if (fvalue != NULL){
-                        input = add_hidden_input(h, form_node,
-                            list_ta->fieldnames[k], row, fvalue);
-                    }else{
+                    if (fvalue == NULL){
+                        // not in pg result, perhaps it is the passed in data.
+                        fvalue = xmlHashLookup(h->postdata, fname);
+                        static char posted[] = "postdata";
+
+                        if (fvalue != NULL) {
+
+                             // found it
+                            input = add_hidden_input(h, form_node,
+                                fname, -1, fvalue);
+
+                            field_src = posted;
+                        }
+                    }
+
+                    if (fvalue == NULL){
                         // asked to include a field in the post data,
                         // that was not found.
                         pthread_mutex_lock(&log_mutex);
-                        fprintf(h->log, "%f %d %s %d fail %s %s [%s]\n",
+                        fprintf(h->log, "%f %d %s %d fail requested data "
+                            "field %s not found in postgresql result "
+                            "nor in post data for form %s\n",
                             gettime(), h->request_id, __func__, __LINE__,
-                            "requested data field not found in postgresql result",
-                            "nor in post data", fname);
+                            fname, form_prop_name);
                         pthread_mutex_unlock(&log_mutex);
                     }
+
+                    // log it maybe, unless it was missing and just logged.
+                    if (h->conf->log_post_details && (fvalue != NULL)){
+                        pthread_mutex_lock(&log_mutex);
+                        fprintf(h->log, "%f %d %s:%d "
+                        "field %s added from %s to %s.\n",
+                        gettime(), h->request_id, __func__, __LINE__,
+                        fname, field_src, form_prop_name );
+                        pthread_mutex_unlock(&log_mutex);
+                    }
+
                 } // for k
             } // fieldnames not null
+            free(form_prop_name);
 
             save_pkey_values(h, edit_form_rec, list_ta, list_rs, row);
 
