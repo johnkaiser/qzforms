@@ -45,15 +45,17 @@ function setup_callback(callback_el, func, xhr, args={}){
 
     var form_present = (callback_el.form !== undefined) &&
            (callback_el.form !== null) &&
-           (callback_el.form.name !== undefined)
+           (callback_el.form.name !== undefined) &&
            (callback_el.form.name !== null) ;
 
    if ( form_present ){
        var form_name = callback_el.form.name;
 
+       console.log("form " + form_name + " is present");
+
        for (let n=0; n < fn_len; n++){
            let fn = fieldnames[n];
-           console.log("n="+n + " fn="+fn);
+           console.log("fieldname n="+n + " fn="+fn);
 
            // args take precendence over form data
            if ( ! (fn in args)){
@@ -67,6 +69,8 @@ function setup_callback(callback_el, func, xhr, args={}){
                }
            }
        }
+   } else {
+        console.log("form not present");
    }
    // Turn the args object into form urlencoded data for posting
 
