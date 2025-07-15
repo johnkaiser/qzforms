@@ -359,8 +359,9 @@ extern void onetable(struct handler_args*);
 extern void testdatum(struct handler_args*);
 extern void menupage(struct handler_args*);
 extern void callback(struct handler_args*);
-/*
- *  serve_output
+extern void simpleform(struct handler_args* h);
+
+/*  serve_output
  *  output.c
  *
  *  Send the document to out.

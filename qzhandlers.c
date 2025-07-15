@@ -88,6 +88,10 @@ void init_handler_hash(void){
             .name = "callback",
             .handler = callback
         },
+        {   .count = 0,
+            .name = "simpleform",
+            .handler = simpleform
+        },
         {
             .count = 0,
             .name = NULL,

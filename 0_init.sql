@@ -72,7 +72,7 @@ CREATE TYPE qz.callback_response_type AS ENUM
 --
 -- Set the Schema Version
 --
-INSERT INTO qz.constants (key, schema_version) VALUES ('t', '13');
+INSERT INTO qz.constants (key, schema_version) VALUES ('t', '14');
 
 CREATE TABLE qz.change_history (
     change_id serial primary key,

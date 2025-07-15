@@ -28,6 +28,7 @@ INSERT INTO qz.handler (handler_name) VALUES ('none');
 INSERT INTO qz.handler (handler_name) VALUES ('grid');
 INSERT INTO qz.handler (handler_name) VALUES ('menupage');
 INSERT INTO qz.handler (handler_name) VALUES ('callback');
+INSERT INTO qz.handler (handler_name) VALUES ('simpleform');
 
 
 --
@@ -48,6 +49,8 @@ INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('grid', 'save'
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('grid', 'update_row');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('grid', 'insert_row');
 INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('grid', 'delete_row');
+INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('simpleform', 'view');
+INSERT INTO qz.handler_action (handler_name, action_name) VALUES ('simpleform', 'action');
 
 
 

@@ -11,7 +11,8 @@ function set_action_options(){
         "onetable": ["view", "list", "create", "insert", "edit", "update", "delete"],
         "grid": ["edit", "save", "insert_row", "update_row", "delete_row"],
         "fs": ["get", "etag_value" ],
-        "menupage":["view"]
+        "menupage":["view"],
+        "simpleform":["view", "action"]
     };
 
    var handler_el = document.getElementById('handler_name');

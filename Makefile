@@ -38,11 +38,11 @@ CFLAGS=-Wall \
 	-I$(PGINCLUDEDIR)
 
 VERSION!=cat Version
-SCHEMA_VERSION=13
+SCHEMA_VERSION=14
 
 OBJ=qzhandlers.o onetable.o \
 	str_to_array.o session.o login.o  cookie.o\
-	input.o output.o menu.o utility.o \
+	input.o output.o menu.o utility.o simpleform.o \
 	parse_key_eq_val.o status.o opentable.o parse_pg_array.o qzfs.o \
 	pgtools.o qzrandom.o crypto_etag.o tagger.o \
 	hex_to_uchar.o qzconfig.o gettime.o form_tag.o prompt_rule.o \
@@ -54,7 +54,7 @@ FILES=Makefile qz.h qzforms.conf Version qzforms_install.sh \
 	http_codes.h qzrandom.h crypto_etag.h \
 	qzmain.c qzhandlers.c onetable.c callback.c \
 	str_to_array.c session.c login.c cookie.c \
-	input.c output.c menu.c utility.c \
+	input.c output.c menu.c utility.c simpleform.c \
 	parse_key_eq_val.c status.c opentable.c parse_pg_array.c qzfs.c \
 	pgtools.c qzrandom.c crypto_etag.c tagger.h tagger.c \
 	hex_to_uchar.h hex_to_uchar.c qzconfig.c qzconfig.h gettime.c \
@@ -219,7 +219,9 @@ qzrandom.o: qzrandom.c qzrandom.h
 	$(CC) $(CFLAGS) $(QZRANDOM) -c qzrandom.c
 
 test_qzrandom: qzrandom.c qzrandom.h hex_to_uchar.o qzrandom.o
-	echo "\n\tIf this fails then edit Makefile and set QZRANDOM\n"
+	echo "\n\tIf this fails then edit Makefile and set QZRANDOM\n" \
+	   "\tto select your source of randomness.\n" \
+	   "\tThen run make clean.\n"
 	$(CC) $(CFLAGS) $(QZRANDOM) -lcrypto -DTEST_QZRANDOM  qzrandom.c \
 	hex_to_uchar.o \
 	-o test_qzrandom
@@ -295,6 +297,9 @@ form_tag.o: form_tag.c
 
 grid.o: grid.c
 	$(CC) $(CFLAGS) -Wall -c grid.c
+
+simpleform.o: simpleform.c
+	$(CC) $(CFLAGS) -Wall -c simpleform.c
 
 form_set.o: form_set.c
 	$(CC) $(CFLAGS) -Wall -c form_set.c
