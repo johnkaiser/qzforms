@@ -208,13 +208,15 @@ void edit_form(struct handler_args* h, char* next_action,
     asprintf(&form_target, "/%s/%s/%s",
         get_uri_part(h, QZ_URI_BASE_SEGMENT),
         get_uri_part(h, QZ_URI_FORM_NAME),
-        (next_action == NULL) ? "null":next_action);
+        (next_action != NULL) ? next_action:form_name);
 
     form = xmlNewChild(divqz, NULL, "form", NULL);
     xmlNewProp(form, "action", form_target);
     xmlNewProp(form, "method", "post");
     char* action_name;
-    asprintf(&action_name, "%s_it", next_action);
+    asprintf(&action_name, "%s_it",
+        (next_action != NULL) ? next_action:form_name);
+
     xmlNewProp(form, "name", action_name);
     xmlNewProp(form, "id", action_name);
     xmlNewProp(form, "enctype", "application/x-www-form-urlencoded");
