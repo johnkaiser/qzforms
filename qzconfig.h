@@ -46,6 +46,7 @@
 #define DEFAULT_LOG_COOKIE_DETAILS false
 #define DEFAULT_LOG_DOC_DETAILS false
 #define DEFAULT_LOG_POST_DETAILS false
+#define DEFAULT_LOG_SIMPLEFORM_DETAILS false
 
 // 104 from un.h max socket length
 #define MAX_SOCKET_NAME_LEN 104
@@ -85,6 +86,7 @@ struct qz_config {
     bool log_cookie_details;
     bool log_doc_details;
     bool log_post_details;
+    bool log_simpleform_details;
     uint64_t integrity_token;
 };
 
