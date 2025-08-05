@@ -29,6 +29,7 @@ function setup_callback(callback_el, func, xhr, args={}){
    let formaction = callback_el.getAttribute('formaction');
    console.log('setup_callback: callback_el.id = ' + callback_el.id);
    console.log('setup_callback: formaction = ' + formaction);
+
    let form_fields = form_tag;
  
    //  The callback object will have a list of fields for the
@@ -37,7 +38,11 @@ function setup_callback(callback_el, func, xhr, args={}){
    let fn_len = 0;
    let fieldnames = false;
    try{
-        fieldnames = callback_el['x-fieldnames'];
+        let xfieldnames = callback_el.attributes.getNamedItem('x-fieldnames');
+        console.log("setup_callback: xfieldnames = " + xfieldnames.value);
+
+        fieldnames = JSON.parse(xfieldnames.value.replace(/\'/g, '"'));
+
         if (fieldnames) fn_len = fieldnames.length;
     }catch(e){
         console.log(e);

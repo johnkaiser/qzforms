@@ -185,7 +185,18 @@ void callback_adder(struct handler_args* h, xmlNodePtr form_node,
         xmlNodeAddContent(callback_button, ta->callbacks[cbn]);
         xmlAddNextSibling(callback_button, xmlNewText("\n"));
 
+        // A bit of quoting madness going on.
+        // JSON wants to use double quotes around each value,
+        // but libxml wants to use double quotes around the whole list.
+        // "["one","two","three"]" needs to be "['one','two','three']"
+        // Javascript will need to replace quotes:
+        // JSON.parse(xfieldnames.value.replace(/\'/g, '"'));
+
         char* fields = str_ar_to_json(cb_ta->fieldnames);
+        int k;
+        for (k=0; k<strlen(fields); k++){
+            if (fields[k] == '"') fields[k] = '\'';
+        }
         if (fields != NULL){
             xmlNewProp(callback_button, "x-fieldnames", fields);
             if (h->conf->log_callback_details){
