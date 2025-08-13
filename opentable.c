@@ -229,11 +229,11 @@ void init_open_table(struct handler_args* h){
 
     char fetch_rule[] =
         "SELECT form_name, fieldname, prompt_type, el_class, "
-        "readonly, rows, cols, size, maxlength, tabindex, publish_pgtype, "
-        "expand_percent_n, regex_pattern, options, src, onfocus, onblur, onchange, "
-        "onselect, onclick, ondblclick, onmousedown, onmouseup, "
-        "onmouseover, onmouseout, onkeypress, onkeydown, "
-        "onkeyup, tabindex "
+        "readonly, required, rows, cols, size, maxlength, tabindex, "
+        "publish_pgtype, expand_percent_n, regex_pattern, options, src, "
+        "onfocus, onblur, onchange, onselect, onclick, ondblclick, "
+        "onmousedown, onmouseup, onmouseover, onmouseout, onkeypress, "
+        "onkeydown, onkeyup, tabindex "
         "FROM qz.prompt_rule "
         "WHERE form_name = $1 AND fieldname = $2";
 

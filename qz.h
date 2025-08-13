@@ -271,6 +271,7 @@ struct prompt_rule{
     char* prompt_type;
     char* el_class;
     bool readonly;
+    bool required;
     char* regex_pattern;
     bool publish_pgtype;
     int rows;

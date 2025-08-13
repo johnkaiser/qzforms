@@ -146,6 +146,7 @@ struct prompt_rule* fetch_prompt_rule(struct handler_args* h,
         rule->el_class = get_value(rs, 0, "el_class");
 
         rule->readonly =  get_bool(rs, 0, "readonly");
+        rule->required =  get_bool(rs, 0, "required");
 
         rule->publish_pgtype = get_bool(rs, 0, "publish_pgtype");
        
@@ -960,6 +961,12 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
              (rule->readonly) ? "true":"false");
      }        
 
+     char* required = "";
+     if (rule->required){
+         asprintf(&required, "\"required\":\"%s\", ", 
+             (rule->required) ? "true":"false");
+     }        
+
      char* pattern = "";
      if ((rule->regex_pattern != NULL) && (rule->regex_pattern[0] != '\0')){
          char* pattern64 = base64_encode(rule->regex_pattern);
@@ -1091,8 +1098,8 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
 
 
      if (func_name == NULL){
-         asprintf(&json_args, "{%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}",
-             prompt_type, el_class, expand_percent_n, readonly, pattern, 
+         asprintf(&json_args, "{%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}",
+             prompt_type, el_class, expand_percent_n, readonly, required, pattern, 
              rows, cols, size, maxlength, tabindex, options,
              onblur, onchange, onclick, ondblclick, onfocus,
              onkeypress, onkeyup, onkeydown, onmousedown, onmouseout,
@@ -1100,9 +1107,9 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
              fieldname);
 
      }else{
-         asprintf(&json_args, "%s({%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s});",
+         asprintf(&json_args, "%s({%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s});",
              func_name,  // Having this requires name() around the object
-             prompt_type, el_class, expand_percent_n, readonly, pattern,
+             prompt_type, el_class, expand_percent_n, readonly, required, pattern,
              rows, cols, size, maxlength, tabindex, options,
              onblur, onchange, onclick, ondblclick, onfocus,
              onkeypress, onkeyup, onkeydown, onmousedown, onmouseout,
@@ -1115,6 +1122,7 @@ char* json_add_element_args(char* func_name, struct prompt_rule* rule,
      if (el_class[0] != '\0') free(el_class);
      if (expand_percent_n[0] != '\0') free(expand_percent_n);
      if (readonly[0] != '\0') free(readonly);
+     if (required[0] != '\0') free(required);
      if (pattern[0] != '\0') free(pattern);
      if (rows[0] != '\0') free(rows);
      if (cols[0] != '\0') free(cols);
@@ -1340,6 +1348,10 @@ void add_prompt(struct handler_args* hargs,
     
     if ((args->rule->readonly) || (is_pkey && has_data(fvalue))){
         xmlNewProp(input,"readonly","readonly"); 
+    }
+
+    if (args->rule->required){
+        xmlNewProp(input,"required","required"); 
     }
 
     return;
@@ -1573,6 +1585,7 @@ void print_prompt_rule(struct prompt_rule* rule, double elapsed){
     printf("prompt_type=%s\n", rule->prompt_type);
     printf("el_class=%s\n", rule->el_class);
     printf("readonly=%c\n", (rule->readonly) ? 't':'f');
+    printf("required=%c\n", (rule->required) ? 't':'f');
     printf("rows=%d\n", rule->rows);
     printf("cols=%d\n", rule->cols);
     printf("size=%d\n", rule->size);
