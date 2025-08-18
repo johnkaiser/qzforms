@@ -192,10 +192,13 @@ void callback_adder(struct handler_args* h, xmlNodePtr form_node,
         // Javascript will need to replace quotes:
         // JSON.parse(xfieldnames.value.replace(/\'/g, '"'));
 
-        char* fields = str_ar_to_json(cb_ta->fieldnames);
-        int k;
-        for (k=0; k<strlen(fields); k++){
-            if (fields[k] == '"') fields[k] = '\'';
+        char* fields = NULL;
+        if (cb_ta->fieldnames){
+            fields = str_ar_to_json(cb_ta->fieldnames);
+            int k;
+            for (k=0; k<strlen(fields); k++){
+               if (fields[k] == '"') fields[k] = '\'';
+            }
         }
         if (fields != NULL){
             xmlNewProp(callback_button, "x-fieldnames", fields);
