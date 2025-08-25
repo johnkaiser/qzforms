@@ -157,12 +157,17 @@ void error_page( struct handler_args* h, int status_code, const char* msg ){
     FCGX_FPrintF(h->out, "Status: %d\r\n", status_code);
 
     if (msg != NULL){
-        FCGX_FPrintF(h->out, "Content-type: text/plain\r\n");
+        FCGX_FPrintF(h->out, "Content-type: text/html\r\n");
         FCGX_FPrintF(h->out, "\r\n");
-        FCGX_FPrintF(h->out, "ERROR\r\n");
-        FCGX_FPrintF(h->out, "%s\r\n", msg);
-        FCGX_FPrintF(h->out, "code=%d\r\n", status_code);
-        FCGX_FPrintF(h->out, "request_id=%d\r\n", h->request_id);
+        FCGX_FPrintF(h->out, "<!DOCTYPE html>\r\n");
+        FCGX_FPrintF(h->out, "<html><body>\r\n");
+        FCGX_FPrintF(h->out, "<p><b>ERROR</b></p>\r\n");
+        FCGX_FPrintF(h->out, "<p>%s</p>\r\n", msg);
+        FCGX_FPrintF(h->out, "<p>code=%d</p>\r\n", status_code);
+        FCGX_FPrintF(h->out, "<p>request_id=%d</p>\r\n", h->request_id);
+        FCGX_FPrintF(h->out, "<p><a href='/%s/login'>Login</a></p>\r\n",
+            get_uri_part(h,QZ_URI_BASE_SEGMENT));
+        FCGX_FPrintF(h->out, "</body></html>\r\n");
         h->error_exists = true;
     }else{
         FCGX_FPrintF(h->out, "\r\n");
