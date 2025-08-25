@@ -157,4 +157,105 @@ AND action = 'update';
 INSERT INTO qz.prompt_rule (form_name, fieldname, el_class, readonly, rows, cols, size, options, maxlength, onfocus, onblur, onchange, src, onselect, onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeypress, onkeydown, onkeyup, tabindex, prompt_type, publish_pgtype, expand_percent_n, opttest)
 VALUES ('prompt_rule_edit', 'required', NULL, false, NULL, NULL, NULL, '{yes,no}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'input_radio', NULL, false, '{yes,no}');
 
+-- inline doc add doc_name
+-- change primary key
+
+ALTER TABLE qz.doc
+ADD COLUMN doc_name variable_name;
+
+ALTER TABLE qz.doc
+ADD COLUMN doc_title text;
+
+UPDATE qz.doc
+SET doc_name = div_id
+WHERE doc_name IS NULL;
+
+ALTER TABLE qz.doc
+DROP CONSTRAINT doc_pkey;
+
+ALTER TABLE qz.doc
+ADD PRIMARY KEY (form_name, action, doc_name);
+
+UPDATE qz.form
+SET pkey = '{form_name,action,doc_name}'
+WHERE form_name = 'inline_doc';
+
+-- inline_doc create
+
+UPDATE qz.table_action
+SET sql =
+$TACID$
+SELECT $1::qz.variable_name "form_name",
+''::text "action",
+''::text "doc_name",
+''::text "doc_title",
+''::text "div_id",
+''::text "el_class",
+''::text "data"
+$TACID$
+WHERE
+form_name = 'inline_doc'
+AND action = 'create';
+
+-- inline doc insert
+
+UPDATE qz.table_action
+SET sql =
+$TAIID$
+INSERT INTO qz.doc
+(form_name, action, doc_name, doc_title, div_id, el_class, data)
+VALUES
+($1,$2,$3,$4,$5,$6,$7)
+$TAIID$,
+fieldnames = '{form_name,action,doc_name,doc_title,div_id,el_class,data}'
+WHERE form_name = 'inline_doc'
+AND action = 'insert';
+
+-- inline_doc edit
+
+UPDATE qz.table_action
+SET sql =
+$TAEID$
+SELECT action, doc_name, doc_title, div_id, el_class, "data"
+FROM qz.doc
+WHERE form_name = $1
+AND action = $2
+AND doc_name = $3
+$TAEID$,
+fieldnames = '{form_name,action,doc_name}'
+WHERE form_name = 'inline_doc'
+AND action = 'edit';
+
+-- inline_doc update
+
+UPDATE qz.table_action
+SET sql =
+$TAUID$
+UPDATE qz.doc
+SET
+doc_title = $4,
+div_id = $5,
+el_class = $6,
+"data" = $7
+WHERE form_name = $1
+AND action = $2
+AND doc_name = $3
+$TAUID$,
+fieldnames =  '{form_name,action,doc_name,doc_title,div_id,el_class,data}'
+WHERE form_name = 'inline_doc'
+AND action = 'update';
+
+-- inline_doc list
+
+UPDATE qz.table_action
+SET sql =
+$TALID$
+SELECT action, doc_name, doc_title
+FROM qz.doc
+WHERE form_name = $1
+ORDER BY action, doc_name
+$TALID$
+WHERE form_name = 'inline_doc'
+AND action = 'list';
+
 

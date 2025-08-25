@@ -35,6 +35,7 @@ void init_doc(struct handler_args* h){
 
     char fetch_doc_query[] = 
         "SELECT div_id, "
+        "doc_name, "
         "'<div>' || data || '</div>' \"data\", "
         "el_class "
         "FROM qz.doc "
@@ -61,7 +62,6 @@ void init_doc(struct handler_args* h){
         error_page(h, SC_INTERNAL_SERVER_ERROR, "prepare fetch_doc failed");
         return;
     }
-
 
     PQclear(rs);
 }
@@ -98,6 +98,7 @@ void doc_adder(struct handler_args* h){
                  char* data = get_value(doc_adder_rs, nt, "data");
                  char* node_name = get_value(doc_adder_rs, nt, "div_id");
                  char* el_class = get_value(doc_adder_rs, nt, "el_class");
+                 char* doc_name = get_value(doc_adder_rs, nt, "doc_name");
 
                  int data_len = strlen(data);
                  add_where = qzGetElementByID(h, node_name);
@@ -120,10 +121,17 @@ void doc_adder(struct handler_args* h){
                              xerr->message);
                          pthread_mutex_unlock(&log_mutex);
                      }
+                     xmlNewProp(newnode, "name", doc_name);
                      if (has_data(el_class)){
                          xmlNewProp(newnode, "class", el_class);
                      }
                      if (newnode != NULL){
+                         char* new_id;
+                         asprintf(&new_id, "_doc%d", nt);
+                         xmlNewProp(newnode, "id", new_id);
+                         free(new_id);
+
+                         xmlNewProp(newnode, "name", doc_name);
                          xmlAddChild(add_where, newnode);
                      }
                      

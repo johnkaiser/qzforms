@@ -8,7 +8,7 @@
 ## QZRANDOM=-DQZ_GETRANDOM
 
 ## Use Openssl RAND_bytes
-## QZRANDOM=-DQZ_RAND_OPENSSL
+QZRANDOM=-DQZ_RAND_OPENSSL
 
 ## Optionally choose either gcc or clang for the compiler
 ## CC=clang
@@ -72,6 +72,7 @@ SQLUTIL=qz_db_update_SV3.sql qz_db_update_SV4.sql \
 	qz_db_update_SV5.sql qz_db_update_SV6.sql qz_db_update_SV7.sql \
 	qz_db_update_SV8.sql qz_db_update_SV9.sql qz_db_update_SV10.sql \
 	qz_db_update_SV11.sql qz_db_update_SV12.sql qz_db_update_SV13.sql \
+	qz_db_update_SV14.sql
 
 EXAMPLES=examples/release_checklist.sql \
 	examples/release_checklist_data.sql \
