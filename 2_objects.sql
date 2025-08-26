@@ -133,19 +133,21 @@ VALUES
 CREATE TABLE qz.doc (
     form_name qz.variable_name REFERENCES qz.form(form_name),
     action qz.variable_name,
+    doc_name qz.variable_name,
+    doc_title text,
     div_id qz.variable_name,
     modtime timestamp without time zone,
     etag bigint,
     data text,
     el_class text,
-    PRIMARY KEY (form_name, action, div_id));
+    PRIMARY KEY (form_name, action, doc_name));
 
 INSERT INTO qz.form
 (form_name, handler_name, schema_name, table_name, xml_template,
 target_div, hidden, prompt_container, form_set_name, pkey)
 VALUES
 ('inline_doc', 'onetable', 'qz', 'doc', 'tinymce.xml',
-'qz', 't', 'fieldset', 'form_mgt', '{form_name,action,id}');
+'qz', 't', 'fieldset', 'form_mgt', '{form_name,action,doc_name}');
 
 ---
 --- Callbacks

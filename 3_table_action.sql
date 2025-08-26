@@ -165,7 +165,7 @@ a fieldname identify a prompt rule.');
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('prompt_rule_edit', 'edit',
     'SELECT "form_name", "fieldname", "prompt_type", "tabindex",
-    "el_class", "readonly", "regex_pattern", "rows", "cols", "size",
+    "el_class", "readonly", "required", "regex_pattern", "rows", "cols", "size",
     "maxlength", "options", "publish_pgtype", "expand_percent_n",
      "onfocus", "onblur", "onchange", "onselect",
     "onclick", "ondblclick", "onmousedown", "onmouseup",
@@ -252,6 +252,12 @@ VALUES ('table_action_edit', 'update',
 '{form_name,action,helpful_text,sql,fieldnames,clear_context_parameters}',
 NULL,
 $TAUJS$ window.addEventListener("DOMContentLoaded",set_action_options, true); $TAUJS$ );
+
+-- update returns to form list, discard current form name
+UPDATE qz.table_action
+SET clear_context_parameters = '{form_name}'
+WHERE form_name  = 'table_action_edit'
+AND action = 'update';
 
 INSERT INTO qz.table_action (form_name, action, sql, fieldnames, helpful_text)
 VALUES ('table_action_edit', 'delete',
@@ -1094,47 +1100,51 @@ VALUES
 ('inline_doc', 'list', '{form_name}',
 'Use this to attach a bit of html to your form',
 $DTALI$
-SELECT action, div_id
+SELECT action, doc_name, doc_title 
 FROM qz.doc
 WHERE form_name = $1
-ORDER BY action, div_id
+ORDER BY action, doc_name 
 $DTALI$),
 
-('inline_doc', 'edit', '{form_name,action,div_id}', NULL,
+('inline_doc', 'edit', '{form_name,action,doc_name}', NULL,
 $DTAED$
-SELECT action, div_id, el_class, "data"
+SELECT action, doc_name, doc_title, div_id, el_class, "data"
 FROM qz.doc
 WHERE form_name = $1
 AND action = $2
-AND div_id = $3
+AND doc_name = $3
 $DTAED$),
 
-('inline_doc', 'update', '{form_name,action,div_id,el_class,data}', NULL,
+('inline_doc', 'update', '{form_name,action, doc_name, doc_title, div_id,el_class,data}', NULL,
 $DTAUP$
 UPDATE qz.doc
 SET
-el_class = $4,
-"data" = $5
+doc_title = $4,
+div_id = $5
+el_class = $6,
+"data" = $7
 WHERE form_name = $1
 AND action = $2
-AND div_id = $3
+AND doc_name = $3
 $DTAUP$),
 
 ('inline_doc', 'create', '{form_name}', NULL,
 $DTACR$
 SELECT $1::qz.variable_name "form_name",
 ''::text "action",
+''::text "doc_name",
+''::text "doc_title",
 ''::text "div_id",
 ''::text "el_class",
 ''::text "data"
 $DTACR$),
 
 ('inline_doc', 'insert',
-'{form_name, action, div_id, el_class, data}',
+'{form_name, action, doc_name, doc_title, div_id, el_class, data}',
 NULL,
 $DTAIN$
 INSERT INTO qz.doc
-(form_name, action, div_id, el_class, data)
+(form_name, action, doc_name, doc_title, div_id, el_class, data)
 VALUES
 ($1,$2,$3,$4,$5)
 $DTAIN$),

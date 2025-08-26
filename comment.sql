@@ -29,7 +29,7 @@ COMMENT ON COLUMN qz.table_action.helpful_text IS 'A short paragraph of a hopefu
 COMMENT ON COLUMN qz.table_action.form_name IS 'A common identity that binds together a set of actions.';
 COMMENT ON COLUMN qz.table_action.sql IS 'The actual command to be performed.  This is made into a prepared statement.  Use $n positional parameters, $1, $2, etc.  Map the positional parameters to names using fieldnames.';
 COMMENT ON COLUMN qz.form.form_set_name IS 'Typically left blank.  Used when data must be passed from one form to another.';
-COMMENT ON COLUMN qz.form.pkey IS 'The names of the fields that comprise the primary key.  Fields in the primary key are used to retrieve particular records and may not be edited. An empty cell truncates the data and values after an empty cell are lost.';
+COMMENT ON COLUMN qz.form.pkey IS 'The primary key of the table the form is to manage';
 COMMENT ON COLUMN qz.table_action.clear_context_parameters IS
 'Context parameters allow a form to pass attributes to other forms in the same form_set. Clear_context_parameters will remove the values after the form executes. For example, to clear one attribute in a multi part key.';
 COMMENT ON COLUMN qz.prompt_rule.el_class IS
