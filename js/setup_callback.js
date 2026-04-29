@@ -38,12 +38,15 @@ function setup_callback(callback_el, func, xhr, args={}){
    let fn_len = 0;
    let fieldnames = false;
    try{
-        let xfieldnames = callback_el.attributes.getNamedItem('x-fieldnames');
-        console.log("setup_callback: xfieldnames = " + xfieldnames.value);
+        let xfieldnames = callback_el.getAttribute('x-fieldnames');
+        if (xfieldnames){
+            fieldnames = JSON.parse(xfieldnames.replace(/\'/g, '"'));
+            if (fieldnames) fn_len = fieldnames.length;
+            console.log("setup_callback: "+fn_len+" fieldnames = " + fieldnames);
+        }else{
+            console.log('x-fieldnames for ' + callback_el.value + ' not found');
+        }
 
-        fieldnames = JSON.parse(xfieldnames.value.replace(/\'/g, '"'));
-
-        if (fieldnames) fn_len = fieldnames.length;
     }catch(e){
         console.log(e);
     }
@@ -72,6 +75,8 @@ function setup_callback(callback_el, func, xhr, args={}){
                }else{
                    console.log("element " + fn + " not found");
                }
+           }else{
+               console.log(fn + " passed in " + args[fn] );
            }
        }
    } else {

@@ -1219,7 +1219,7 @@ SELECT $1::qz.variable_name "form_name",
 ''::text "sql",
 ''::text "fieldnames",
 'any'::text "callback_attached_action",
-''::text "callback_response"
+'qzforms_json'::text "callback_response"
 $CBC$),
 
 ('callback', 'insert',

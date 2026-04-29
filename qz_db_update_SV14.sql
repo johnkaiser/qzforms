@@ -11,7 +11,7 @@ COMMENT ON COLUMN qz.form.pkey IS 'The primary key of the table the form is to m
 -- update returns to form list, discard current form name
 UPDATE qz.table_action
 SET clear_context_parameters = '{form_name}'
-WHERE form_name  = 'table_action_edit' 
+WHERE form_name  = 'table_action_edit'
 AND action = 'update';
 
 
@@ -25,9 +25,9 @@ ALTER TABLE  qz.prompt_rule
 ADD COLUMN required boolean
 DEFAULT false;
 
--- prompt_rule create 
+-- prompt_rule create
 UPDATE qz.table_action
-SET sql = 
+SET sql =
 $PRCTA$
  SELECT
     $1::text "form_name",
@@ -66,18 +66,18 @@ $PRCTA$
     ''::text "onmouseout",
     ''::text "onkeypress",
     ''::text "onkeydown",
-    ''::text "onkeyup" 
-$PRCTA$    
-WHERE 
+    ''::text "onkeyup"
+$PRCTA$
+WHERE
 form_name = 'prompt_rule_edit'
 AND action = 'create';
 
 -- prompt_rule edit
 UPDATE qz.table_action
-SET sql = 
+SET sql =
 $PRETA$
 SELECT "form_name", "fieldname", "prompt_type", "tabindex",
-"el_class", "readonly", "required", "regex_pattern", "rows", "cols", "size", 
+"el_class", "readonly", "required", "regex_pattern", "rows", "cols", "size",
 "maxlength", "options", "publish_pgtype", "expand_percent_n",
  "onfocus", "onblur", "onchange", "onselect",
 "onclick", "ondblclick", "onmousedown", "onmouseup",
@@ -86,13 +86,13 @@ SELECT "form_name", "fieldname", "prompt_type", "tabindex",
 FROM qz.prompt_rule
 WHERE form_name = $1 AND fieldname = $2
 $PRETA$
-WHERE 
+WHERE
 form_name = 'prompt_rule_edit'
 AND action = 'edit';
 
 -- prompt_rule insert
 UPDATE qz.table_action
-SET sql = 
+SET sql =
 $PRITA$INSERT INTO qz.prompt_rule
   ("form_name", "fieldname", "prompt_type", "tabindex",
   "el_class", "readonly", "required", "regex_pattern",
@@ -106,14 +106,23 @@ $PRITA$INSERT INTO qz.prompt_rule
   ($1,$2,$3,$4,$5,$6,$7,$8,$9,
   $10,$11,$12,$13,$14,$15,$16,$17,$18,
   $19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29)
-$PRITA$
+$PRITA$,
+fieldnames =
+  '{form_name, fieldname, prompt_type, tabindex,
+  el_class, readonly, required, regex_pattern,
+  rows, cols, size,
+  maxlength, options, publish_pgtype,
+ expand_percent_n, onfocus, onblur, onchange, onselect,
+ onclick, ondblclick, onmousedown, onmouseup,
+ onmouseover, onmousemove, onmouseout,
+ onkeypress, onkeydown, onkeyup}'
 WHERE
 form_name = 'prompt_rule_edit'
 AND action = 'insert';
 
 -- prompt_rule update
-UPDATE qz.table_action 
-SET sql = 
+UPDATE qz.table_action
+SET sql =
 $PRUTA$
 UPDATE qz.prompt_rule
     SET
@@ -147,7 +156,7 @@ UPDATE qz.prompt_rule
     WHERE form_name = $28
     AND fieldname = $29
 $PRUTA$,
-fieldnames = 
+fieldnames =
 '{prompt_type,el_class,readonly,required,regex_pattern,rows,cols,size,tabindex,options,maxlength,onfocus,onblur,onchange,onselect,onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,publish_pgtype,expand_percent_n,form_name,fieldname}'
 WHERE
 form_name = 'prompt_rule_edit'
@@ -258,4 +267,16 @@ $TALID$
 WHERE form_name = 'inline_doc'
 AND action = 'list';
 
+-- set default for callback response
+UPDATE qz.table_action
+SET sql =  $CBC$
+ SELECT $1::qz.variable_name "form_name",
+ ''::text "callback_name",
+ ''::text "sql",
+ ''::text "fieldnames",
+ 'any'::text "callback_attached_action",
+ 'qzforms_json'::text "callback_response"
+$CBC$
+WHERE form_name = 'callback'
+AND action = 'create';
 
