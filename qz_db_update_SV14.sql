@@ -280,3 +280,5 @@ $CBC$
 WHERE form_name = 'callback'
 AND action = 'create';
 
+-- add a date type prompt rule
+ALTER TYPE qz.prompt_types ADD VALUE 'input_date';

@@ -54,8 +54,8 @@ CREATE TYPE qz.prompt_container_type
     AS ENUM ('no_container','fieldset');
 
 create type qz.prompt_types as enum (
-    'input_hidden', 'input_text', 'select_options', 'select_fkey',
-    'input_radio', 'textarea', 'text_array', 'button'
+ 'button', 'input_date', 'input_hidden', 'input_radio', 'input_text',
+ 'select_fkey', 'select_options', 'text_array', 'textarea'
 );
 
 -- etag values less than 2^16 are reserved for use by the distribution.

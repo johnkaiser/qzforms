@@ -625,6 +625,29 @@ xmlNodePtr add_input_text(struct prompt_add_args* args){
 }
 
 /*
+ *  add_input_date
+ *
+ *  Add an input type=date style prompt.
+ */
+
+xmlNodePtr add_input_date(struct prompt_add_args* args){
+     xmlNodePtr input;
+
+     input = xmlNewChild(args->child_of, NULL, "input", NULL);
+     xmlNewProp(input, "type", "date");
+     xmlNewProp(input, "name", args->fname);
+     xmlNewProp(input, "id", args->fname);
+
+     if (args->fvalue!=NULL) xmlNewProp(input, "value", args->fvalue);
+
+     if (args->rule != NULL){
+         set_common_attributes(args, input);
+     }
+
+     return input;
+}
+
+/*
  *  add_select_options
  *
  *  Create a drop down, select options from the array in
@@ -1422,7 +1445,7 @@ void init_prompt_type_hash(void){
             .prompt_type = select_fkey,
             .name = "select_fkey",
             .add_prompt = add_select_fkey
-        },    
+        },
         {
             .prompt_type = textarea,
             .name = "textarea",
@@ -1437,6 +1460,11 @@ void init_prompt_type_hash(void){
             .prompt_type = input_datalist,
             .name = "input_datalist",
             .add_prompt = add_input_datalist
+        },
+        {
+            .prompt_type = input_date,
+            .name = "input_date",
+            .add_prompt = add_input_date
         },
         {
             .prompt_type = none,
