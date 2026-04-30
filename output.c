@@ -81,7 +81,8 @@ void serve_output( struct handler_args* hargs ){
         xmlSaveDoc(ctxt, hargs->doc);
         xmlSaveClose(ctxt);
 
-        FCGX_FPrintF(hargs->out, "%s", xbuf->content);
+        //FCGX_FPrintF(hargs->out, "%s", xbuf->content);
+        FCGX_FPrintF(hargs->out, "%s", xmlBufferContent(xbuf));
 
         xmlBufferFree(xbuf);
 
