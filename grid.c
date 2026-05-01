@@ -541,7 +541,7 @@ void grid_save(struct handler_args* h, char* form_name, xmlNodePtr root_el){
     pthread_mutex_lock(&log_mutex);
     fprintf(h->log, "%f %d %s:%d perform_action with table_action(%s,%s)\n",
         gettime(), h->request_id, __func__, __LINE__,
-        form_name, "edit");
+        form_name, "save");
     pthread_mutex_unlock(&log_mutex);
 
     PGresult* grid_save_rs = perform_post_action(h, grid_save_ta);

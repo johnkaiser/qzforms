@@ -31,6 +31,10 @@ function add_prompt(parent_el, fieldname, prompt_rule, row_index){
             add_input_hidden(parent_el, fieldname, prompt_rule, row_index);
             break;
 
+        case "input_date":
+            add_input_date(parent_el, fieldname, prompt_rule, row_index);
+            break;
+
         case "select_options":
         case "select_fkey":
            add_select_options(parent_el, fieldname, prompt_rule, row_index);

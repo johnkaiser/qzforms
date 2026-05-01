@@ -87,7 +87,8 @@ JS=js/add_array_input.js js/add_button.js js/add_input_hidden.js \
 	js/get_next_row_index.js js/grid_add_row.js js/grid_delete_row.js \
 	js/httpRequest.js js/refresh_result.js js/set_common_attributes.js \
 	js/set_action_options.js js/dollarquote js/tinymce.init.js \
-	js/get_callbacks.js js/setup_callback.js js/callback_options.js
+	js/get_callbacks.js js/setup_callback.js js/callback_options.js \
+    js/add_input_date.js
 
 DOCS=COPYRIGHT.txt opentable.txt design_principles.html login_process.html
 
@@ -352,6 +353,7 @@ qzforms.js.sql: $(JS)
 	cat js/add_input_hidden.js      >> qzforms.js.sql
 	cat js/add_input_radio.js       >> qzforms.js.sql
 	cat js/add_input_text.js        >> qzforms.js.sql
+	cat js/add_input_date.js        >> qzforms.js.sql
 	cat js/add_select_options.js    >> qzforms.js.sql
 	cat js/add_text_area.js         >> qzforms.js.sql
 	cat js/add_prompt.js            >> qzforms.js.sql

@@ -1136,6 +1136,11 @@ PGresult* perform_post_row_action(struct handler_args* h,
             error_page(h, SC_BAD_REQUEST, "missing parameter");
             return NULL;
         }
+        // After all that null checking, convert an empty string to null.
+         // Some data types, such as date, are not valid as empty strings.
+        if (strlen(paramdata[k]) == 0){
+            paramdata[k] = NULL;
+       }
 
         free(fieldname);
     }
