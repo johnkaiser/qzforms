@@ -572,7 +572,7 @@ int main(int argc, char* argv[], char* envpmain[]){
     }
 
     init_prompt_type_hash();
-    init_handler_hash();
+    init_handler_hash(conf->integrity_token);
 
     FCGX_Init();
     fprintf(log, "%f %d %s:%d FCGX_Init complete\n",

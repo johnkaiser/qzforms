@@ -371,6 +371,18 @@ void do_page( struct handler_args* hargs ){
                     struct handler* handler;
                     handler = xmlHashLookup(handler_hash, hargs->handler_name);
 
+                    if (handler->integrity_token != hargs->conf->integrity_token){
+
+                        pthread_mutex_lock(&log_mutex);
+                        fprintf(hargs->log, "%f %d %s:%d %s expected %"PRIu64" got %"PRIu64"\n",
+                            gettime(), hargs->request_id, __func__, __LINE__,
+                            "handler integrity token failed",
+                            handler->integrity_token, hargs->integrity_token);
+                        pthread_mutex_unlock(&log_mutex);
+
+                        //error_page(hargs, SC_BAD_REQUEST, "integrity token failed");
+                    }
+
                     if (form_tag_required(hargs->handler_name) &&
                         ! has_valid_form_tag ){
 

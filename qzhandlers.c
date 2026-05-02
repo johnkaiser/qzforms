@@ -39,7 +39,7 @@ xmlHashTablePtr handler_hash = NULL;
  *  Initialize a hash table to resolve names into function pointers.
  */  
 
-void init_handler_hash(void){
+void init_handler_hash(uint64_t integrity_token){
 
     static struct handler static_handlers[] = 
     {
@@ -66,7 +66,7 @@ void init_handler_hash(void){
         {
             .count = 0,
             .name = "onetable",
-            .handler = onetable 
+            .handler = onetable
         },
         {
             .count = 0,
@@ -81,7 +81,7 @@ void init_handler_hash(void){
         {
             .count = 0,
             .name = "grid",
-            .handler = grid 
+            .handler = grid
         },    
         {
             .count = 0,
@@ -102,6 +102,7 @@ void init_handler_hash(void){
     handler_hash = xmlHashCreate(31);
     int n;
     for(n=0; static_handlers[n].name != NULL; n++){
+        static_handlers[n].integrity_token = integrity_token;
         xmlHashAddEntry( handler_hash, static_handlers[n].name,
            (void*) &static_handlers[n]);
     }        

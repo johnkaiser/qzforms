@@ -1544,7 +1544,7 @@ int main(int argc, char* argv[]){
     hargs.log = stdout;
     hargs.conf = conf;
 
-    init_handler_hash();
+    init_handler_hash(12345678);
     init_prompt_type_hash();
 
     struct session s;

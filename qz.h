@@ -151,6 +151,7 @@ struct handler{
     int count;
     char* name;
     void (*handler)( struct handler_args* );
+    uint64_t integrity_token;
 };
 
 struct session{
@@ -921,7 +922,7 @@ extern void init_prompt_type_hash(void);
  *  init_handler_hash
  *  qzhandlers.c
  */
-extern void init_handler_hash(void);
+extern void init_handler_hash(uint64_t integrity_token);
 /*
  *  handler_hash
  *  qzhandlers.c
