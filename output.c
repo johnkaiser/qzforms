@@ -380,7 +380,7 @@ void do_page( struct handler_args* hargs ){
                             handler->integrity_token, hargs->integrity_token);
                         pthread_mutex_unlock(&log_mutex);
 
-                        //error_page(hargs, SC_BAD_REQUEST, "integrity token failed");
+                        error_page(hargs, SC_BAD_REQUEST, "handler integrity token failed");
                     }
 
                     if (form_tag_required(hargs->handler_name) &&
