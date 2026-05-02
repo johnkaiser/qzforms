@@ -553,13 +553,12 @@ void do_housekeeping(struct handler_args* h, xmlHashTablePtr sessions,
     }
     pthread_mutex_lock(&log_mutex);
     fprintf(h->log,
-        "%f %d %s:%d active threads %d of %d oldest %f "
-        "integrity token %s\n",
+        "%f %d %s:%d active threads %d of %d oldest %f %s\n",
         gettime(), h->request_id, __func__, __LINE__,
         active_count, conf->number_of_threads,
         (oldest == DBL_MAX) ? 0.0 : oldest,
         (thread_state[conf->number_of_threads] == conf->integrity_token) ?
-            "valid":"invalid fail");
+            "":"fail thread integrity token invalid");
 
     fprintf(h->log,
         "%f %d %s:%d sessions logged in %u not logged in %u\n",
